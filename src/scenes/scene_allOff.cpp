@@ -3,10 +3,12 @@
 #include "applicationInternal/keys.h"
 #include "applicationInternal/scenes/sceneRegistry.h"
 #include "applicationInternal/hardware/hardwarePresenter.h"
-// devices
-#include "devices/TV/device_samsungTV/device_samsungTV.h"
-#include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
 #include "applicationInternal/commandHandler.h"
+// devices
+#include "devices/mediaPlayer/device_appleTV/device_appleTV.h"
+#include "devices/TV/device_lgTV/device_lgTV.h"
+#include "devices/AVreceiver/device_sonyAvr/device_sonyAvr.h"
+#include "devices/misc/device_hub_helper.h"
 
 uint16_t SCENE_ALLOFF      ; //"Scene_allOff"
 uint16_t SCENE_ALLOFF_FORCE; //"Scene_allOff_force"
@@ -17,58 +19,33 @@ std::map<char, uint16_t> key_commands_long_allOff;
 
 void scene_setKeys_allOff() {
   key_repeatModes_allOff = {
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
   };
   
   key_commands_short_allOff = {
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
   };
   
   key_commands_long_allOff = {
-  
   
   };
 
 }
 
 void scene_start_sequence_allOff(void) {
-  executeCommand(SAMSUNG_POWER_OFF);
-  delay(500);
-  executeCommand(YAMAHA_POWER_OFF);
-  delay(500);
-  // repeat IR to be sure
-  executeCommand(SAMSUNG_POWER_OFF);
-  delay(500);
-  executeCommand(YAMAHA_POWER_OFF);
-  delay(500);
-  // repeat IR to be sure
-  executeCommand(SAMSUNG_POWER_OFF);
-  delay(500);
-  executeCommand(YAMAHA_POWER_OFF);
-  delay(500);
-  // you cannot power off FireTV, but at least you can stop the currently running app
-  executeCommand(KEYBOARD_HOME);
-  delay(500);
-  executeCommand(KEYBOARD_HOME);
-
+  #if (ENABLE_HUB_COMMUNICATION == 1)
+  execute_hub_command(LGTV_POWER_OFF);
+  execute_hub_command(APPLETV_POWER_OFF);
+  execute_hub_command(SONYAVR_POWER_OFF);
+  #else
+  // executeCommand(SAMSUNG_POWER_ON);
+  // delay(500);
+  // executeCommand(YAMAHA_POWER_ON);
+  // delay(1500);
+  // executeCommand(YAMAHA_INPUT_DVD);
+  // delay(3000);
+  // executeCommand(SAMSUNG_INPUT_TV);
+  #endif
 }
 
 void scene_end_sequence_allOff(void) {

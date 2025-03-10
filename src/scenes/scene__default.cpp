@@ -3,8 +3,11 @@
 #include "applicationInternal/scenes/sceneRegistry.h"
 #include "applicationInternal/commandHandler.h"
 // devices
-#include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
-#include "devices/misc/device_smarthome/gui_smarthome.h"
+// #include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
+// #include "devices/misc/device_smarthome/gui_smarthome.h"
+#include "devices/AVreceiver/device_sonyAvr/device_sonyAvr.h"
+#include "devices/mediaPlayer/device_appleTV/device_appleTV.h"
+#include "devices/TV/device_lgTV/device_lgTV.h"
 // scenes
 #include "scene__default.h"
 #include "scenes/scene_allOff.h"
@@ -34,34 +37,29 @@ t_gui_list main_gui_list;
 
 void register_scene_defaultKeys(void) {
   key_repeatModes_default = {
-                                                                                                             {KEY_OFF,   SHORT            },
-    {KEY_STOP,  SHORT            },    {KEY_REWI,  SHORTorLONG      },    {KEY_PLAY,  SHORT            },    {KEY_FORW,  SHORTorLONG      },
-    {KEY_CONF,  SHORT            },                                                                          {KEY_INFO,  SHORT            },
-                                                         {KEY_UP,    SHORT            },
-                      {KEY_LEFT,  SHORT            },    {KEY_OK,    SHORT            },    {KEY_RIGHT, SHORT            },
-                                                         {KEY_DOWN,  SHORT            },
-    {KEY_BACK,  SHORT            },                                                                          {KEY_SRC,   SHORT            },
-    {KEY_VOLUP, SHORT_REPEATED   },                      {KEY_MUTE,  SHORT            },                     {KEY_CHUP,  SHORT            },
-    {KEY_VOLDO, SHORT_REPEATED   },                      {KEY_REC,   SHORT            },                     {KEY_CHDOW, SHORT            },
-    {KEY_RED,   SHORT            },    {KEY_GREEN, SHORT            },    {KEY_YELLO, SHORT            },    {KEY_BLUE,  SHORT            },
+      {KEY_OFF, SHORT},   {KEY_STOP, SHORT},       {KEY_REWI, SHORTorLONG},
+      {KEY_PLAY, SHORT},  {KEY_FORW, SHORTorLONG}, {KEY_CONF, SHORT},
+      {KEY_INFO, SHORT},  {KEY_UP, SHORT},         {KEY_LEFT, SHORT},
+      {KEY_OK, SHORT},    {KEY_RIGHT, SHORT},      {KEY_DOWN, SHORT},
+      {KEY_BACK, SHORT},  {KEY_SRC, SHORT},        {KEY_VOLUP, SHORT_REPEATED},
+      {KEY_MUTE, SHORT},  {KEY_CHUP, SHORT},       {KEY_VOLDO, SHORT_REPEATED},
+      {KEY_REC, SHORT},   {KEY_CHDOW, SHORT},      {KEY_RED, SHORT},
+      {KEY_GREEN, SHORT}, {KEY_YELLO, SHORT},      {KEY_BLUE, SHORT},
   };
-  
+
   key_commands_short_default = {
-                                                                                                             {KEY_OFF,   SCENE_ALLOFF_FORCE},
-    {KEY_STOP,  GUI_SMARTHOME_ACTIVATE},/*{KEY_REWI,  COMMAND_UNKNOWN  }, {KEY_PLAY,  COMMAND_UNKNOWN  },    {KEY_FORW,  COMMAND_UNKNOWN  },*/
-  /*{KEY_CONF,  COMMAND_UNKNOWN  },                                                                          {KEY_INFO,  COMMAND_UNKNOWN  },*/
-                                                     /*  {KEY_UP,    COMMAND_UNKNOWN  },*/
-                      {KEY_LEFT,  GUI_PREV  },       /*  {KEY_OK,    COMMAND_UNKNOWN  },*/  {KEY_RIGHT, GUI_NEXT  },
-                                                     /*  {KEY_DOWN,  COMMAND_UNKNOWN  },*/
-    {KEY_BACK,  SCENE_SELECTION  },                                                                        /*{KEY_SRC,   COMMAND_UNKNOWN  },*/
-    {KEY_VOLUP, YAMAHA_VOL_PLUS  },                      {KEY_MUTE,  YAMAHA_MUTE_TOGGLE},                  /*{KEY_CHUP,  COMMAND_UNKNOWN  },*/
-    {KEY_VOLDO, YAMAHA_VOL_MINUS },                      {KEY_REC,   SCENE_BACK_TO_PREVIOUS_GUI_LIST  },   /*{KEY_CHDOW, COMMAND_UNKNOWN  },*/
-    {KEY_RED,   SCENE_TV_FORCE   },    {KEY_GREEN, SCENE_FIRETV_FORCE},  {KEY_YELLO, SCENE_CHROMECAST_FORCE},{KEY_BLUE,  SCENE_APPLETV_FORCE},
+      {KEY_OFF, SCENE_ALLOFF_FORCE}, {KEY_LEFT, GUI_PREV},
+      {KEY_RIGHT, GUI_NEXT},
+
+      {KEY_VOLUP, SONYAVR_VOL_PLUS},    {KEY_MUTE, SONYAVR_VOL_MUTE},
+      {KEY_VOLDO, SONYAVR_VOL_MINUS},
+
+      {KEY_BACK, COMMAND_UNKNOWN},   {KEY_REC, COMMAND_UNKNOWN},
+      {KEY_RED, COMMAND_UNKNOWN},    {KEY_BLUE, COMMAND_UNKNOWN},
   };
-  
+
   key_commands_long_default = {
-  
-  
+
   };
 
   register_command(&SCENE_SELECTION                , makeCommandData(SCENE, {scene_name_selection}));

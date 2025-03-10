@@ -3,11 +3,14 @@
 #include "applicationInternal/keys.h"
 #include "applicationInternal/scenes/sceneRegistry.h"
 #include "applicationInternal/hardware/hardwarePresenter.h"
-// devices
-#include "devices/TV/device_samsungTV/device_samsungTV.h"
-#include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
 #include "applicationInternal/commandHandler.h"
+// devices
+// #include "devices/TV/device_samsungTV/device_samsungTV.h"
+// #include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
 #include "devices/mediaPlayer/device_appleTV/device_appleTV.h"
+#include "devices/TV/device_lgTV/device_lgTV.h"
+#include "devices/AVreceiver/device_sonyAvr/device_sonyAvr.h"
+#include "devices/misc/device_hub_helper.h"
 // guis
 #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 
@@ -26,12 +29,12 @@ void scene_setKeys_appleTV() {
   };
 
   key_commands_short_appleTV = {
-      {KEY_STOP, COMMAND_UNKNOWN},       {KEY_REWI, COMMAND_UNKNOWN},
-      {KEY_PLAY, COMMAND_UNKNOWN}, {KEY_FORW, COMMAND_UNKNOWN},
-      {KEY_CONF, COMMAND_UNKNOWN},       {KEY_INFO, COMMAND_UNKNOWN},
+      {KEY_STOP, APPLETV_STOP},       {KEY_REWI, APPLETV_SKIP_BACKWARD},
+      {KEY_PLAY, APPLETV_PLAY_PAUSE}, {KEY_FORW, APPLETV_SKIP_FORWARD},
+      {KEY_CONF, APPLETV_HOME},       {KEY_INFO, COMMAND_UNKNOWN},
       {KEY_UP, APPLETV_UP},           {KEY_LEFT, APPLETV_LEFT},
       {KEY_OK, APPLETV_SELECT},       {KEY_RIGHT, APPLETV_RIGHT},
-      {KEY_DOWN, APPLETV_DOWN},       {KEY_BACK, COMMAND_UNKNOWN},
+      {KEY_DOWN, APPLETV_DOWN},       {KEY_BACK, APPLETV_MENU},
       {KEY_CHUP, COMMAND_UNKNOWN},    {KEY_REC, COMMAND_UNKNOWN},
       {KEY_CHDOW, COMMAND_UNKNOWN},
   };
@@ -43,14 +46,19 @@ void scene_setKeys_appleTV() {
 }
 
 void scene_start_sequence_appleTV(void) {
-  executeCommand(SAMSUNG_POWER_ON);
-  delay(500);
-  executeCommand(YAMAHA_POWER_ON);
-  delay(1500);
-  executeCommand(YAMAHA_INPUT_DVD);
-  delay(3000);
-  executeCommand(SAMSUNG_INPUT_HDMI_3);
-
+  #if (ENABLE_HUB_COMMUNICATION == 1)
+  execute_hub_command(APPLETV_POWER_ON);
+  execute_hub_command(SONYAVR_POWER_ON);
+  execute_hub_command(LGTV_POWER_ON);
+  #else
+  // executeCommand(SAMSUNG_POWER_ON);
+  // delay(500);
+  // executeCommand(YAMAHA_POWER_ON);
+  // delay(1500);
+  // executeCommand(YAMAHA_INPUT_DVD);
+  // delay(3000);
+  // executeCommand(SAMSUNG_INPUT_HDMI_3);
+  #endif
 }
 
 void scene_end_sequence_appleTV(void) {
