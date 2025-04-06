@@ -15,7 +15,6 @@ To run this firmware, you have two options
 
 ### The state of this project
 
-#### Software
 The software can be adjusted to your needs. You can add your own amplifier, TV and media player. Smart home devices can be controlled with MQTT. The software is an example made up of:
 * a TV and an amplifier controlled with infrared
 * a Fire TV media player controlled with BLE (bluetooth keyboard)

@@ -19,10 +19,10 @@ void init_preferences_HAL(void) {
     set_sleepTimeout_HAL(preferences.getUInt("slpTimeout", DEFAULT_SLEEP_TIMEOUT));
     set_motionThreshold_HAL(preferences.getUInt("motionThreshold", DEFAULT_MOTION_THRESHOLD));
     // from tft.h
-    set_backlightBrightness_HAL(preferences.getUChar("blBrightness", 255));
+    set_backlightBrightness_HAL(preferences.getUInt("blBrightness", 255));
     // from keyboard.h
     #if(OMOTE_HARDWARE_REV >= 5)
-    set_keyboardBrightness_HAL(preferences.getUChar("kbBrightness", 255));
+    set_keyboardBrightness_HAL(preferences.getUInt("kbBrightness", 255));
     #endif
     // from here
     activeScene = std::string(preferences.getString("currentScene").c_str());
@@ -44,10 +44,11 @@ void save_preferences_HAL(void) {
   // from tft.h
   preferences.putUInt("slpTimeout", get_sleepTimeout_HAL());
   preferences.putUInt("motionThreshold", get_motionThreshold_HAL());
-  preferences.putUChar("blBrightness", get_backlightBrightness_HAL());
+  preferences.putUInt("blBrightness", get_backlightBrightness_HAL());
   // from keyboard.h
   #if(OMOTE_HARDWARE_REV >= 5)
   preferences.putUInt("kbBrightness", get_keyboardBrightness_HAL());
+  // Serial.printf("Preferences saved: blBrightness %d, kbBrightness %d, GUI %s, scene %s\r\n", get_backlightBrightness_HAL(), get_keyboardBrightness_HAL(), activeGUIname.c_str(), activeScene.c_str());
   #endif
   // from here
   preferences.putString("currentScene", activeScene.c_str());
