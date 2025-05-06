@@ -2,6 +2,7 @@
 // 2023-2025 Maximilian Kern, Klaus Musch
 
 #include "applicationInternal/omote_log.h"
+#include "applicationInternal/devices/deviceRegistry.h"
 // init hardware and hardware loop
 #include "applicationInternal/hardware/hardwarePresenter.h"
 // register devices and their commands
@@ -17,6 +18,7 @@
 #endif // ENABLE_KEYBOARD_BLE
 //   TV
 #include "devices/TV/device_samsungTV/device_samsungTV.h"
+#include "devices/TV/device_SonyBravia/device_SonyBravia.h"
 //#include "devices/TV/device_lgTV/device_lgTV.h"
 //   AV receiver
 #include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
@@ -38,6 +40,7 @@
 #include "guis/gui_settings.h"
 #include "guis/gui_numpad.h"
 #include "guis/gui_BLEpairing.h"
+#include "guis/gui_devices.h"
 #include "devices/AVreceiver/device_yamahaAmp/gui_yamahaAmp.h"
 #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 #include "devices/misc/device_smarthome/gui_smarthome.h"
@@ -90,7 +93,9 @@ int main(int argc, char *argv[]) {
   register_device_samsungTV();
   //register_device_lgTV();
   //   AV receiver
-  register_device_yamahaAmp();
+  REGISTER_DEVICE(register_device_yamahaAmp, "Yamaha Receiver");
+  REGISTER_DEVICE(register_device_SonyBravia, "Sony TV");
+
   //register_device_denonAvr();
   //register_device_lgsoundbar();
   //   media player
@@ -111,6 +116,7 @@ int main(int argc, char *argv[]) {
   register_keyboardCommands();
 
   // Register the GUIs. They will be displayed in the order they have been registered.
+  register_gui_devices();
   register_gui_sceneSelection();
   register_gui_irReceiver();
   register_gui_settings();
@@ -125,7 +131,7 @@ int main(int argc, char *argv[]) {
   // Only show these GUIs in the main gui list. If you don't set this explicitely, by default all registered guis are shown.
   #if (USE_SCENE_SPECIFIC_GUI_LIST != 0)
   main_gui_list =
-    {tabName_yamahaAmp, tabName_sceneSelection, tabName_smarthome, tabName_settings, tabName_irReceiver
+    {tabName_devices, tabName_sceneSelection, tabName_smarthome, tabName_settings, tabName_irReceiver
     #if (ENABLE_KEYBOARD_BLE == 1)
     , tabName_blepairing
     #endif
