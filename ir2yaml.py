@@ -1,43 +1,48 @@
 #!/usr/bin/env python3
+"""ir2yaml.py  Convert Flipper-Zero *.ir* dumps to an ESPHome-friendly YAML list
+
+The script now understands three kinds of input in **one file**:
+
+1. **Flipper Zero .ir** (as kept in the IRDB)  detected by extension *or* the
+   leading line `Filetype: IR signals file`.
+2. A plain YAML sequence of dictionaries.
+3. A JSON array of objects.
+
+For **Sony SIRC / SIRC15 / SIRC20** entries the helper builds the *normal* MSB-
+first hex word (e.g. `0xC90`) and drops the low-level `address`/`command`
+fields.  All other protocols are passed through unchanged  they still keep the
+raw address/command bytes because the conversion rules differ per protocol.
+
+Example
+=======
+```bash
+$ python ir2yaml.py Sony_Bravia.ir > sony.yaml
+```
+
+Input (excerpt)
+```
+# name: Vol_dn type: parsed protocol: SIRC address: 01 00 00 00 command: 13 00 00 00
+```
+Output
+```
+- name: Vol_dn
+  protocol: SIRC
+  data: 0xC90
+  nbits: 12
+```
 """
-ir2yaml.py  convert a Flipper-IRDB *.ir file into a YAML description
-suitable for OMOTE-Firmware.
-"""
+from __future__ import annotations
+
 import argparse
-import pathlib
+import json
 import re
 import sys
-from typing import List, Dict
+from pathlib import Path
+from typing import Any, Dict, List
 
-try:
-    import yaml          # pip install pyyaml
-except ModuleNotFoundError:        # fall back to std-lib emitter
-    yaml = None
-
-
-# ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦ helpers ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-_CMD_RE = re.compile(
-    r'#\s*name:\s*(?P<name>[^\s]+)\s+'
-    r'type:\s*[^\s]+\s+'
-    r'protocol:\s*(?P<proto>\w+)\s+'
-    r'address:\s*(?P<addr>(?:[0-9A-F]{2}\s*){4})\s+'
-    r'command:\s*(?P<cmd>(?:[0-9A-F]{2}\s*){4})',
-    flags=re.I,
-)
-
-_REMOTE_RE = re.compile(r'#\s+#\s*(?P<label>.+?)\.ir', re.I)
-
-
-def _remote_name(buf: str) -> str:
-    m = _REMOTE_RE.search(buf)
-    raw = m.group('label') if m else 'unknown_remote'
-    # sanitise for filename / YAML key
-    return (
-        raw.replace(',', '')
-           .replace(' ', '_')
-           .replace('__', '_')
-           .strip('_')
-    )
+###############################################################################
+# Bit helpers
+###############################################################################
 
 def _reverse_bits(value: int, nbits: int) -> int:
     """Return *value* with exactly *nbits* reversed (LSB?MSB)."""
@@ -57,81 +62,113 @@ def make_sirc_hex(address: int, command: int, nbits: int) -> str:
     hex_digits = (nbits + 3) // 4  # 123 digits, 15/164, 205
     return f"0x{word:0{hex_digits}X}"
 
-def _parse_commands(buf: str) -> List[Dict]:
-    commands = []
-    for m in _CMD_RE.finditer(buf):
-        name = m['name']
-        proto = m['proto'].upper()
-        addr_bytes = m['addr'].strip().split()
-        cmd_bytes = m['cmd'].strip().split()
+###############################################################################
+# .ir parser
+###############################################################################
 
-        # First byte is all OMOTE needs for Sony / NEC / RC-5 
-        addr_hex = f"0x{addr_bytes[0]}"
-        cmd_hex = f"0x{cmd_bytes[0]}"
-
-        # Map Flipper protocol names to the constants you pass to
-        # makeCommandData().  Extend this dict as needed.
-        proto_const = {
-            "SIRC":    "IR_SONY",
-            "SIRC15":  "IR_SONY",   # 15-bit Sony
-            "NEC":     "IR_NEC",
-            "RC5":     "IR_RC5",
-            "RC6":     "IR_RC6",
-        }.get(proto, f"IR_{proto}")
-
-        nbits = 12
-        if proto == "SIRC15":
-            nbits = 15
-        commands.append(
-            {
-                "name": name,
-                "protocol": proto,
-                "address": addr_hex,
-                "command": cmd_hex,
-                # This is exactly the list you hand over when you build the
-                # command with makeCommandData(IR, payloads)
-                "makeCommandPayload": [proto_const, addr_hex, cmd_hex],
-                "full": make_sirc_hex(int(m['addr'].split()[0],16), int(m['cmd'].split()[0], 16), nbits)
-            }
-        )
-    return commands
+_RE_ITEM = re.compile(
+    r"#\s*name:\s*(?P<name>.+?)\s+type:\s*parsed\s+protocol:\s*(?P<proto>\S+)"
+    r"\s+address:\s*(?P<addr>(?:[0-9A-Fa-f]{2}\s+){0,3}[0-9A-Fa-f]{2})"
+    r"\s+command:\s*(?P<cmd>(?:[0-9A-Fa-f]{2}\s+){0,3}[0-9A-Fa-f]{2})",
+    re.I | re.S,
+)
 
 
-def _dump_yaml(data, stream=None):
-    if yaml:
-        yaml.safe_dump(data, stream or sys.stdout,
-                       sort_keys=False,
-                       default_flow_style=False)
-    else:
-        import json      # very tiny fallback
-        json.dump(data, stream or sys.stdout, indent=2)
+def parse_ir_file(text: str) -> List[Dict[str, Any]]:
+    """Return a list of command dicts extracted from a Flipper *.ir* dump."""
+    out: List[Dict[str, Any]] = []
+    for m in _RE_ITEM.finditer(text):
+        name = m.group("name").strip().replace(" ", "_")
+        proto = m.group("proto").upper()
+        addr_b = int(m.group("addr").split()[0], 16)
+        cmd_b = int(m.group("cmd").split()[0], 16)
+        out.append({
+            "name": name,
+            "protocol": proto,
+            "address": addr_b,
+            "command": cmd_b,
+        })
+    if not out:
+        raise ValueError("No IR items found  malformed .ir file?")
+    return out
+
+###############################################################################
+# Generic loader  JSON, YAML, or .ir
+###############################################################################
 
 
-# ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦ main ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-def main() -> None:
-    ap = argparse.ArgumentParser(
-        description="Convert Flipper *.ir file  OMOTE YAML."
-    )
-    ap.add_argument("src", help="Path or URL to the *.ir file")
-    ap.add_argument("-o", "--output", metavar="FILE",
-                    help="write YAML to file instead of stdout")
-    ns = ap.parse_args()
+def load_input(path: Path) -> List[Dict[str, Any]]:
+    text = path.read_text(encoding="utf-8", errors="replace")
 
-    # Read source (URL or local)
-    if ns.src.startswith(("http://", "https://")):
-        import requests
-        text = requests.get(ns.src, timeout=15).text
-    else:
-        text = pathlib.Path(ns.src).read_text(encoding="utf-8")
+    if path.suffix.lower() == ".ir" or text.lstrip().startswith("Filetype:"):
+        return parse_ir_file(text)
 
-    data = {_remote_name(text): _parse_commands(text)}
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
 
-    if ns.output:
-        with open(ns.output, "w", encoding="utf-8") as fp:
-            _dump_yaml(data, fp)
-    else:
-        _dump_yaml(data)
+    try:
+        import yaml  # type: ignore
+
+        data = yaml.safe_load(text)
+        if isinstance(data, list):
+            return data
+    except Exception:
+        pass
+
+    raise ValueError("Input file is not .ir, JSON, or YAML list")
+
+###############################################################################
+# Transformation per entry
+###############################################################################
+
+_SIRC_PATTERN = re.compile(r"SIRC(\d+)?", re.I)
 
 
-if __name__ == "__main__":
+def process_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
+    proto_raw = entry.get("protocol", "")
+    m = _SIRC_PATTERN.fullmatch(proto_raw)
+    if not m:
+        return entry  # untouched for non-Sony protocols
+
+    nbits = int(m.group(1)) if m.group(1) else 12
+    address = int(entry["address"])
+    command = int(entry["command"])
+
+    entry = entry.copy()
+    entry["data"] = make_sirc_hex(address, command, nbits)
+    entry["nbits"] = nbits
+    # Clean up legacy fields
+    entry.pop("address", None)
+    entry.pop("command", None)
+    # Normalise protocol label to plain SIRC for YAML cleanliness
+    entry["protocol"] = "SIRC"
+    return entry
+
+###############################################################################
+# YAML emitter
+###############################################################################
+
+
+def dump_yaml(obj: Any):
+    import yaml  # type: ignore
+
+    yaml.safe_dump(obj, sys.stdout, sort_keys=False, default_flow_style=False)
+
+###############################################################################
+# Main CLI
+###############################################################################
+
+
+def main(argv: List[str] | None = None) -> None:
+    p = argparse.ArgumentParser(description="Convert Flipper .ir / JSON / YAML to ESPHome YAML")
+    p.add_argument("input", type=Path, help="Input file (.ir, .yaml, .json)")
+    args = p.parse_args(argv)
+
+    commands = [process_entry(e) for e in load_input(args.input)]
+    dump_yaml(commands)
+
+
+if __name__ == "__main__":  # pragma: no cover
     main()
