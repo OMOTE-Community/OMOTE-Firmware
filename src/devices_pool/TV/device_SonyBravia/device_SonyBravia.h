@@ -6,6 +6,7 @@ void register_device_SonyBravia(void);
 extern uint16_t SONY_TV_POWER;
 extern uint16_t SONY_TV_INPUT;
 extern uint16_t SONY_TV_HOME;
+
 extern uint16_t SONY_TV_APPS;
 extern uint16_t SONY_TV_TV;
 extern uint16_t SONY_TV_LEFT;

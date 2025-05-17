@@ -3,6 +3,8 @@
 
 #include "applicationInternal/omote_log.h"
 #include "applicationInternal/devices/deviceRegistry.h"
+#include "applicationInternal/devices/deviceParser.h"
+
 // init hardware and hardware loop
 #include "applicationInternal/hardware/hardwarePresenter.h"
 // register devices and their commands
@@ -18,7 +20,6 @@
 #endif // ENABLE_KEYBOARD_BLE
 //   TV
 #include "devices/TV/device_samsungTV/device_samsungTV.h"
-#include "devices/TV/device_SonyBravia/device_SonyBravia.h"
 //#include "devices/TV/device_lgTV/device_lgTV.h"
 //   AV receiver
 #include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
@@ -93,9 +94,8 @@ int main(int argc, char *argv[]) {
   register_device_samsungTV();
   //register_device_lgTV();
   //   AV receiver
-  REGISTER_DEVICE(register_device_yamahaAmp, "Yamaha Receiver");
-  REGISTER_DEVICE(register_device_SonyBravia, "Sony TV");
-
+  parseConfig();
+  
   //register_device_denonAvr();
   //register_device_lgsoundbar();
   //   media player

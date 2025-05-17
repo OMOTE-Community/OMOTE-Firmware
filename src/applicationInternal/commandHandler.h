@@ -4,6 +4,7 @@
 #include <list>
 #include <map>
 
+#include "applicationInternal/devices/deviceRegistry.h"
 #include "devices/keyboard/device_keyboard_mqtt/device_keyboard_mqtt.h"
 #include "devices/keyboard/device_keyboard_ble/device_keyboard_ble.h"
 
@@ -105,12 +106,14 @@ enum commandHandlers {
 };
 
 struct commandData {
-  commandHandlers commandHandler;
-  std::list<std::string> commandPayloads;
+    commandHandlers commandHandler;
+    std::list<std::string> commandPayloads;
+    //    CommandDetails details;
 };
 
 // register a command and give it a command id
 void register_command(uint16_t *command, commandData aCommandData);
+
 // only get a unique ID. used by KEYBOARD_DUMMY and COMMAND_UNKNOWN
 void get_uniqueCommandID(uint16_t *command);
 

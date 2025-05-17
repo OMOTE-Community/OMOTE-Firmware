@@ -1,10 +1,16 @@
 #include "deviceRegistry.h"
+#include <ArduinoJson.h>
+#include <embedded_config.h>
 
 namespace {
-    std::vector<std::string> g_devices;
+    std::vector<Device> g_devices;
 }
 
-void deviceRegistry::registerDevice(const std::string& n) {
-    g_devices.push_back(n);
+Device* deviceRegistry::registerDevice(JsonPair ref) {
+    g_devices.push_back({ref});
+    return &g_devices.back();
 }
-const std::vector<std::string>& deviceRegistry::getDevices() { return g_devices; }
+
+std::vector<Device>& deviceRegistry::getDevices() {
+    return g_devices;
+}

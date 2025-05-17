@@ -1,11 +1,35 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <stdint.h>
+#include <ArduinoJson.h>
 
-#define REGISTER_DEVICE(func, pretty) \
-    do { func(); deviceRegistry::registerDevice(pretty); } while(0)
+struct CommandDetails {
+    JsonObject ref;
+    uint16_t ID;
+    CommandDetails(JsonObject ref, uint16_t ID) : ref(ref), ID(ID)
+    {}
+    const char* displayName() const {
+        return ref["name"];
+    }    
+};
 
+struct Device {
+    JsonPair ref;
+    Device(JsonPair ref) : ref(ref)
+    {}
+
+    const char* displayName() {
+        return ref.value()["display_name"];
+    }
+    std::vector<CommandDetails> commands;
+    void addCommand(JsonObject ref, uint16_t ID) {
+        commands.push_back({ref, ID});
+    }
+};
+
+    
 namespace deviceRegistry {
-    void registerDevice(const std::string& niceName);
-    const std::vector<std::string>& getDevices();
+    Device* registerDevice(JsonPair ref);
+    std::vector<Device>& getDevices();
 }
