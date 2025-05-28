@@ -1,4 +1,22 @@
 remotes:
+  denon_x4700h:
+    display_name: Denon Receiver
+    commands:
+    - name: Power Toggle
+      protocol: DENON
+      data: "0x2A4C028A0088"
+      nbits: 48
+      repeats: 0
+    - name: Volume Up
+      protocol: DENON
+      data: "0x2A4C0280E86A"
+      nbits: 48
+      repeats: 0      
+    - name: Volume Down
+      protocol: DENON
+      data: "0x2A4C0288E862"
+      nbits: 48
+      repeats: 0      
   sony_bravia:
     display_name: Sony Bravia
     commands:

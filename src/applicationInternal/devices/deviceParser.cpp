@@ -17,6 +17,7 @@ static IRProtocolType toProtoType(const char* proto)
     if (strcmp(proto, "SIRC") == 0)  return IR_PROTOCOL_SONY;
     if (strcmp(proto, "NEC")  == 0)  return IR_PROTOCOL_NEC;
     if (strcmp(proto, "RC5")  == 0)  return IR_PROTOCOL_RC5;
+    if (strcmp(proto, "DENON")  == 0)  return IR_PROTOCOL_DENON;
     return IR_PROTOCOL_UNKNOWN;
 }
 
@@ -31,6 +32,7 @@ void registerRemote(JsonPair remote)
         const char* protoStr = obj["protocol"];
         const char* dataStr = obj["data"];
         uint8_t     nbits    = obj["nbits"] | 0;
+        uint8_t     repeats    = obj["repeats"] | 3;        
         
         if (!name || !protoStr || !dataStr) {
             Serial.println("malformed entry, skipped");
@@ -46,7 +48,7 @@ void registerRemote(JsonPair remote)
         }
 
         std::string data(dataStr);
-        data = data + ":" + std::to_string(nbits) + ":3";
+        data = data + ":" + std::to_string(nbits) + ":" + std::to_string(repeats);
 
         commandData cmd = makeCommandData(IR, {std::to_string(protoType), data});
     
