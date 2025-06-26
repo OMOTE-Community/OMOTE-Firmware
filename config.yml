@@ -1,3 +1,15 @@
+scenes:
+  watch_tv:
+    display_name: Watch TV
+    commands_short:
+      UP:
+        remote: sony_bravia
+        key: Down
+      DOWN:
+        remote: sony_bravia
+        key: Up
+        
+      
 remotes:
   denon_x4700h:
     display_name: Denon Receiver
@@ -16,7 +28,8 @@ remotes:
       protocol: DENON
       data: "0x2A4C0288E862"
       nbits: 48
-      repeats: 0      
+      repeats: 0
+      
   sony_bravia:
     display_name: Sony Bravia
     commands:
@@ -24,10 +37,12 @@ remotes:
       protocol: SIRC
       data: '0xA90'
       nbits: 12
+      map_short: OFF
     - name: Input
       protocol: SIRC
       data: '0xA50'
       nbits: 12
+      map_short: SRC
     - name: Home
       protocol: SIRC
       data: '0x070'
@@ -44,18 +59,22 @@ remotes:
       protocol: SIRC
       data: '0x2D0'
       nbits: 12
+      map_short: LEFT
     - name: Right
       protocol: SIRC
       data: '0xCD0'
       nbits: 12
+      map_short: RIGHT
     - name: Up
       protocol: SIRC
       data: '0x2F0'
       nbits: 12
+      map_short: UP
     - name: Down
       protocol: SIRC
       data: '0xAF0'
       nbits: 12
+      map_short: DOWN
     - name: Enter
       protocol: SIRC
       data: '0xA70'
