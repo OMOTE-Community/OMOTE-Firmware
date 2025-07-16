@@ -1,6 +1,7 @@
 // OMOTE firmware for ESP32
 // 2023-2025 Maximilian Kern, Klaus Musch
 
+#include <RemoteDebug.h>
 #include "applicationInternal/omote_log.h"
 #include "applicationInternal/devices/deviceRegistry.h"
 #include "applicationInternal/devices/deviceParser.h"
@@ -59,6 +60,7 @@
 
 #if defined(ARDUINO)
 // in case of Arduino we have a setup() and a loop()
+RemoteDebug Debug;
 void setup() {
 
 #elif defined(WIN32) || defined(__linux__) || defined(__APPLE__)
@@ -191,6 +193,7 @@ unsigned long updateStatusTimer = 0;
 unsigned long *pIMUTaskTimer = &IMUTaskTimer;
 unsigned long *pUpdateStatusTimer = &updateStatusTimer;
 void loop() {
+    Debug.handle();
 #elif defined(WIN32) || defined(__linux__) || defined(__APPLE__)
 void loop(unsigned long *pIMUTaskTimer, unsigned long *pUpdateStatusTimer) {
 #endif

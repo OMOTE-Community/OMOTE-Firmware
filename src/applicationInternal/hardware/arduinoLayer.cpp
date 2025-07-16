@@ -37,6 +37,9 @@ unsigned long millis() {
 }
 
 SerialClass Serial;
+void SerialClass::enableMQTT(PubSubClient* client, const std::string& topic)
+{}
+
 void SerialClass::begin(unsigned long) {
   // Serial.begin is one of the first methods called in main.cpp
   // So we use this to initialize the timer
