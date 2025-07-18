@@ -8,14 +8,14 @@
 const char* const tabName_devices = "Devices";
 
 
-void show_device_details(Device& entry);
+void show_device_details(config::Device& entry);
 void show_device_list();
 
 namespace {
     lv_obj_t* root     = nullptr;
     lv_obj_t* header   = nullptr;
     lv_obj_t* content  = nullptr;
-    KeyMap deviceMap;
+    config::KeyMap deviceMap;
 }
 
 static void clear_content()
@@ -53,10 +53,10 @@ void show_device_list()
     lv_obj_set_size(content, LV_PCT(100), LV_PCT(80));
     lv_obj_align(content, LV_ALIGN_BOTTOM_MID, 0, 0);
     
-    for (auto& dev : deviceRegistry::getDevices()) {
+    for (auto& dev : config::getDevices()) {
         lv_obj_t* btn = lv_list_add_btn(content, LV_SYMBOL_RIGHT, dev.displayName());
         lv_obj_add_event_cb(btn, [](lv_event_t* e){
-            auto* entry = static_cast<Device*>(lv_event_get_user_data(e));
+            auto* entry = static_cast<config::Device*>(lv_event_get_user_data(e));
             show_device_details(*entry);
         }, LV_EVENT_CLICKED, (void*)&dev);
     }
@@ -85,7 +85,7 @@ void cmd_btn_cb(lv_event_t* e)
     executeCommand(command);
 }
 
-void show_device_details(Device& entry)
+void show_device_details(config::Device& entry)
 {
     clear_content();
     lv_obj_clean(header);

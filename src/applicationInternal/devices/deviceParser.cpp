@@ -4,8 +4,9 @@
 #include <applicationInternal/devices/deviceRegistry.h>
 #include <applicationInternal/commandHandler.h>
 
+using namespace config;
 
-JsonDocument config;
+JsonDocument configuration;
 
 typedef IRprotocols_new IRProtocolType;
 
@@ -18,18 +19,28 @@ static IRProtocolType toProtoType(const char* proto)
     if (strcmp(proto, "NEC")  == 0)  return IR_PROTOCOL_NEC;
     if (strcmp(proto, "RC5")  == 0)  return IR_PROTOCOL_RC5;
     if (strcmp(proto, "DENON")  == 0)  return IR_PROTOCOL_DENON;
+    if (strcmp(proto, "KASEIKYO")  == 0)  return IR_PROTOCOL_PANASONIC;
     return IR_PROTOCOL_UNKNOWN;
 }
 
 void registerRemote(JsonPair remote)
 {
 
-    Device* dev = deviceRegistry::registerDevice(remote);
+    Device* dev = registerDevice(remote);
+
+    const char* protoStr = remote.value()["protocol"];
+
+    IRProtocolType protoType = toProtoType(protoStr);
+
+    if (protoType == IR_PROTOCOL_UNKNOWN) {
+        Serial.printf("[IR-CFG] unsupported protocol %s (skip %s)\n",
+                      protoStr, remote.key());
+        return;
+    }
 
     for (JsonObject obj : remote.value()["commands"].as<JsonArray>()) {
 
         const char* name     = obj["name"];
-        const char* protoStr = obj["protocol"];
         const char* dataStr = obj["data"];
         uint8_t     nbits    = obj["nbits"] | 0;
         uint8_t     repeats    = obj["repeats"] | 3;        
@@ -38,25 +49,17 @@ void registerRemote(JsonPair remote)
             Serial.println("malformed entry, skipped");
             continue;
         }
-
-        IRProtocolType protoType = toProtoType(protoStr);
-         
-        if (protoType == IR_PROTOCOL_UNKNOWN) {
-            Serial.printf("[IR-CFG] unsupported protocol %s (skip %s)\n",
-                          protoStr, name);
-            continue;
-        }
-
+        
         std::string data(dataStr);
         data = data + ":" + std::to_string(nbits) + ":" + std::to_string(repeats);
 
         commandData cmd = makeCommandData(IR, {std::to_string(protoType), data});
-    
+
         uint16_t idRef;
         register_command(&idRef, cmd);
 
         dev->addCommand(obj, idRef);
-        
+
         Serial.printf("[IR-CFG] registered %-12s  %s / %s (%u bit)\n",
                       name, protoStr, dataStr, nbits);
     }        
@@ -65,9 +68,9 @@ void registerRemote(JsonPair remote)
 
 void parseConfig() {
 
-    loadConfig(config);
+    loadConfig(configuration);
 
-    JsonObject root = config.as<JsonObject>();
+    JsonObject root = configuration.as<JsonObject>();
     
     JsonObject remotes = root["remotes"].as<JsonObject>();
     for(JsonPair kv: remotes) {

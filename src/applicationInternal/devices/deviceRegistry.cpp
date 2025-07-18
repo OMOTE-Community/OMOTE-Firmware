@@ -3,8 +3,8 @@
 #include <embedded_config.h>
 
 namespace {
-    std::vector<Device> g_devices;
-    static const std::unordered_map<std::string_view,char> key_to_code = {
+    std::vector<config::Device> g_devices;
+    static const std::unordered_map<std::string, char> key_to_code = {
         { "OFF", KEY_OFF },
         { "STOP", KEY_STOP },
         { "REWI", KEY_REWI },
@@ -34,14 +34,16 @@ namespace {
 
 }
 
-char KeyMap::getKeyCode(const std::string_view& key) {
+using namespace config;
+
+char KeyMap::getKeyCode(const std::string& key) {
     return key_to_code.at(key);
 }
-Device* deviceRegistry::registerDevice(JsonPair ref) {
+config::Device* config::registerDevice(JsonPair ref) {
     g_devices.push_back({ref});
     return &g_devices.back();
 }
 
-std::vector<Device>& deviceRegistry::getDevices() {
+std::vector<config::Device>& config::getDevices() {
     return g_devices;
 }
