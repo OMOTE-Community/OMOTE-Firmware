@@ -4,251 +4,295 @@ scenes:
     commands_short:
       UP:
         remote: sony_bravia
-        key: Down
+        command: Down
       DOWN:
         remote: sony_bravia
-        key: Up
+        command: Up
+  watch_dvd:
+    display_name: Watch DVD
+    commands_default: sony_bravia
+    on_seq:
+      - remote: sony_bravia
+        command: Power
+      - delay: 500
+      - remote: denon_x4700h
+        command: Power Toggle
         
       
 remotes:
   denon_x4700h:
     display_name: Denon Receiver
+    protocol: DENON
     commands:
     - name: Power Toggle
-      protocol: DENON
       data: "0x2A4C028A0088"
       nbits: 48
       repeats: 0
     - name: Volume Up
-      protocol: DENON
       data: "0x2A4C0280E86A"
       nbits: 48
       repeats: 0      
     - name: Volume Down
-      protocol: DENON
       data: "0x2A4C0288E862"
       nbits: 48
       repeats: 0
+    - name: Input Blue Ray
+      data: "0x2A4C0288B43E"
+      nbits: 48
+      repeats: 0
+    - name: Input TV
+      data: "0x2A4C0284B432"
+      nbits: 48
+      repeats: 0
+      
       
   sony_bravia:
     display_name: Sony Bravia
+    protocol: SIRC    
     commands:
     - name: Power
-      protocol: SIRC
       data: '0xA90'
       nbits: 12
       map_short: OFF
     - name: Input
-      protocol: SIRC
       data: '0xA50'
       nbits: 12
       map_short: SRC
     - name: Home
-      protocol: SIRC
       data: '0x070'
       nbits: 12
     - name: Apps
-      protocol: SIRC
       data: '0x2A23'
       nbits: 15
     - name: Tv
-      protocol: SIRC
       data: '0x250'
       nbits: 12
     - name: Left
-      protocol: SIRC
       data: '0x2D0'
       nbits: 12
       map_short: LEFT
     - name: Right
-      protocol: SIRC
       data: '0xCD0'
       nbits: 12
       map_short: RIGHT
     - name: Up
-      protocol: SIRC
       data: '0x2F0'
       nbits: 12
       map_short: UP
     - name: Down
-      protocol: SIRC
       data: '0xAF0'
       nbits: 12
       map_short: DOWN
     - name: Enter
-      protocol: SIRC
       data: '0xA70'
       nbits: 12
     - name: Back
-      protocol: SIRC
       data: '0x62E9'
       nbits: 15
     - name: Mute
-      protocol: SIRC
       data: '0x290'
       nbits: 12
     - name: Vol_up
-      protocol: SIRC
       data: '0x490'
       nbits: 12
     - name: Vol_dn
-      protocol: SIRC
       data: '0xC90'
       nbits: 12
     - name: Ch_next
-      protocol: SIRC
       data: '0x090'
       nbits: 12
     - name: Ch_prev
-      protocol: SIRC
       data: '0x890'
       nbits: 12
     - name: Play
-      protocol: SIRC
       data: '0x2CE9'
       nbits: 15
     - name: Pause
-      protocol: SIRC
       data: '0x4CE9'
       nbits: 15
     - name: Stop
-      protocol: SIRC
       data: '0x0CE9'
       nbits: 15
     - name: Fwd
-      protocol: SIRC
       data: '0x1CE9'
       nbits: 15
     - name: Rew
-      protocol: SIRC
       data: '0x6CE9'
       nbits: 15
     - name: Prev
-      protocol: SIRC
       data: '0x1EE9'
       nbits: 15
     - name: Next
-      protocol: SIRC
       data: '0x5EE9'
       nbits: 15
     - name: Rec
-      protocol: SIRC
       data: '0x02E9'
       nbits: 15
     - name: Netflix
-      protocol: SIRC
       data: '0x1F58'
       nbits: 15
     - name: Google_play
-      protocol: SIRC
       data: '0x3123'
       nbits: 15
     - name: Red
-      protocol: SIRC
       data: '0x52E9'
       nbits: 15
     - name: Green
-      protocol: SIRC
       data: '0x32E9'
       nbits: 15
     - name: Yellow
-      protocol: SIRC
       data: '0x72E9'
       nbits: 15
     - name: Blue
-      protocol: SIRC
       data: '0x12E9'
       nbits: 15
     - name: Action_menu
-      protocol: SIRC
       data: '0x6923'
       nbits: 15
     - name: Guide
-      protocol: SIRC
       data: '0x6D25'
       nbits: 15
     - name: Help
-      protocol: SIRC
       data: '0x5923'
       nbits: 15
     - name: Title_list
-      protocol: SIRC
       data: '0x5358'
       nbits: 15
     - name: Audio
-      protocol: SIRC
       data: '0xE90'
       nbits: 12
     - name: Screen___
-      protocol: SIRC
       data: '0x0AE9'
       nbits: 15
     - name: Swap
-      protocol: SIRC
       data: '0xDD0'
       nbits: 12
     - name: Dig_analo
-      protocol: SIRC
       data: '0x58EE'
       nbits: 15
     - name: Tv_radio
-      protocol: SIRC
       data: '0x7558'
       nbits: 15
     - name: Exit
-      protocol: SIRC
       data: '0xC70'
       nbits: 12
     - name: Ext_box_menu
-      protocol: SIRC
       data: '0x4923'
       nbits: 15
     - name: '1'
-      protocol: SIRC
       data: '0x010'
       nbits: 12
     - name: '2'
-      protocol: SIRC
       data: '0x810'
       nbits: 12
     - name: '3'
-      protocol: SIRC
       data: '0x410'
       nbits: 12
     - name: '4'
-      protocol: SIRC
       data: '0xC10'
       nbits: 12
     - name: '5'
-      protocol: SIRC
       data: '0x210'
       nbits: 12
     - name: '6'
-      protocol: SIRC
       data: '0xA10'
       nbits: 12
     - name: '7'
-      protocol: SIRC
       data: '0x610'
       nbits: 12
     - name: '8'
-      protocol: SIRC
       data: '0xE10'
       nbits: 12
     - name: '9'
-      protocol: SIRC
       data: '0x110'
       nbits: 12
     - name: '0'
-      protocol: SIRC
       data: '0x910'
       nbits: 12
     - name: I_plus
-      protocol: SIRC
       data: '0x5D0'
       nbits: 12
     - name: Txt
-      protocol: SIRC
       data: '0xFD0'
       nbits: 12
 
+  panasonic_dvd:
+    display_name: BlueRay
+    protocol: KASEIKYO
+    commands:
+    - name: Power
+      data: '0x40040D00BCB1'
+      nbits: 48
+      repeats: 0
+    - name: Eject
+      data: '0x40040D00808D'
+      nbits: 48
+      repeats: 0
+    - name: Prev
+      data: '0x40040D4080CD'
+      nbits: 48
+      repeats: 0
+    - name: Ok
+      data: '0x40040D40400D'
+      nbits: 48
+      repeats: 0
+    - name: Up
+      data: '0x40040D40A0ED'
+      nbits: 48
+      repeats: 0
+    - name: Down
+      data: '0x40040D40602D'
+      nbits: 48
+      repeats: 0
+    - name: Left
+      data: '0x40040D40E0AD'
+      nbits: 48
+      repeats: 0
+    - name: Right
+      data: '0x40040D40105D'
+      nbits: 48
+      repeats: 0
+    - name: Fast_fo
+      data: '0x40040D00A0AD'
+      nbits: 48
+      repeats: 0
+    - name: Fast_ba
+      data: '0x40040D00202D'
+      nbits: 48
+      repeats: 0
+    - name: Pause
+      data: '0x40040D00606D'
+      nbits: 48
+      repeats: 0
+    - name: Play
+      data: '0x40040D00505D'
+      nbits: 48
+      repeats: 0
+    - name: Stop
+      data: '0x40040D00000D'
+      nbits: 48
+      repeats: 0
+    - name: Subtitle
+      data: '0x40040D40C885'
+      nbits: 48
+      repeats: 0
+    - name: Netflix
+      data: '0x40040D801499'
+      nbits: 48
+      repeats: 0
+    - name: Audio
+      data: '0x40040D00CCC1'
+      nbits: 48
+      repeats: 0
+    - name: Top_menu
+      data: '0x40040D40D895'
+      nbits: 48
+      repeats: 0
+    - name: PopUp
+      data: '0x40040D800885'
+      nbits: 48
+      repeats: 0
+    - name: Home
+      data: '0x40040D80E865'
+      nbits: 48
+      repeats: 0
