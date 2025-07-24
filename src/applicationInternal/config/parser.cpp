@@ -1,8 +1,9 @@
 #include <ArduinoJson.h>
 #include <embedded_config.h>
 #include <applicationInternal/hardware/hardwarePresenter.h>
-#include <applicationInternal/devices/deviceRegistry.h>
+#include <applicationInternal/config/registry.h>
 #include <applicationInternal/commandHandler.h>
+#include <applicationInternal/omote_log.h>
 
 using namespace config;
 
@@ -63,6 +64,23 @@ void registerRemote(JsonPair remote)
         Serial.printf("[IR-CFG] registered %-12s  %s / %s (%u bit)\n",
                       name, protoStr, dataStr, nbits);
     }        
+
+}
+
+void registerScene(JsonPair def) {
+    Scene* scene = addScene(def);
+    const char* commands_default = def.value()["commands_default"];
+    if(commands_default) {
+        Device* dev = getDevice(commands_default);
+        if(dev == NULL) {
+            omote_log_w("Unkown remote reference: %s in %s", commands_default, scene->displayName());
+        }
+        else {
+            scene->keys = dev->defaultKeys;
+        }
+    }
+        
+        
 
 }
 

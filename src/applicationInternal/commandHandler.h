@@ -4,7 +4,7 @@
 #include <list>
 #include <map>
 
-#include "applicationInternal/devices/deviceRegistry.h"
+#include "applicationInternal/config/registry.h"
 #include "devices/keyboard/device_keyboard_mqtt/device_keyboard_mqtt.h"
 #include "devices/keyboard/device_keyboard_ble/device_keyboard_ble.h"
 

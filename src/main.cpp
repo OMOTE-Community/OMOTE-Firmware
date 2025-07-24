@@ -3,8 +3,8 @@
 
 #include <RemoteDebug.h>
 #include "applicationInternal/omote_log.h"
-#include "applicationInternal/devices/deviceRegistry.h"
-#include "applicationInternal/devices/deviceParser.h"
+#include "applicationInternal/config/registry.h"
+#include "applicationInternal/config/parser.h"
 
 // init hardware and hardware loop
 #include "applicationInternal/hardware/hardwarePresenter.h"

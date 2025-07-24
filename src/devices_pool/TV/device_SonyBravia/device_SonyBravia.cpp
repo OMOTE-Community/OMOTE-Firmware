@@ -61,7 +61,7 @@ uint16_t SONY_TV_I_PLUS;
 uint16_t SONY_TV_TXT;
 
 void register_device_SonyBravia() {
-    Device* dev = deviceRegistry::registerDevice("SONY_TV");
+    Device* dev = config::registerDevice("SONY_TV");
     register_command(&SONY_TV_APPS, makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), "0x23:15:2"})); // Apps
     register_command(&SONY_TV_TV, makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), "0x1:12:2"})); // Tv
     register_command(&SONY_TV_LEFT, makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), "0x1:12:2"})); // Left
