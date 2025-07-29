@@ -26,6 +26,14 @@ namespace config {
         }
         
         std::vector<RemoteCommand> commands;
+        const RemoteCommand* getCommand(const std::string& name) {
+            for(auto& cmd : commands) {
+                if (cmd.displayName() == name) {
+                    return &cmd;
+                }
+            }
+            return NULL;
+        }
         void addCommand(JsonObject ref, uint16_t ID) {
             commands.push_back({ref, ID});
             const char* map_short = ref["map_short"];

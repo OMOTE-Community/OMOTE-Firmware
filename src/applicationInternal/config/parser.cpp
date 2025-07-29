@@ -67,6 +67,38 @@ void registerRemote(JsonPair remote)
 
 }
 
+const RemoteCommand* parseCommandReference(JsonObject cmdRef) {
+    Device* dev = getDevice(cmdRef["remote"]);
+    if(dev == NULL) {
+        omote_log_w("Unkown remote reference: %s", cmdRef["remote"]);
+        return NULL;
+    }
+    const RemoteCommand* cmd = dev->getCommand(cmdRef["command"]);
+    if(cmd == NULL) {
+        omote_log_w("Unkown command reference: %s/%s", cmdRef["remote"], cmdRef["command"]);
+        return NULL;
+    }
+    return cmd;
+}
+
+void parseSequence(JsonArray sequence, CommandSequence& out) {
+    for(JsonObject cmd : sequence) {
+        int delay = cmd["delay"];
+        if(delay) {
+            out.commands.push_back(new DelayCommand(delay));
+        }
+        else {
+            const RemoteCommand* command = parseCommandReference(cmd);
+            if(command == NULL) {
+                continue;
+            }
+            out.commands.push_back(command);
+        }
+    }
+}
+
+
+
 void registerScene(JsonPair def) {
     Scene* scene = addScene(def);
     const char* commands_default = def.value()["commands_default"];
@@ -79,8 +111,22 @@ void registerScene(JsonPair def) {
             scene->keys = dev->defaultKeys;
         }
     }
-        
-        
+
+    JsonObject sceneDef = def.value().as<JsonObject>();
+    JsonObject commands_short = sceneDef["commands_short"];
+    if(commands_short) {
+        for(JsonPair kv: commands_short) {
+            const RemoteCommand* cmd = parseCommandReference(kv.value());
+            if(cmd == NULL) {
+                continue;
+            }
+            scene->keys.keys_short[KeyMap::getKeyCode(kv.key().c_str())] = cmd->ID;
+        }
+    }
+    JsonArray onSeq = sceneDef["on_seq"];
+    if(onSeq) {
+        parseSequence(onSeq, scene->on);
+    }
 
 }
 
