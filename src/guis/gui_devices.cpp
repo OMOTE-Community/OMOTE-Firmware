@@ -54,11 +54,11 @@ void show_device_list()
     lv_obj_align(content, LV_ALIGN_BOTTOM_MID, 0, 0);
     
     for (auto& dev : config::getDevices()) {
-        lv_obj_t* btn = lv_list_add_btn(content, LV_SYMBOL_RIGHT, dev.displayName());
+        lv_obj_t* btn = lv_list_add_btn(content, LV_SYMBOL_RIGHT, dev->displayName());
         lv_obj_add_event_cb(btn, [](lv_event_t* e){
             auto* entry = static_cast<config::Device*>(lv_event_get_user_data(e));
             show_device_details(*entry);
-        }, LV_EVENT_CLICKED, (void*)&dev);
+        }, LV_EVENT_CLICKED, (void*)dev);
     }
 }
 

@@ -6,8 +6,10 @@ namespace config {
     struct Scene {
         JsonPair ref;
         KeyMap keys;
-        CommandSequence on;
-        CommandSequence off;
+        CommandID_t command;
+        CommandID_t commandForce;
+        CommandSequence start;
+        CommandSequence end;
         Scene(JsonPair ref) : ref(ref)
         {}
 

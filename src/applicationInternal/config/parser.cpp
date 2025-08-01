@@ -24,10 +24,10 @@ static IRProtocolType toProtoType(const char* proto)
     return IR_PROTOCOL_UNKNOWN;
 }
 
-void registerRemote(JsonPair remote)
+void parseRemote(JsonPair remote)
 {
 
-    Device* dev = registerDevice(remote);
+    Device* dev = new Device(remote);
 
     const char* protoStr = remote.value()["protocol"];
 
@@ -70,14 +70,15 @@ void registerRemote(JsonPair remote)
 const RemoteCommand* parseCommandReference(JsonObject cmdRef) {
     Device* dev = getDevice(cmdRef["remote"]);
     if(dev == NULL) {
-        omote_log_w("Unkown remote reference: %s", cmdRef["remote"]);
+        omote_log_w("Unknown remote reference: %s", (const char*)cmdRef["remote"]);
         return NULL;
     }
     const RemoteCommand* cmd = dev->getCommand(cmdRef["command"]);
     if(cmd == NULL) {
-        omote_log_w("Unkown command reference: %s/%s", cmdRef["remote"], cmdRef["command"]);
+        omote_log_w("Unknown command reference: %s/%s", (const char*)cmdRef["remote"], (const char*)cmdRef["command"]);
         return NULL;
     }
+    omote_log_i("Parsed command reference: %s/%s\n", (const char*)cmdRef["remote"], (const char*)cmdRef["command"]);
     return cmd;
 }
 
@@ -99,13 +100,13 @@ void parseSequence(JsonArray sequence, CommandSequence& out) {
 
 
 
-void registerScene(JsonPair def) {
-    Scene* scene = addScene(def);
+void parseScene(JsonPair def) {
+    Scene* scene = new Scene(def);
     const char* commands_default = def.value()["commands_default"];
     if(commands_default) {
         Device* dev = getDevice(commands_default);
         if(dev == NULL) {
-            omote_log_w("Unkown remote reference: %s in %s", commands_default, scene->displayName());
+            omote_log_w("Unknown remote reference: %s in %s", commands_default, scene->displayName());
         }
         else {
             scene->keys = dev->defaultKeys;
@@ -123,11 +124,17 @@ void registerScene(JsonPair def) {
             scene->keys.keys_short[KeyMap::getKeyCode(kv.key().c_str())] = cmd->ID;
         }
     }
-    JsonArray onSeq = sceneDef["on_seq"];
-    if(onSeq) {
-        parseSequence(onSeq, scene->on);
+    JsonArray seq = sceneDef["start"];
+    if(seq) {
+        parseSequence(seq, scene->start);
     }
 
+    seq = sceneDef["end"];
+    if(seq) {
+        parseSequence(seq, scene->end);
+    }    
+
+    registerScene(scene);
 }
 
 void parseConfig() {
@@ -138,8 +145,13 @@ void parseConfig() {
     
     JsonObject remotes = root["remotes"].as<JsonObject>();
     for(JsonPair kv: remotes) {
-        registerRemote(kv);
-    }        
+        parseRemote(kv);
+    }
+
+    JsonObject scenes = root["scenes"];
+    for(JsonPair kv: scenes) {
+        parseScene(kv);
+    }
 
 }
-//Serial.println(cfg["mqtt"]["host"].as<const char*>());
+

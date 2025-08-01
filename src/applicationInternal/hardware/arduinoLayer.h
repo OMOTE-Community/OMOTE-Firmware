@@ -1,12 +1,11 @@
 #pragma once
 
 #include <stddef.h>
-#include <PubSubClient.h>
-#include <RemoteDebug.h>
 
 #if defined(ARDUINO)
   // for env:esp32 we need "Arduino.h" e.g. for Serial, delay(), millis()
   #include <Arduino.h>
+  #include <RemoteDebug.h>
   extern RemoteDebug Debug;
   #define OmoteSerial Debug
 

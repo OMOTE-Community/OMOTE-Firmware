@@ -1,7 +1,5 @@
 // OMOTE firmware for ESP32
 // 2023-2025 Maximilian Kern, Klaus Musch
-
-#include <RemoteDebug.h>
 #include "applicationInternal/omote_log.h"
 #include "applicationInternal/config/registry.h"
 #include "applicationInternal/config/parser.h"
@@ -59,6 +57,7 @@
 #include "applicationInternal/scenes/sceneHandler.h"
 
 #if defined(ARDUINO)
+#include <RemoteDebug.h>
 // in case of Arduino we have a setup() and a loop()
 RemoteDebug Debug;
 void setup() {
@@ -140,15 +139,15 @@ int main(int argc, char *argv[]) {
     };
   #endif
 
-  // register the scenes and their key_commands_*
-  register_scene_defaultKeys();
-  register_scene_TV();
-  register_scene_fireTV();
-  register_scene_chromecast();
-  register_scene_appleTV();
-  register_scene_allOff();
-  // Only show these scenes on the sceneSelection gui. If you don't set this explicitely, by default all registered scenes are shown.
-  set_scenes_on_sceneSelectionGUI({scene_name_TV, scene_name_fireTV, scene_name_chromecast, scene_name_appleTV});
+  // // register the scenes and their key_commands_*
+  // register_scene_defaultKeys();
+  // register_scene_TV();
+  // register_scene_fireTV();
+  // register_scene_chromecast();
+  // register_scene_appleTV();
+  // register_scene_allOff();
+  // // Only show these scenes on the sceneSelection gui. If you don't set this explicitely, by default all registered scenes are shown.
+  // set_scenes_on_sceneSelectionGUI({scene_name_TV, scene_name_fireTV, scene_name_chromecast, scene_name_appleTV});
 
   // init GUI - will initialize tft, touch and lvgl
   init_gui(); // This has to come before any other i2c devices are initialized, otherwise the i2c bus will not be powered

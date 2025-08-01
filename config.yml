@@ -11,7 +11,7 @@ scenes:
   watch_dvd:
     display_name: Watch DVD
     commands_default: sony_bravia
-    on_seq:
+    start:
       - remote: sony_bravia
         command: Power
       - delay: 500
