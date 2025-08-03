@@ -1,6 +1,7 @@
 scenes:
   watch_tv:
     display_name: Watch TV
+    commands_default: sony_bravia    
     commands_short:
       UP:
         remote: sony_bravia
@@ -28,6 +29,7 @@ remotes:
       data: "0x2A4C028A0088"
       nbits: 48
       repeats: 0
+      category: power
     - name: Volume Up
       data: "0x2A4C0280E86A"
       nbits: 48
@@ -44,7 +46,150 @@ remotes:
       data: "0x2A4C0284B432"
       nbits: 48
       repeats: 0
-      
+    - name: Power Sleep
+      data: "0x2A4C02822CAC"
+      nbits: 48
+      repeats: 0
+    - name: Mute
+      data: "0x2A4C0284E86E"
+      nbits: 48
+      repeats: 0
+    - name: Channel Up
+      data: "0x2A4C0288DC56"
+      nbits: 48
+      repeats: 0
+    - name: Channel Down
+      data: "0x2A4C0284DC5A"
+      nbits: 48
+      repeats: 0
+    - name: Input Cable/Sat
+      data: "0x2A4C028CB43A"
+      nbits: 48
+      repeats: 0
+    - name: Input Media Player
+      data: "0x2A4C0286B430"
+      nbits: 48
+      repeats: 0
+    - name: Input Game
+      data: "0x2A4C028AB43C"
+      nbits: 48
+      repeats: 0
+    - name: Input Aux 1
+      data: "0x2A4C0289B43F"
+      nbits: 48
+      repeats: 0
+    - name: Input Aux 2
+      data: "0x2A4C0285B433"
+      nbits: 48
+      repeats: 0
+    - name: Input Phono
+      data: "0x2A4C028034B6"
+      nbits: 48
+      repeats: 0
+    - name: Input Tuner
+      data: "0x2A4C028F34B9"
+      nbits: 48
+      repeats: 0
+    - name: Input USB
+      data: "0x2A4C028734B1"
+      nbits: 48
+      repeats: 0
+    - name: Input BT
+      data: "0x2A4C028F74F9"
+      nbits: 48
+      repeats: 0
+    - name: Input Internet
+      data: "0x2A4C028A74FC"
+      nbits: 48
+      repeats: 0
+    - name: Input HEOS
+      data: "0x2A4C028E34B8"
+      nbits: 48
+      repeats: 0
+    - name: Power Eco
+      data: "0x2A4C02816CEF"
+      nbits: 48
+      repeats: 0
+    - name: Info
+      data: "0x2A4C0280E466"
+      nbits: 48
+      repeats: 0
+    - name: Option
+      data: "0x2A4C028ADC54"
+      nbits: 48
+      repeats: 0
+    - name: Back
+      data: "0x2A4C028440C6"
+      nbits: 48
+      repeats: 0
+    - name: Setup
+      data: "0x2A4C028C40CE"
+      nbits: 48
+      repeats: 0
+    - name: Enter
+      data: "0x2A4C028F800D"
+      nbits: 48
+      repeats: 0
+    - name: Up
+      data: "0x2A4C028D800F"
+      nbits: 48
+      repeats: 0
+    - name: Left
+      data: "0x2A4C028B8009"
+      nbits: 48
+      repeats: 0
+    - name: Right
+      data: "0x2A4C02878005"
+      nbits: 48
+      repeats: 0
+    - name: Down
+      data: "0x2A4C02838001"
+      nbits: 48
+      repeats: 0
+    - name: Mode Movie
+      data: "0x2A4C028928A3"
+      nbits: 48
+      repeats: 0
+    - name: Mode Music
+      data: "0x2A4C028528AF"
+      nbits: 48
+      repeats: 0
+    - name: Mode Game
+      data: "0x2A4C028D28A7"
+      nbits: 48
+      repeats: 0
+    - name: Mode Pure
+      data: "0x2A4C028AC840"
+      nbits: 48
+      repeats: 0
+    - name: Quick Select 1
+      data: "0x2A4C028248C8"
+      nbits: 48
+      repeats: 0
+    - name: Quick Select 2
+      data: "0x2A4C028A48C0"
+      nbits: 48
+      repeats: 0
+    - name: Quick Select 3
+      data: "0x2A4C028648CC"
+      nbits: 48
+      repeats: 0
+    - name: Quick Select 4
+      data: "0x2A4C028E48C4"
+      nbits: 48
+      repeats: 0
+    - name: Prev
+      data: "0x2A4C028C7CF2"
+      nbits: 48
+      repeats: 0
+    - name: Play/Pause
+      data: "0x2A4C02807CFE"
+      nbits: 48
+      repeats: 0
+    - name: Next
+      data: "0x2A4C02827CFC"
+      nbits: 48
+      repeats: 0
       
   sony_bravia:
     display_name: Sony Bravia
@@ -54,6 +199,7 @@ remotes:
       data: '0xA90'
       nbits: 12
       map_short: OFF
+      category: power      
     - name: Input
       data: '0xA50'
       nbits: 12
@@ -224,6 +370,7 @@ remotes:
       data: '0x40040D00BCB1'
       nbits: 48
       repeats: 0
+      category: power      
     - name: Eject
       data: '0x40040D00808D'
       nbits: 48
