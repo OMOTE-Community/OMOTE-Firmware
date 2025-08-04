@@ -50,6 +50,7 @@ size_t SerialClass::printf(const char * format, ...) {
   va_start(args, format);
   int ret = vprintf(format, args);
   va_end(args);
+  fflush(stdout);
   return ret;
 }
 
