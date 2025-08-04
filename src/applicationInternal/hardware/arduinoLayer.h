@@ -8,6 +8,7 @@
   #include <RemoteDebug.h>
   extern RemoteDebug Debug;
   #define OmoteSerial Debug
+  #define NEWLINE "\r\n"
 
 #elif defined(WIN32) || defined(__linux__) || defined(__APPLE__)
   #include <stdint.h>
@@ -23,6 +24,6 @@
     size_t println(int nr);
   };
   extern SerialClass Serial;
-#define OmoteSerial Serial
-
+  #define OmoteSerial Serial
+  #define NEWLINE "\n"
 #endif
