@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <applicationInternal/scenes/sceneRegistry.h>
 #include <applicationInternal/commandHandler.h>
+#include <applicationInternal/omote_log.h>
 #include <guis/gui_devices.h>
 
 namespace {
@@ -19,7 +20,7 @@ void config::registerRemote(config::Device* dev) {
 
 void scene_start_sequence_dispatch() {
     Scene* scene = g_scenes[get_scene_being_handled()];
-    scene->start.run();
+    scene->start();
 }
 
 void scene_end_sequence_dispatch() {
@@ -54,7 +55,9 @@ std::vector<config::Device*>& config::getDevices() {
 }
 
 Device* config::getDevice(const std::string& id) {
+    omote_log_i("Get device: %s", id.c_str());
     for(auto& dev : g_devices) {
+        omote_log_i("Comparing: %s", dev->ID());
         if(dev->ID() == id) {
             return dev;
         }

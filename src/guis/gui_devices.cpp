@@ -81,8 +81,8 @@ void register_gui_devices()
 
 void cmd_btn_cb(lv_event_t* e)
 {
-    uint16_t command = (uint16_t)((size_t)lv_event_get_user_data(e));
-    executeCommand(command);
+    config::RemoteCommand* cmd = (config::RemoteCommand*)lv_event_get_user_data(e);
+    cmd->execute();
 }
 
 void show_device_details(config::Device& entry)
@@ -116,7 +116,7 @@ void show_device_details(config::Device& entry)
         any = true;
         lv_obj_t* b = lv_btn_create(content);
         lv_obj_set_width(b, LV_PCT(95));
-        lv_obj_add_event_cb(b, cmd_btn_cb, LV_EVENT_CLICKED, (void*)cmd.ID);
+        lv_obj_add_event_cb(b, cmd_btn_cb, LV_EVENT_CLICKED, (void*)&cmd);
 
         lv_label_set_text(lv_label_create(b), cmd.displayName());
         omote_log_i("Button created: %s\n", cmd.displayName());

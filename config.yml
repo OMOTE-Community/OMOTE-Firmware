@@ -9,6 +9,10 @@ scenes:
       DOWN:
         remote: sony_bravia
         command: Up
+    start:
+      - remote: sony_bravia
+        command: Power
+      
   watch_dvd:
     display_name: Watch DVD
     commands_default: sony_bravia
@@ -18,7 +22,6 @@ scenes:
       - delay: 500
       - remote: denon_x4700h
         command: Power Toggle
-        
       
 remotes:
   denon_x4700h:
@@ -29,7 +32,7 @@ remotes:
       data: "0x2A4C028A0088"
       nbits: 48
       repeats: 0
-      category: power
+      category: on,off
     - name: Volume Up
       data: "0x2A4C0280E86A"
       nbits: 48
@@ -199,7 +202,7 @@ remotes:
       data: '0xA90'
       nbits: 12
       map_short: OFF
-      category: power      
+      category: on,off
     - name: Input
       data: '0xA50'
       nbits: 12
@@ -370,7 +373,7 @@ remotes:
       data: '0x40040D00BCB1'
       nbits: 48
       repeats: 0
-      category: power      
+      category: on,off
     - name: Eject
       data: '0x40040D00808D'
       nbits: 48

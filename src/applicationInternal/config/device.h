@@ -1,11 +1,5 @@
 #pragma once
-#include <vector>
-#include <map>
-#include <unordered_map>
 #include <string>
-#include <stdint.h>
-#include <ArduinoJson.h>
-#pragma once
 #include <ArduinoJson.h>
 #include "command.h"
 
@@ -21,31 +15,14 @@ namespace config {
             return ref.value()["display_name"];
         }
 
-        const char* ID() {
+        const char* ID() const {
             return ref.key().c_str();
         }
         
         std::vector<RemoteCommand> commands;
-        const RemoteCommand* getCommand(const std::string& name) {
-            for(auto& cmd : commands) {
-                if (cmd.displayName() == name) {
-                    return &cmd;
-                }
-            }
-            return NULL;
-        }
-        void addCommand(JsonObject ref, uint16_t ID) {
-            commands.push_back({ref, ID});
-            const char* map_short = ref["map_short"];
-            if(map_short) {
-                defaultKeys.keys_short[KeyMap::getKeyCode(map_short)] = ID;
-            }
-            const char* map_long = ref["map_long"];        
-            if(map_long) {
-                defaultKeys.keys_long[KeyMap::getKeyCode(map_long)] = ID;
-            }
-
-        }
+        const RemoteCommand* getCommand(const std::string& name) const;
+        const RemoteCommand* getCommandByCategory(const std::string& category) const;
+        void addCommand(JsonObject ref, uint16_t ID, Device* dev);
     };
     
 }

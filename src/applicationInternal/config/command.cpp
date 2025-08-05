@@ -1,4 +1,6 @@
 #include "command.h"
+#include "device.h"
+#include <applicationInternal/omote_log.h>
 #include <applicationInternal/scenes/sceneRegistry.h>
 
 namespace {
@@ -42,8 +44,42 @@ void CommandSequence::run() {
     }
 }
 
+void CommandSequence::findDevicesByCategory(std::vector<const Device*>& out, const std::string& category) {
+    for(auto cmd : commands) {
+        if(cmd->hasCategory(category)) {
+            out.push_back(cmd->device());
+        }
+    }
+}
+
+void CommandSequence::dropMatching(const Device* dev, const std::string& category) {
+    auto it = commands.begin();
+    while(it != commands.end()) {
+        if ((*it)->device() == dev && (*it)->hasCategory(category)) {
+            it = commands.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+}
+bool RemoteCommand::hasCategory(const std::string& category_) const {
+    
+    const char* cat = category();
+
+    if(cat != NULL) {
+        if(std::string(cat).find(category_) != std::string::npos) {
+            return true;
+        }
+    }
+
+    return false;
+
+}
 
 void RemoteCommand::execute() const
 {
+    omote_log_i("Executing command: %s/%s", device_m->ID(), displayName());
     executeCommand(ID);
 }

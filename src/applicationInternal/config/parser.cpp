@@ -59,21 +59,21 @@ void parseRemote(JsonPair remote)
         uint16_t idRef;
         register_command(&idRef, cmd);
 
-        dev->addCommand(obj, idRef);
+        dev->addCommand(obj, idRef, dev);
 
         Serial.printf("[IR-CFG] registered %-12s  %s / %s (%u bit)\n",
                       name, protoStr, dataStr, nbits);
     }        
-
+    registerRemote(dev);
 }
 
 const RemoteCommand* parseCommandReference(JsonObject cmdRef) {
-    Device* dev = getDevice(cmdRef["remote"]);
+    Device* dev = getDevice((const char*)cmdRef["remote"]);
     if(dev == NULL) {
         omote_log_w("Unknown remote reference: %s", (const char*)cmdRef["remote"]);
         return NULL;
     }
-    const RemoteCommand* cmd = dev->getCommand(cmdRef["command"]);
+    const RemoteCommand* cmd = dev->getCommand(cmdRef["command"].as<const char*>());
     if(cmd == NULL) {
         omote_log_w("Unknown command reference: %s/%s", (const char*)cmdRef["remote"], (const char*)cmdRef["command"]);
         return NULL;
@@ -126,7 +126,7 @@ void parseScene(JsonPair def) {
     }
     JsonArray seq = sceneDef["start"];
     if(seq) {
-        parseSequence(seq, scene->start);
+        parseSequence(seq, scene->startSeq);
     }
 
     seq = sceneDef["end"];
