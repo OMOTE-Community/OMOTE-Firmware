@@ -23,7 +23,7 @@ extern "C"
 #define OMOTE_LOG_LEVEL CONFIG_OMOTE_LOG_DEFAULT_LEVEL
 #endif
 
-#define OMOTE_LOG_FORMAT(letter, format) "[OMOTE " #letter "][%8lu]: " format NEWLINE , (unsigned long) millis()
+#define OMOTE_LOG_FORMAT(letter, format) "[OMOTE " #letter "][%s][%8lu]: " format NEWLINE , __func__, (unsigned long) millis()
 
 #if OMOTE_LOG_LEVEL >= OMOTE_LOG_LEVEL_VERBOSE
 #define omote_log_v(format, ...) OmoteSerial.printf(OMOTE_LOG_FORMAT(V, format), ##__VA_ARGS__)
