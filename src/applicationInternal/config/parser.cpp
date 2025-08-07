@@ -11,6 +11,10 @@ JsonDocument configuration;
 
 typedef IRprotocols_new IRProtocolType;
 
+std::map<IRProtocolType, uint16_t> BITS = {
+    {IR_PROTOCOL_NEC, kNECBits}
+};
+
 static IRProtocolType toProtoType(const char* proto)
 {
     if (!proto)
@@ -34,21 +38,34 @@ void parseRemote(JsonPair remote)
     IRProtocolType protoType = toProtoType(protoStr);
 
     if (protoType == IR_PROTOCOL_UNKNOWN) {
-        Serial.printf("[IR-CFG] unsupported protocol %s (skip %s)\n",
+        omote_log_e("unsupported protocol %s (skip %s)",
                       protoStr, remote.key());
         return;
+    }
+
+    uint16_t defaultBits = 0;
+    if(BITS.find(protoType) != BITS.end()) {
+        defaultBits = BITS[protoType];
     }
 
     for (JsonObject obj : remote.value()["commands"].as<JsonArray>()) {
 
         const char* name     = obj["name"];
         const char* dataStr = obj["data"];
-        uint8_t     nbits    = obj["nbits"] | 0;
+        uint16_t     nbits    = obj["nbits"] | 0;
         uint8_t     repeats    = obj["repeats"] | 3;        
         
         if (!name || !protoStr || !dataStr) {
-            Serial.println("malformed entry, skipped");
+            omote_log_e("malformed entry, skipped");
             continue;
+        }
+
+        if(!nbits) {
+            if(defaultBits == 0) {
+                omote_log_e("bits needs to be defined for %s", protoStr);
+                continue;
+            }
+            nbits = defaultBits;
         }
         
         std::string data(dataStr);
@@ -61,8 +78,8 @@ void parseRemote(JsonPair remote)
 
         dev->addCommand(obj, idRef, dev);
 
-        Serial.printf("[IR-CFG] registered %-12s  %s / %s (%u bit)\n",
-                      name, protoStr, dataStr, nbits);
+        omote_log_i("registered %-12s  %s / %s (%u bit) -> %u",
+                    name, protoStr, dataStr, nbits, idRef);
     }        
     registerRemote(dev);
 }
