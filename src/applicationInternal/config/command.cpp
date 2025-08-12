@@ -35,6 +35,11 @@ namespace {
 using namespace config;
 
 char KeyMap::getKeyCode(const std::string& key) {
+    auto item = key_to_code.find(key);
+    if(item == key_to_code.end()) {
+        omote_log_e("Unrecognized key definition: %s", key.c_str());
+        return 0;
+    }
     return key_to_code.at(key);
 }
 

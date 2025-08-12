@@ -3,7 +3,7 @@
 
 using namespace config;
 
-config::Scene* config::Scene::current = NULL;
+config::Scene* config::Scene::current = nullptr;
 
 
 

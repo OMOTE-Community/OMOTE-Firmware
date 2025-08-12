@@ -99,18 +99,18 @@ const RemoteCommand* parseCommandReference(JsonObject cmdRef) {
     return cmd;
 }
 
-void parseSequence(JsonArray sequence, CommandSequence& out) {
+void parseSequence(JsonArray sequence, commands_t& out) {
     for(JsonObject cmd : sequence) {
         int delay = cmd["delay"];
         if(delay) {
-            out.commands.push_back(new DelayCommand(delay));
+            out.push_back(new DelayCommand(delay));
         }
         else {
             const RemoteCommand* command = parseCommandReference(cmd);
             if(command == NULL) {
                 continue;
             }
-            out.commands.push_back(command);
+            out.push_back(command);
         }
     }
 }
@@ -143,14 +143,19 @@ void parseScene(JsonPair def) {
     }
     JsonArray seq = sceneDef["start"];
     if(seq) {
-        parseSequence(seq, scene->startSeq);
+        parseSequence(seq, scene->startSeq.commands);
     }
 
     seq = sceneDef["end"];
     if(seq) {
-        parseSequence(seq, scene->end);
+        parseSequence(seq, scene->end.commands);
     }    
 
+    JsonArray shortcuts = sceneDef["shortcuts"];
+    if(shortcuts) {
+        parseSequence(shortcuts, scene->shortcuts);
+    }
+    
     registerScene(scene);
 }
 

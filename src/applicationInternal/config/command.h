@@ -61,8 +61,9 @@ namespace config {
         }
     };
 
+    typedef std::vector<const Command*> commands_t;
     struct CommandSequence {
-        std::vector<const Command*> commands;
+        commands_t commands;
         void findDevicesByCategory(std::vector<const Device*>& out, const std::string& category);
         void dropMatching(const Device* dev, const std::string& category);
         void run();

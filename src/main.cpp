@@ -41,6 +41,7 @@
 #include "guis/gui_numpad.h"
 #include "guis/gui_BLEpairing.h"
 #include "guis/gui_devices.h"
+#include "guis/gui_scene.h"
 #include "devices/AVreceiver/device_yamahaAmp/gui_yamahaAmp.h"
 #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 #include "devices/misc/device_smarthome/gui_smarthome.h"
@@ -118,6 +119,7 @@ int main(int argc, char *argv[]) {
 
   // Register the GUIs. They will be displayed in the order they have been registered.
   register_gui_devices();
+  register_gui_scene();
   register_gui_sceneSelection();
   register_gui_irReceiver();
   register_gui_settings();

@@ -96,7 +96,7 @@ void show_device_details(config::Device& entry)
     
     /* Back button */
     lv_obj_t* back = lv_btn_create(header);
-    lv_obj_set_size(back, 25, 25);
+    lv_obj_set_size(back, 35, 25);
     lv_obj_align(back, LV_ALIGN_LEFT_MID, 4, 0);
     lv_obj_add_event_cb(back, [](lv_event_t* e){
         show_device_list();

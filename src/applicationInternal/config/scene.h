@@ -13,6 +13,7 @@ namespace config {
         CommandID_t commandForce;
         CommandSequence startSeq;
         CommandSequence end;
+        commands_t shortcuts;
         Scene(JsonPair ref) : ref(ref)
         {}
 
@@ -20,7 +21,9 @@ namespace config {
             return ref.value()["display_name"];
         }
         void start();
-        
+        static const Scene* getCurrent() {
+            return current;
+        }
     protected:
         static Scene* current;
         

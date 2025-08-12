@@ -5,11 +5,12 @@
 #include <applicationInternal/commandHandler.h>
 #include <applicationInternal/omote_log.h>
 #include <guis/gui_devices.h>
+#include <guis/gui_scene.h>
 
 namespace {
     std::vector<config::Device*> g_devices;
     std::map<std::string, config::Scene*> g_scenes;
-    t_gui_list scene_guis = {tabName_devices};
+    t_gui_list scene_guis = {tabName_scene, tabName_devices};
 }
 
 using namespace config;
