@@ -1,7 +1,13 @@
 scenes:
   watch_tv:
     display_name: Watch TV
-    commands_default: sony_bravia    
+    commands_default: sony_bravia
+    shortcuts:
+      - remote: sony_bravia
+        command: Netflix
+      - remote: sony_bravia
+        command: Swap
+        
     commands_short:
       UP:
         remote: sony_bravia
@@ -33,14 +39,17 @@ remotes:
       nbits: 48
       repeats: 0
       category: on,off
+      map_short: OFF
     - name: Volume Up
       data: "0x2A4C0280E86A"
       nbits: 48
-      repeats: 0      
+      repeats: 0
+      map_short: VOLUP
     - name: Volume Down
       data: "0x2A4C0288E862"
       nbits: 48
       repeats: 0
+      map_short: VOLDO
     - name: Input Blue Ray
       data: "0x2A4C0288B43E"
       nbits: 48
@@ -57,10 +66,12 @@ remotes:
       data: "0x2A4C0284E86E"
       nbits: 48
       repeats: 0
+      map_short: MUTE
     - name: Channel Up
       data: "0x2A4C0288DC56"
       nbits: 48
       repeats: 0
+      map_short: CHUP
     - name: Channel Down
       data: "0x2A4C0284DC5A"
       nbits: 48
@@ -235,39 +246,50 @@ remotes:
     - name: Enter
       data: '0xA70'
       nbits: 12
+      map_short: OK
     - name: Back
       data: '0x62E9'
       nbits: 15
+      map_short: BACK
     - name: Mute
       data: '0x290'
       nbits: 12
-    - name: Vol_up
+      map_short: MUTE
+    - name: Vol Up
       data: '0x490'
       nbits: 12
-    - name: Vol_dn
+      map_short: VOLUP
+    - name: Vol Down
       data: '0xC90'
       nbits: 12
-    - name: Ch_next
+      map_short: VOLDO
+    - name: Chan Next
       data: '0x090'
       nbits: 12
-    - name: Ch_prev
+      map_short: CHUP
+    - name: Chan Prev
       data: '0x890'
       nbits: 12
+      map_short: CHDOW
     - name: Play
       data: '0x2CE9'
       nbits: 15
+      map_short: PLAY
     - name: Pause
       data: '0x4CE9'
       nbits: 15
     - name: Stop
       data: '0x0CE9'
       nbits: 15
+      map_short: STOP
     - name: Fwd
       data: '0x1CE9'
       nbits: 15
+      map_short: FORW
     - name: Rew
       data: '0x6CE9'
       nbits: 15
+      map_short: REWI
     - name: Prev
       data: '0x1EE9'
       nbits: 15
@@ -446,3 +468,54 @@ remotes:
       data: '0x40040D80E865'
       nbits: 48
       repeats: 0
+  topping_dac:
+    display_name: DAC
+    protocol: NEC
+    commands:
+    - name: Power
+      data: '0x11EE18E7'
+      repeats: 0
+      category: on,off
+    - name: Volume Up
+      data: '0x11EE629D'
+      repeats: 0
+    - name: Power
+      data: '0x11EE6897'
+      repeats: 0
+    - name: Mute
+      data: '0x11EE609F'
+      repeats: 0
+    - name: Prev Input
+      data: '0x11EEE21D'
+      repeats: 0
+    - name: Next Input
+      data: '0x11EEA857'
+      repeats: 0
+    - name: Headphone Out 
+      data: '0x11EE20DF'
+      repeats: 0
+    - name: Line Out
+      data: '0x11EE02FD'
+      repeats: 0
+    - name: Filter
+      data: '0x11EE2AD5'
+      repeats: 0
+    - name: Headphone Gain
+      data: '0x11EE0AF5'
+      repeats: 0
+    - name: Brightness
+      data: '0x11EE28D7'
+      repeats: 0
+    - name: Auto Standby
+      data: '0x11EE08F7'
+      repeats: 0
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
