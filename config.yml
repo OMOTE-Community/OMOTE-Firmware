@@ -1,14 +1,14 @@
 scenes:
   watch_tv:
     display_name: Watch TV
-    commands_default: sony_bravia
+    keys_default: sony_bravia
     shortcuts:
       - remote: sony_bravia
         command: Netflix
       - remote: sony_bravia
         command: Swap
         
-    commands_short:
+    keys_short:
       UP:
         remote: sony_bravia
         command: Down
@@ -21,8 +21,8 @@ scenes:
 
   watch_tv_receiver:
     display_name: Watch TV Receiver
-    commands_default: sony_bravia    
-    commands_short:
+    keys_default: sony_bravia    
+    keys_short:
       VOLUP:
         remote: denon_x4700h
         command: Volume Up
@@ -44,7 +44,7 @@ scenes:
      
   watch_dvd:
     display_name: Watch DVD
-    commands_default: sony_bravia
+    keys_default: sony_bravia
     start:
       - remote: sony_bravia
         command: Power        

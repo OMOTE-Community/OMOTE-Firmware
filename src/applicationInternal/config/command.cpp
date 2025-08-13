@@ -15,7 +15,7 @@ namespace {
         { "UP", KEY_UP },
         { "DOWN", KEY_DOWN },
         { "LEFT", KEY_LEFT },
-        { "RIGHT", KEY_REWI },
+        { "RIGHT", KEY_RIGHT },
         { "OK", KEY_OK },
         { "BACK", KEY_BACK },
         { "SRC", KEY_SRC },
