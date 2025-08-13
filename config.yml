@@ -18,13 +18,36 @@ scenes:
     start:
       - remote: sony_bravia
         command: Power
+
+  watch_tv_receiver:
+    display_name: Watch TV Receiver
+    commands_default: sony_bravia    
+    commands_short:
+      VOLUP:
+        remote: denon_x4700h
+        command: Volume Up
+      VOLDO:
+        remote: denon_x4700h
+        command: Volume Down
+      MUTE:
+        remote: denon_x4700h
+        command: Mute
       
+    start:
+      - remote: sony_bravia
+        command: Power        
+      - delay: 500
+      - remote: denon_x4700h
+        command: Power Toggle
+      - remote: denon_x4700h
+        command: Input TV
+     
   watch_dvd:
     display_name: Watch DVD
     commands_default: sony_bravia
     start:
       - remote: sony_bravia
-        command: Power
+        command: Power        
       - delay: 500
       - remote: denon_x4700h
         command: Power Toggle
