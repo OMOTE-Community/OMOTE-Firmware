@@ -17,8 +17,6 @@ LV_IMG_DECLARE(appleBackIcon);
 static void appleKey_event_cb(lv_event_t* e) {
   // Send IR command based on the event user data  
   int user_data = *((int*)(&(e->user_data)));
-  
-  omote_log_v("%d\r\n", 50 + user_data);
   omote_log_v("appleKey_event_cb: Event Id: '%d'.\r\n", user_data);
 
   if (user_data == 2)
