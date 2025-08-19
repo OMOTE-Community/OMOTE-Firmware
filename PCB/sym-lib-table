@@ -1,4 +1,0 @@
-(sym_lib_table
-  (version 7)
-  (lib (name "omoteLib")(type "KiCad")(uri "${KIPRJMOD}/project_libraries/symbols/omoteLib.kicad_sym")(options "")(descr "OMOTE symbol library"))
-)

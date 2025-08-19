@@ -1,4 +1,0 @@
-(fp_lib_table
-  (version 7)
-  (lib (name "omoteLib")(type "KiCad")(uri "${KIPRJMOD}/project_libraries/footprints/omoteLib.pretty")(options "")(descr "OMOTE footprint library"))
-)

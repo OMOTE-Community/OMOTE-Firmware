@@ -34,7 +34,19 @@ jobs:
           install: >-
             mingw-w64-${{matrix.env}}-gcc
             mingw-w64-${{matrix.env}}-SDL2
+          # mingw-w64-${{matrix.env}}-SDL2_image
+      - name: Install MSYS2 MINGW64 SDL2_image
+        if: ${{matrix.sys == 'mingw64'}}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.sys}}
+          install: >-
             mingw-w64-${{matrix.env}}-SDL2_image
+      - name: Install MSYS2 MINGW32 SDL2_image
+        if: ${{matrix.sys == 'mingw32'}}
+        shell: msys2 {0}
+        run: |
+          pacman --noconfirm -U https://repo.msys2.org/mingw/mingw32/mingw-w64-i686-SDL2_image-2.8.8-1-any.pkg.tar.zst
       - name: Add paths mingw64
         if: ${{matrix.sys == 'mingw64'}}
         run: |
@@ -50,27 +62,21 @@ jobs:
         run: pip install --upgrade platformio
 
       - name: Build PlatformIO env:ESP32-Rev1toRev4
-        working-directory: ./Platformio
         run: pio run -e esp32-Rev1toRev4
 
       - name: Build PlatformIO env:ESP32_testboard-Rev1toRev4
-        working-directory: ./Platformio
         run: pio run -e esp32_testboard-Rev1toRev4
 
       - name: Build PlatformIO env:ESP32-S3-Rev5andHigher
-        working-directory: ./Platformio
         run: pio run -e esp32-s3-Rev5andHigher
 
       - name: Build PlatformIO env:ESP32-S3_testboard-Rev5andHigher
-        working-directory: ./Platformio
         run: pio run -e esp32-s3_testboard-Rev5andHigher
 
       - name: Build PlatformIO env:windows_64bit
         if: ${{matrix.sys == 'mingw64'}}
-        working-directory: ./Platformio
         run: pio run -e windows_64bit
 
       - name: Build PlatformIO env:windows_32bit
         if: ${{matrix.sys == 'mingw32'}}
-        working-directory: ./Platformio
         run: pio run -e windows_32bit
