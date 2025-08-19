@@ -12,18 +12,8 @@
   
   // For Windows and Linux there is no Arduino framework available. So we have to simulate at least those very few calls to Arduino functions which are left in the code.
   // Note: Of course there is a lot more Arduino code in folder "hardware/ESP32/*", but this code is only active in case of esp32, so we don't have to simulate this in the Arduino layer if Windows/Linux is active.
-  
-  #ifdef __cplusplus
-  extern "C" {
-  #endif
-  
   void delay(uint32_t ms);
   unsigned long millis();
-  
-  #ifdef __cplusplus
-  }
-  #endif
-  
   class SerialClass {
   public:
     void begin(unsigned long);
