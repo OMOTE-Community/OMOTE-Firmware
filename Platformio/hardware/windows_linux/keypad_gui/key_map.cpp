@@ -35,7 +35,7 @@ std::vector<KeyPadKey> loadKeypadMap() {
     keypad_keys[i].vertx = vertx;
     keypad_keys[i].verty = verty;
     keypad_keys[i].num_vert = num_coords;
-    auto title = data["map"]["areas"][i]["title"].get<std::string>().c_str();
+    std::string title = data["map"]["areas"][i]["title"].get<std::string>();
     keypad_keys[i].key = title[0];
     keypad_keys[i].id = i;
   }

@@ -48,7 +48,9 @@
 #include "scenes/scene_chromecast.h"
 #include "scenes/scene_appleTV.h"
 #include "applicationInternal/scenes/sceneHandler.h"
+#if (ENABLE_HUB_COMMUNICATION > 0)
 #include "applicationInternal/hub/hubManager.h"
+#endif
 #include "secrets.h"
 
 #if defined(ARDUINO)

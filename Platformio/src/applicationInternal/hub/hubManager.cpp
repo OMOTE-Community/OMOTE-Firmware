@@ -1,7 +1,7 @@
 #include "hubManager.h"
 #include "hubTransportBase.h"
 #include "applicationInternal/omote_log.h"
-#include <Arduino.h>
+#include "applicationInternal/hardware/arduinoLayer.h"
 
 #if (ENABLE_HUB_COMMUNICATION == 1)
 #include "espNowHubTransport.h"
