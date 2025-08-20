@@ -4,13 +4,10 @@
 #include <applicationInternal/scenes/sceneRegistry.h>
 #include <applicationInternal/commandHandler.h>
 #include <applicationInternal/omote_log.h>
-#include <guis/gui_devices.h>
-#include <guis/gui_scene.h>
 
 namespace {
     std::vector<config::Device*> g_devices;
     std::map<std::string, config::Scene*> g_scenes;
-    t_gui_list scene_guis = {tabName_scene, tabName_devices};
 }
 
 using namespace config;
@@ -33,10 +30,14 @@ void scene_set_keys_dispatch() {
     //redundant
 }
 
-void config::registerScene(config::Scene* scene) {
+void config::registerScene(config::Scene* scene, t_gui_list* scene_guis) {
+    auto iter = g_scenes.find(scene->displayName());
+    if(iter != g_scenes.end()) {
+        delete iter->second;
+    }
     g_scenes[scene->displayName()] = scene;
-    register_command(&scene->command, makeCommandData(SCENE, {scene->displayName()}));
-    register_command(&scene->commandForce, makeCommandData(SCENE, {scene->displayName(), "FORCE"}));
+    register_command(&scene->command.commandID, makeCommandData(SCENE, {scene->displayName()}));
+    register_command(&scene->commandForce.commandID, makeCommandData(SCENE, {scene->displayName(), "FORCE"}));
 
     register_scene(scene->displayName(),
                    &scene_set_keys_dispatch,
@@ -45,8 +46,8 @@ void config::registerScene(config::Scene* scene) {
                    &scene->keys.keys_repeat_modes,
                    &scene->keys.keys_short,
                    &scene->keys.keys_long,
-                   &scene_guis,
-                   scene->command);
+                   scene_guis,
+                   scene->command.commandID);
                    
     
 }

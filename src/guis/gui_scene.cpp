@@ -6,7 +6,7 @@
 #include "applicationInternal/omote_log.h"
 
 const char* const tabName_scene = "Scene";
-
+extern config::DynamicScene allOff;
 
 void show_device_details(config::Device& entry);
 void show_device_list();
@@ -17,7 +17,7 @@ namespace {
     lv_obj_t* content  = nullptr;
     void cmd_btn_cb(lv_event_t* e)
     {
-        config::RemoteCommand* cmd = (config::RemoteCommand*)lv_event_get_user_data(e);
+        config::Command* cmd = (config::Command*)lv_event_get_user_data(e);
         cmd->execute();
     }
     config::KeyMap sceneKeys;
@@ -39,21 +39,33 @@ void build_scene_tab(lv_obj_t* parent)
 {
     omote_log_d("Buidling scene tab");
     root = parent;
-
+    
     //shortcuts
     content = lv_obj_create(root);
     lv_obj_set_size(content, LV_PCT(100), LV_PCT(100));
-    lv_obj_align(content, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_align(content, LV_ALIGN_TOP_MID, 0, 0);
     
     lv_obj_set_layout(content, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(content, LV_FLEX_FLOW_ROW_WRAP);
-    // lv_obj_set_style_pad_row(cont, 6, 0);
 
-    lv_obj_t* header = lv_label_create(content);
-    lv_obj_set_width(header, LV_PCT(100));    
-    lv_label_set_text(header, "Shortcuts");    
+    lv_obj_t* header = lv_obj_create(content);
+    lv_obj_set_size(header, LV_PCT(100), LV_PCT(20));
+    lv_obj_set_style_border_width(header, 0, 0);
+    lv_obj_set_scrollbar_mode(header, LV_SCROLLBAR_MODE_OFF);
 
+    lv_obj_t* shortcuts = lv_label_create(header);
+    lv_label_set_text(shortcuts, "Shortcuts");    
+    lv_obj_align(shortcuts, LV_ALIGN_LEFT_MID, 0, 0);
     
+    lv_obj_t* off = lv_btn_create(header);    
+    lv_obj_set_style_radius(off, LV_RADIUS_CIRCLE, 0);
+    lv_obj_align(off, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_add_event_cb(off, cmd_btn_cb, LV_EVENT_CLICKED, (void*)&allOff.command);
+    
+    lv_obj_t* lbl = lv_label_create(off);
+    lv_label_set_text(lbl, "Off");
+    lv_obj_center(lbl);
+ 
     bool any = false;
     const config::Scene* current = config::Scene::getCurrent();
 

@@ -4,12 +4,20 @@
 #include <applicationInternal/config/registry.h>
 #include <applicationInternal/commandHandler.h>
 #include <applicationInternal/omote_log.h>
+#include <guis/gui_devices.h>
+#include <guis/gui_scene.h>
 
 using namespace config;
 
 JsonDocument configuration;
 
+DynamicScene allOff("Off");
+
 typedef IRprotocols_new IRProtocolType;
+
+namespace {
+    t_gui_list scene_guis = {tabName_scene, tabName_devices};
+}
 
 std::map<IRProtocolType, uint16_t> BITS = {
     {IR_PROTOCOL_NEC, kNECBits}
@@ -118,7 +126,7 @@ void parseSequence(JsonArray sequence, commands_t& out) {
 
 
 void parseScene(JsonPair def) {
-    Scene* scene = new Scene(def);
+    ConfigScene* scene = new ConfigScene(def);
     const char* keys_default = def.value()["keys_default"];
     if(keys_default) {
         Device* dev = getDevice(keys_default);
@@ -168,11 +176,12 @@ void parseScene(JsonPair def) {
         parseSequence(shortcuts, scene->shortcuts);
     }
     
-    registerScene(scene);
+    registerScene(scene, &scene_guis);
 }
 
 void parseConfig() {
-
+    omote_log_i("Loading configuration");
+    
     loadConfig(configuration);
 
     JsonObject root = configuration.as<JsonObject>();
@@ -186,6 +195,7 @@ void parseConfig() {
     for(JsonPair kv: scenes) {
         parseScene(kv);
     }
+    registerScene(&allOff, NULL);
 
 }
 

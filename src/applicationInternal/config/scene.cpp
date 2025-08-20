@@ -4,8 +4,16 @@
 using namespace config;
 
 config::Scene* config::Scene::current = nullptr;
+const std::string config::SceneCommand::catName = "scene";
 
-
+void SceneCommand::execute() const {
+    omote_log_i("Executing scene command: %s", displayName());
+    executeCommand(commandID);
+}
+    
+const char* SceneCommand::displayName() const {
+    return scene->displayName();
+}
 
 void Scene::start() {
     const char* currentName = "";
