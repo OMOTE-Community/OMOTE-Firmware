@@ -32,11 +32,11 @@ namespace config {
         }
     };
     
-    class RemoteCommand : public Command {
+    class DeviceCommand : public Command {
     public:
         JsonObject ref;
         const CommandID_t ID;
-        RemoteCommand(JsonObject ref, uint16_t ID, Device* device) : ref(ref), ID(ID), Command(device)
+        DeviceCommand(JsonObject ref, uint16_t ID, Device* device) : ref(ref), ID(ID), Command(device)
         {}
         virtual const char* displayName() const {
             return ref["name"];

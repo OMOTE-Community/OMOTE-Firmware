@@ -1,7 +1,7 @@
 #include "device.h"
 using namespace config;
 
-const RemoteCommand* Device::getCommand(const std::string& name) const {
+const DeviceCommand* Device::getCommand(const std::string& name) const {
     for(auto& cmd : commands) {
         if (cmd.displayName() == name) {
             return &cmd;
@@ -9,7 +9,7 @@ const RemoteCommand* Device::getCommand(const std::string& name) const {
     }
     return NULL;
 }
-const RemoteCommand* Device::getCommandByCategory(const std::string& category) const {
+const DeviceCommand* Device::getCommandByCategory(const std::string& category) const {
     omote_log_d("%s looking for category: %s", ID(), category.c_str());
     for(auto& cmd : commands) {
         if (cmd.hasCategory(category)) {

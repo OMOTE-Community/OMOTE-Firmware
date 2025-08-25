@@ -69,7 +69,7 @@ void CommandSequence::dropMatching(const Device* dev, const std::string& categor
     }
 
 }
-bool RemoteCommand::hasCategory(const std::string& category_) const {
+bool DeviceCommand::hasCategory(const std::string& category_) const {
     
     const char* cat = category();
 
@@ -83,7 +83,7 @@ bool RemoteCommand::hasCategory(const std::string& category_) const {
 
 }
 
-void RemoteCommand::execute() const
+void DeviceCommand::execute() const
 {
     omote_log_i("Executing command: %s/%s", device_m->ID(), displayName());
     executeCommand(ID);

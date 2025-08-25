@@ -86,7 +86,7 @@ void register_gui_devices()
 
 void cmd_btn_cb(lv_event_t* e)
 {
-    config::RemoteCommand* cmd = (config::RemoteCommand*)lv_event_get_user_data(e);
+    config::DeviceCommand* cmd = (config::DeviceCommand*)lv_event_get_user_data(e);
     cmd->execute();
 }
 

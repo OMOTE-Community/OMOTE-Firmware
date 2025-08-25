@@ -15,7 +15,7 @@ namespace {
 
 using namespace config;
 
-void config::registerRemote(config::Device* dev) {
+void config::registerDevice(config::Device* dev) {
     g_devices.push_back(dev);
 }
 

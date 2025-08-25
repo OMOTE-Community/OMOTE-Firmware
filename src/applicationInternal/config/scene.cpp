@@ -44,7 +44,7 @@ void Scene::start() {
         for(auto dev : devices_on_prev) {
             if(devices_on_set.find(dev) == devices_on_set.end()) {
                 omote_log_i("Device %s no longer needed. Turning off.", dev->ID());
-                const RemoteCommand* cmd = dev->getCommandByCategory("off");
+                const DeviceCommand* cmd = dev->getCommandByCategory("off");
                 if(cmd != NULL) {
                     cmd->execute();
                 }

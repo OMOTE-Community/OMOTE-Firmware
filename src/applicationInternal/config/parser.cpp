@@ -34,18 +34,18 @@ static IRProtocolType toProtoType(const char* proto)
     return IR_PROTOCOL_UNKNOWN;
 }
 
-void parseRemote(JsonPair remote)
+void parseDevice(JsonPair device)
 {
 
-    Device* dev = new Device(remote);
+    Device* dev = new Device(device);
 
-    const char* protoStr = remote.value()["protocol"];
+    const char* protoStr = device.value()["protocol"];
 
     IRProtocolType protoType = toProtoType(protoStr);
 
     if (protoType == IR_PROTOCOL_UNKNOWN) {
         omote_log_e("unsupported protocol %s (skip %s)",
-                      protoStr, remote.key());
+                      protoStr, device.key());
         return;
     }
 
@@ -54,7 +54,7 @@ void parseRemote(JsonPair remote)
         defaultBits = BITS[protoType];
     }
 
-    for (JsonObject obj : remote.value()["commands"].as<JsonArray>()) {
+    for (JsonObject obj : device.value()["commands"].as<JsonArray>()) {
 
         const char* name     = obj["name"];
         const char* dataStr = obj["data"];
@@ -87,21 +87,21 @@ void parseRemote(JsonPair remote)
         omote_log_i("registered %-12s  %s / %s (%u bit) -> %u",
                     name, protoStr, dataStr, nbits, idRef);
     }        
-    registerRemote(dev);
+    registerDevice(dev);
 }
 
-const RemoteCommand* parseCommandReference(JsonObject cmdRef) {
-    Device* dev = getDevice((const char*)cmdRef["remote"]);
+const DeviceCommand* parseCommandReference(JsonObject cmdRef) {
+    Device* dev = getDevice((const char*)cmdRef["device"]);
     if(dev == NULL) {
-        omote_log_w("Unknown remote reference: %s", (const char*)cmdRef["remote"]);
+        omote_log_w("Unknown device reference: %s", (const char*)cmdRef["device"]);
         return NULL;
     }
-    const RemoteCommand* cmd = dev->getCommand(cmdRef["command"].as<const char*>());
+    const DeviceCommand* cmd = dev->getCommand(cmdRef["command"].as<const char*>());
     if(cmd == NULL) {
-        omote_log_w("Unknown command reference: %s/%s", (const char*)cmdRef["remote"], (const char*)cmdRef["command"]);
+        omote_log_w("Unknown command reference: %s/%s", (const char*)cmdRef["device"], (const char*)cmdRef["command"]);
         return NULL;
     }
-    omote_log_i("Parsed command reference: %s/%s\n", (const char*)cmdRef["remote"], (const char*)cmdRef["command"]);
+    omote_log_i("Parsed command reference: %s/%s\n", (const char*)cmdRef["device"], (const char*)cmdRef["command"]);
     return cmd;
 }
 
@@ -112,7 +112,7 @@ void parseSequence(JsonArray sequence, commands_t& out) {
             out.push_back(new DelayCommand(delay));
         }
         else {
-            const RemoteCommand* command = parseCommandReference(cmd);
+            const DeviceCommand* command = parseCommandReference(cmd);
             if(command == NULL) {
                 continue;
             }
@@ -129,7 +129,7 @@ void parseScene(JsonPair def) {
     if(keys_default) {
         Device* dev = getDevice(keys_default);
         if(dev == NULL) {
-            omote_log_w("Unknown remote reference: %s in %s", keys_default, scene->displayName());
+            omote_log_w("Unknown device reference: %s in %s", keys_default, scene->displayName());
         }
         else {
             scene->keys = dev->defaultKeys;
@@ -140,7 +140,7 @@ void parseScene(JsonPair def) {
     JsonObject keys_short = sceneDef["keys_short"];
     if(keys_short) {
         for(JsonPair kv: keys_short) {
-            const RemoteCommand* cmd = parseCommandReference(kv.value());
+            const DeviceCommand* cmd = parseCommandReference(kv.value());
             if(cmd == NULL) {
                 continue;
             }
@@ -151,7 +151,7 @@ void parseScene(JsonPair def) {
     JsonObject keys_long = sceneDef["keys_long"];
     if(keys_long) {
         for(JsonPair kv: keys_long) {
-            const RemoteCommand* cmd = parseCommandReference(kv.value());
+            const DeviceCommand* cmd = parseCommandReference(kv.value());
             if(cmd == NULL) {
                 continue;
             }
@@ -184,9 +184,9 @@ void parseConfig() {
 
     JsonObject root = configuration.as<JsonObject>();
     
-    JsonObject remotes = root["remotes"].as<JsonObject>();
-    for(JsonPair kv: remotes) {
-        parseRemote(kv);
+    JsonObject devices = root["devices"].as<JsonObject>();
+    for(JsonPair kv: devices) {
+        parseDevice(kv);
     }
 
     JsonObject scenes = root["scenes"];

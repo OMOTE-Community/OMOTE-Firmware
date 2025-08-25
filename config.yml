@@ -3,20 +3,20 @@ scenes:
     display_name: Watch TV
     keys_default: sony_bravia
     shortcuts:
-      - remote: sony_bravia
+      - device: sony_bravia
         command: Netflix
-      - remote: sony_bravia
+      - device: sony_bravia
         command: Swap
         
     keys_short:
       UP:
-        remote: sony_bravia
+        device: sony_bravia
         command: Down
       DOWN:
-        remote: sony_bravia
+        device: sony_bravia
         command: Up
     start:
-      - remote: sony_bravia
+      - device: sony_bravia
         command: Power
 
   watch_tv_receiver:
@@ -24,35 +24,48 @@ scenes:
     keys_default: sony_bravia    
     keys_short:
       VOLUP:
-        remote: denon_x4700h
+        device: denon_x4700h
         command: Volume Up
       VOLDO:
-        remote: denon_x4700h
+        device: denon_x4700h
         command: Volume Down
       MUTE:
-        remote: denon_x4700h
+        device: denon_x4700h
         command: Mute
       
     start:
-      - remote: sony_bravia
+      - device: sony_bravia
         command: Power        
       - delay: 500
-      - remote: denon_x4700h
+      - device: denon_x4700h
         command: Power Toggle
-      - remote: denon_x4700h
+      - device: denon_x4700h
         command: Input TV
      
   watch_dvd:
     display_name: Watch DVD
     keys_default: sony_bravia
+    keys_short:
+      VOLUP:
+        device: denon_x4700h
+        command: Volume Up
+      VOLDO:
+        device: denon_x4700h
+        command: Volume Down
+      MUTE:
+        device: denon_x4700h
+        command: Mute
     start:
-      - remote: sony_bravia
+      - device: sony_bravia
         command: Power        
       - delay: 500
-      - remote: denon_x4700h
+      - device: denon_x4700h
         command: Power Toggle
+      - delay: 1000       
+      - device: denon_x4700h
+        command: Input Blue Ray
       
-remotes:
+devices:
   denon_x4700h:
     display_name: Denon Receiver
     protocol: DENON
@@ -244,6 +257,7 @@ remotes:
     - name: Home
       data: '0x070'
       nbits: 12
+      map_short: INFO
     - name: Apps
       data: '0x2A23'
       nbits: 15
@@ -325,7 +339,7 @@ remotes:
     - name: Netflix
       data: '0x1F58'
       nbits: 15
-    - name: Google_play
+    - name: Google Play
       data: '0x3123'
       nbits: 15
     - name: Red
@@ -340,16 +354,17 @@ remotes:
     - name: Blue
       data: '0x12E9'
       nbits: 15
-    - name: Action_menu
+    - name: Action Menu
       data: '0x6923'
       nbits: 15
+      map_short: CONF
     - name: Guide
       data: '0x6D25'
       nbits: 15
     - name: Help
       data: '0x5923'
       nbits: 15
-    - name: Title_list
+    - name: Title List
       data: '0x5358'
       nbits: 15
     - name: Audio

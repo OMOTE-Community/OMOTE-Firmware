@@ -19,9 +19,9 @@ namespace config {
             return ref.key().c_str();
         }
         
-        std::vector<RemoteCommand> commands;
-        const RemoteCommand* getCommand(const std::string& name) const;
-        const RemoteCommand* getCommandByCategory(const std::string& category) const;
+        std::vector<DeviceCommand> commands;
+        const DeviceCommand* getCommand(const std::string& name) const;
+        const DeviceCommand* getCommandByCategory(const std::string& category) const;
         void addCommand(JsonObject ref, uint16_t ID, Device* dev);
     };
     
