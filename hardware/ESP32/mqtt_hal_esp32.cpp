@@ -46,6 +46,7 @@ void WiFiEvent(WiFiEvent_t event){
 
     Debug.begin("omote");
     Debug.setResetCmdEnabled(true);
+    Debug.setSerialEnabled(true);
     Debug.println("Remote log ready!");
   } else if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
     isWifiConnected = false;
