@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
   register_device_samsungTV();
   //register_device_lgTV();
   //   AV receiver
-  parseConfig();
+  config::init();
   
   //register_device_denonAvr();
   //register_device_lgsoundbar();

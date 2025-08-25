@@ -11,8 +11,6 @@ using namespace config;
 
 JsonDocument configuration;
 
-DynamicScene allOff("Off");
-
 typedef IRprotocols_new IRProtocolType;
 
 namespace {
@@ -195,7 +193,6 @@ void parseConfig() {
     for(JsonPair kv: scenes) {
         parseScene(kv);
     }
-    registerScene(&allOff, NULL);
-
 }
+
 

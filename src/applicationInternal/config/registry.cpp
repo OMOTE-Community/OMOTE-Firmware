@@ -1,9 +1,12 @@
 #include "registry.h"
+#include "parser.h"
 #include <map>
 #include <ArduinoJson.h>
 #include <applicationInternal/scenes/sceneRegistry.h>
 #include <applicationInternal/commandHandler.h>
 #include <applicationInternal/omote_log.h>
+
+config::DynamicScene allOff("Off");
 
 namespace {
     std::vector<config::Device*> g_devices;
@@ -65,4 +68,19 @@ Device* config::getDevice(const std::string& id) {
         }
     }
     return NULL;
+}
+
+void config::init() {
+    parseConfig();
+    registerScene(&allOff, NULL);
+    std::string lastScene = gui_memoryOptimizer_getActiveSceneName();
+    if(lastScene != "") {
+        omote_log_i("Setting current scene to: %s", lastScene.c_str());
+        if(g_scenes.find(lastScene) == g_scenes.end()) {
+            omote_log_e("Scene: %s not found", lastScene.c_str());
+        }
+        else {
+            Scene::setCurrent(g_scenes[lastScene]);
+        }
+    }
 }

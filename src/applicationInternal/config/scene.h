@@ -38,6 +38,9 @@ namespace config {
         static const Scene* getCurrent() {
             return current;
         }
+        static void setCurrent(Scene* scene) {
+            current = scene;
+        }
         virtual const char* displayName() const = 0;
     protected:
         static Scene* current;
