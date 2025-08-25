@@ -1,0 +1,5 @@
+* Schema
+
+| Entity    | Type                           | Description                                         |
+|-----------+--------------------------------+-----------------------------------------------------|
+| =remotes= | dictionary: string -> =remote= | A dictionary mapping a remote ID to =remote= object |
