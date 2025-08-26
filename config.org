@@ -1,21 +1,201 @@
 * Schema
 
-| Entity    | Attribute      | Type                           | Description                                                                                                                                                                                                                                                                                  |
-|-----------+----------------+--------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| =devices= |                | dictionary: string -> =device= | A dictionary mapping a string representing the unique identifier for a device to a corresponding =device= object                                                                                                                                                                             |
-|-----------+----------------+--------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| =device=  | =display_name= | string                         | The display name for this device in UI                                                                                                                                                                                                                                                       |
-|           | =protocol=     | enum(string)                   | The default protocol used in commands communicating with the device. Currently list: SIRC, NEC, RCS, DENON, KASEIKYO (easily expandable in config/parser.cpp)                                                                                                                                |
-|           | =commands=     | list: =command=                | The list of =command= objects defined for the device                                                                                                                                                                                                                                         |
-|-----------+----------------+--------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| =command= | =name=         | string                         | The name of the command. Will be used both for UI and internal accounting.                                                                                                                                                                                                                   |
-|           | =data=         | hex number                     | The data to be sent for the command based on the supported protocol.                                                                                                                                                                                                                         |
-|           | =protocol=     | (optional) enum(string)        | Overwrites the =device=/=protocol= if specified                                                                                                                                                                                                                                              |
-|           | =nbits=        | (optional) integer             | Number of bits used for the command. Not required if constant for a protocol with no variants                                                                                                                                                                                                |
-|           | =repeats=      | integer                        | Number of repeats to send with the command.                                                                                                                                                                                                                                                  |
-|           | =category=     | (optional) string              | A comma delimited string representing the set of standard functional categories that the command belongs to. Two categories are currently supported: \on\ and \off\. For example a "power on" command would support the "on" category, while "power toggle" would be categorized as "on,off" |
-|           | =map_short=    | (optional) enum(string)        | The default key associated with the command on the remote for a "short" press. See [[*Keys][Keys]] for the list of supported key designations.                                                                                                                                                          |
-|           | =map_long=     | (optional) enum(string)        | The default key associated with the command on the remote for a "long" press. See [[*Keys][Keys]] for the list of supported key designations.                                                                                                                                                           |
-|           |                |                                |                                                                                                                                                                                                                                                                                              |
+| Entity        | Attribute      | Type                                           | Description                                                                                                                                                                                                                                                                                  |
+|---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| =devices=     |                | dictionary: string -> =device=                 | A dictionary mapping a string representing the unique identifier for a device to a corresponding =device= object                                                                                                                                                                             |
+|---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| =device=      | =display_name= | string                                         | The display name for this device in UI                                                                                                                                                                                                                                                       |
+|               | =protocol=     | enum(string)                                   | The default protocol used in commands communicating with the device. Currently list: SIRC, NEC, RCS, DENON, KASEIKYO (easily expandable in config/parser.cpp)                                                                                                                                |
+|               | =commands=     | list: =command=                                | The list of =command= objects defined for the device                                                                                                                                                                                                                                         |
+|---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| =command=     | =name=         | string                                         | The name of the command. Will be used both for UI and internal accounting.                                                                                                                                                                                                                   |
+|               | =data=         | hex number                                     | The data to be sent for the command based on the supported protocol.                                                                                                                                                                                                                         |
+|               | =protocol=     | (optional) enum(string)                        | Overwrites the =device=/=protocol= if specified                                                                                                                                                                                                                                              |
+|               | =nbits=        | (optional) integer                             | Number of bits used for the command. Not required if constant for a protocol with no variants                                                                                                                                                                                                |
+|               | =repeats=      | integer                                        | Number of repeats to send with the command.                                                                                                                                                                                                                                                  |
+|               | =category=     | (optional) string                              | A comma delimited string representing the set of standard functional categories that the command belongs to. Two categories are currently supported: /on/ and /off/. For example a "power on" command would support the "on" category, while "power toggle" would be categorized as "on,off" |
+|               | =map_short=    | (optional) enum(string)                        | The default key associated with the command on the remote for a "short" press. See [[*Keys][Keys]] for the list of supported key designations.                                                                                                                                                          |
+|               | =map_long=     | (optional) enum(string)                        | The default key associated with the command on the remote for a "long" press. See [[*Keys][Keys]] for the list of supported key designations.                                                                                                                                                           |
+|---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| =scenes=      |                | dictionary: string -> =scene=                 | A dictionary mapping a string representing the unique identifier for a scene to a corresponding =scene= object                                                                                                                                                                               |
+|---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| =scene=       | =display_name= | string                                         | The name used for this scene in UI                                                                                                                                                                                                                                                           |
+|               | =keys_default= | (optional) string                              | The unique identifier of a =device= section to be used as source for default physical key mapping in the scene (as retrieved from =command= attributes)                                                                                                                                      |
+|               | =keys_short=   | (optional) dictionary: string -> =command_ref= | A dictionary mapping physical key designators (see [[*Keys][Keys]]) to corresponding  commands (via =command_ref= structures) that should be triggered on short press while the scene is active                                                                                                         |
+|               | =keys_long=    | (optional) dictionary: string -> =command_ref= | A dictionary mapping physical key designators (see [[*Keys][Keys]]) to corresponding  commands (via =command_ref= structures) that should be triggered on long press while the scene is active                                                                                                          |
+|               | =start=        | list: =command_ref= \vert =delay=              | A sequence of device commands (represented via =command_ref= structures) or delays (represented via =delay= structure) to be executed when the scene starts.                                                                                                                                 |
+|               | =end=          | list: =command_ref= \vert =delay=              | A sequence of device commands (represented via =command_ref= structures) or delays (represented via =delay= structure) to be executed when the scene ends.                                                                                                                                   |
+|               | =shortcuts=    | list: =command_ref=                            | A list of commands (represented by =command_ref= structures) to be presented on this scene's GUI as buttons.                                                                                                                                                                                 |
+|---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| =command_ref= | =device=       | string                                         | The unique identifier of the device (see =devices=) that this reference points to.                                                                                                                                                                                                           |
+|               | =command=      | string                                         | The name of the =command= with the device's =commands= list that this reference points to.                                                                                                                                                                                                   |
+|---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| =delay=       |                | integer                                        | The number of milliseconds to delay before executing the next step of a sequence.                                                                                                                                                                                                             |
 
 ** Keys
+The designators for physical keys used in the configuration YAML scheme. Abbreviations are used to limit the amount typing required when authoring a configuration.
+ - OFF
+ - STOP
+ - REWI
+ - PLAY
+ - FORW
+ - CONF
+ - INFO
+ - UP
+ - DOWN
+ - LEFT
+ - RIGHT
+ - OK
+ - BACK
+ - SRC
+ - VOLUP
+ - VOLDO
+ - MUTE
+ - REC
+ - CHUP
+ - CHDOW
+ - RED
+ - GREEN
+ - YELLO
+ - BLUE
+
+* Example   
+#+begin_src json
+scenes:
+  watch_tv:
+    display_name: Watch TV
+    keys_default: sony_bravia
+    shortcuts:
+      - device: sony_bravia
+        command: Netflix
+      - device: sony_bravia
+        command: Swap
+        
+    keys_short:
+      UP:
+        device: sony_bravia
+        command: Down
+      DOWN:
+        device: sony_bravia
+        command: Up
+    start:
+      - device: sony_bravia
+        command: Power
+
+  watch_tv_receiver:
+    display_name: Watch TV Receiver
+    keys_default: sony_bravia    
+    keys_short:
+      VOLUP:
+        device: denon_x4700h
+        command: Volume Up
+      VOLDO:
+        device: denon_x4700h
+        command: Volume Down
+      MUTE:
+        device: denon_x4700h
+        command: Mute
+      
+    start:
+      - device: sony_bravia
+        command: Power        
+      - delay: 500
+      - device: denon_x4700h
+        command: Power Toggle
+      - device: denon_x4700h
+        command: Input TV
+     
+      
+devices:
+  denon_x4700h:
+    display_name: Denon Receiver
+    protocol: DENON
+    commands:
+    - name: Power Toggle
+      data: "0x2A4C028A0088"
+      nbits: 48
+      repeats: 0
+      category: on,off
+      map_short: OFF
+    - name: Volume Up
+      data: "0x2A4C0280E86A"
+      nbits: 48
+      repeats: 0
+      map_short: VOLUP
+    - name: Volume Down
+      data: "0x2A4C0288E862"
+      nbits: 48
+      repeats: 0
+      map_short: VOLDO
+    - name: Input TV
+      data: "0x2A4C0284B432"
+      nbits: 48
+      repeats: 0
+      
+  sony_bravia:
+    display_name: Sony Bravia
+    protocol: SIRC    
+    commands:
+    - name: Power
+      data: '0xA90'
+      nbits: 12
+      map_short: OFF
+      category: on,off
+    - name: Input
+      data: '0xA50'
+      nbits: 12
+      map_short: SRC
+    - name: Home
+      data: '0x070'
+      nbits: 12
+      map_short: INFO
+    - name: Apps
+      data: '0x2A23'
+      nbits: 15
+    - name: Tv
+      data: '0x250'
+      nbits: 12
+    - name: Left
+      data: '0x2D0'
+      nbits: 12
+      map_short: LEFT
+    - name: Right
+      data: '0xCD0'
+      nbits: 12
+      map_short: RIGHT
+    - name: Up
+      data: '0x2F0'
+      nbits: 12
+      map_short: UP
+    - name: Down
+      data: '0xAF0'
+      nbits: 12
+      map_short: DOWN
+    - name: Enter
+      data: '0xA70'
+      nbits: 12
+      map_short: OK
+    - name: Back
+      data: '0x62E9'
+      nbits: 15
+      map_short: BACK
+    - name: Mute
+      data: '0x290'
+      nbits: 12
+      map_short: MUTE
+    - name: Vol Up
+      data: '0x490'
+      nbits: 12
+      map_short: VOLUP
+    - name: Vol Down
+      data: '0xC90'
+      nbits: 12
+      map_short: VOLDO
+    - name: Netflix
+      data: '0x1F58'
+      nbits: 15
+    - name: Swap
+      data: '0xDD0'
+      nbits: 12
+  
+#+end_src
