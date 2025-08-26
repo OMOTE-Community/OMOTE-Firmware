@@ -60,7 +60,7 @@ The designators for physical keys used in the configuration YAML scheme. Abbrevi
  - BLUE
 
 * Example   
-#+begin_src json
+#+begin_src yaml
 scenes:
   watch_tv:
     display_name: Watch TV
