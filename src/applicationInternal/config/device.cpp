@@ -20,8 +20,8 @@ const DeviceCommand* Device::getCommandByCategory(const std::string& category) c
     return NULL;
 }
 
-void Device::addCommand(JsonObject ref, uint16_t ID, Device* dev) {
-    commands.push_back({ref, ID, dev});
+void Device::addCommand(JsonObject ref, uint16_t ID) {
+    commands.push_back({ref, ID, this});
     const char* map_short = ref["map_short"];
     if(map_short) {
         defaultKeys.keys_short[KeyMap::getKeyCode(map_short)] = ID;

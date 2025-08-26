@@ -22,7 +22,7 @@ namespace config {
         std::vector<DeviceCommand> commands;
         const DeviceCommand* getCommand(const std::string& name) const;
         const DeviceCommand* getCommandByCategory(const std::string& category) const;
-        void addCommand(JsonObject ref, uint16_t ID, Device* dev);
+        void addCommand(JsonObject ref, uint16_t ID);
     };
     
 }

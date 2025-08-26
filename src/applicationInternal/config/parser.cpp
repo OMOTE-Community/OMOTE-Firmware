@@ -82,7 +82,7 @@ void parseDevice(JsonPair device)
         uint16_t idRef;
         register_command(&idRef, cmd);
 
-        dev->addCommand(obj, idRef, dev);
+        dev->addCommand(obj, idRef);
 
         omote_log_i("registered %-12s  %s / %s (%u bit) -> %u",
                     name, protoStr, dataStr, nbits, idRef);
