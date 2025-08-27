@@ -462,11 +462,11 @@ devices:
       data: '0x40040D40105D'
       nbits: 48
       repeats: 0
-    - name: Fast_fo
+    - name: Fast Frw
       data: '0x40040D00A0AD'
       nbits: 48
       repeats: 0
-    - name: Fast_ba
+    - name: Fast Bkw
       data: '0x40040D00202D'
       nbits: 48
       repeats: 0
@@ -494,7 +494,7 @@ devices:
       data: '0x40040D00CCC1'
       nbits: 48
       repeats: 0
-    - name: Top_menu
+    - name: Top Menu
       data: '0x40040D40D895'
       nbits: 48
       repeats: 0
@@ -506,6 +506,92 @@ devices:
       data: '0x40040D80E865'
       nbits: 48
       repeats: 0
+    - name: HDR Setting
+      data: '0x40040D809419'
+      nbits: 48
+      repeats: 0
+    - name: Status
+      data: '0x40040D00FAF7'
+      nbits: 48
+      repeats: 0
+    - name: Info
+      data: '0x40040D80A429'
+      nbits: 48
+      repeats: 0
+    - name: Internet
+      data: '0x40040D809A17'
+      nbits: 48
+      repeats: 0
+    - name: Return
+      data: '0x40040D00818C'
+      nbits: 48
+      repeats: 0
+    - name: Option
+      data: '0x40040D00010C'
+      nbits: 48
+      repeats: 0
+    - name: Cancel
+      data: '0x40040D00C1CC'
+      nbits: 48
+      repeats: 0      
+    - name: Red
+      data: '0x40040D80820F'
+      nbits: 48
+      repeats: 0
+    - name: Green
+      data: '0x40040D8042CF'
+      nbits: 48
+      repeats: 0
+    - name: Yellow
+      data: '0x40040D80C24F'
+      nbits: 48
+      repeats: 0
+    - name: Blue
+      data: '0x40040D80028F'
+      nbits: 48
+      repeats: 0
+    - name: 1
+      data: '0x40040D000805'
+      nbits: 48
+      repeats: 0
+    - name: 2
+      data: '0x40040D008885'
+      nbits: 48
+      repeats: 0
+    - name: 3
+      data: '0x40040D004845'
+      nbits: 48
+      repeats: 0
+    - name: 4
+      data: '0x40040D00C8C5'
+      nbits: 48
+      repeats: 0
+    - name: 5
+      data: '0x40040D002825'
+      nbits: 48
+      repeats: 0
+    - name: 6
+      data: '0x40040D00A8A5'
+      nbits: 48
+      repeats: 0
+    - name: 7
+      data: '0x40040D006865'
+      nbits: 48
+      repeats: 0
+    - name: 8
+      data: '0x40040D00E8E5'
+      nbits: 48
+      repeats: 0
+    - name: 9
+      data: '0x40040D001815'
+      nbits: 48
+      repeats: 0
+    - name: 0
+      data: '0x40040D009895'
+      nbits: 48
+      repeats: 0           
+
+
   topping_dac:
     display_name: DAC
     protocol: NEC
