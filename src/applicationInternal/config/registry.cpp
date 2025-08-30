@@ -5,6 +5,7 @@
 #include <applicationInternal/scenes/sceneRegistry.h>
 #include <applicationInternal/commandHandler.h>
 #include <applicationInternal/omote_log.h>
+#include <scenes/scene__default.h>
 
 config::DynamicScene allOff("Off");
 
@@ -41,6 +42,32 @@ void sceneEndSequenceDispatch() {
 
 void sceneSetKeysDispatch() {
     //redundant
+}
+
+void registerDefaultKeys() {
+  key_repeatModes_default = {
+                                                                                                             {KEY_OFF,   SHORT            },
+    {KEY_STOP,  SHORT            },    {KEY_REWI,  SHORTorLONG      },    {KEY_PLAY,  SHORT            },    {KEY_FORW,  SHORTorLONG      },
+    {KEY_CONF,  SHORT            },                                                                          {KEY_INFO,  SHORT            },
+                                                         {KEY_UP,    SHORT            },
+                      {KEY_LEFT,  SHORT            },    {KEY_OK,    SHORT            },    {KEY_RIGHT, SHORT            },
+                                                         {KEY_DOWN,  SHORT            },
+    {KEY_BACK,  SHORT            },                                                                          {KEY_SRC,   SHORT            },
+    {KEY_VOLUP, SHORT_REPEATED   },                      {KEY_MUTE,  SHORT            },                     {KEY_CHUP,  SHORT            },
+    {KEY_VOLDO, SHORT_REPEATED   },                      {KEY_REC,   SHORT            },                     {KEY_CHDOW, SHORT            },
+    {KEY_RED,   SHORT            },    {KEY_GREEN, SHORT            },    {KEY_YELLO, SHORT            },    {KEY_BLUE,  SHORT            },
+  };
+  
+  key_commands_short_default = {
+      {KEY_OFF,   allOff.commandForce.getID()},
+      {KEY_LEFT,  GUI_PREV  },
+      {KEY_RIGHT, GUI_NEXT  },
+      {KEY_BACK,  SCENE_SELECTION  },
+      {KEY_REC,   SCENE_BACK_TO_PREVIOUS_GUI_LIST  }
+  };
+  
+  key_commands_long_default = {};
+
 }
 
 void config::registerScene(config::Scene* scene, t_gui_list* scene_guis) {
@@ -87,6 +114,7 @@ Device* config::getDevice(const std::string& id) {
 void config::init() {
     parseConfig();
     registerScene(&allOff, NULL);
+    registerDefaultKeys();
     std::string lastScene = gui_memoryOptimizer_getActiveSceneName();
     if(lastScene != "") {
         omote_log_i("Setting current scene to: %s", lastScene.c_str());
