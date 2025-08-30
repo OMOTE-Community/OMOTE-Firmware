@@ -5,9 +5,14 @@
 #if defined(ARDUINO)
   // for env:esp32 we need "Arduino.h" e.g. for Serial, delay(), millis()
   #include <Arduino.h>
-  #include <RemoteDebug.h>
-  extern RemoteDebug Debug;
-  #define OmoteSerial Debug
+  #ifdef REMOTE_DEBUG
+    #include <RemoteDebug.h>
+    extern RemoteDebug Debug;
+    #define OmoteSerial Debug
+  #else
+    #define OmoteSerial Serial
+  #endif
+
   #define NEWLINE "\r\n"
 
 #elif defined(WIN32) || defined(__linux__) || defined(__APPLE__)
