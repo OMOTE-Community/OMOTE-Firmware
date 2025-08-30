@@ -15,21 +15,31 @@ namespace {
 
 using namespace config;
 
+Scene* config::getScene(const std::string& name) {
+    auto iter = g_scenes.find(name);
+    if(iter != g_scenes.end()) {
+        return iter->second;
+    }
+    else {
+        return NULL;
+    }
+}
+
 void config::registerDevice(config::Device* dev) {
     g_devices.push_back(dev);
 }
 
-void scene_start_sequence_dispatch() {
+void sceneStartSequenceDispatch() {
     Scene* scene = g_scenes[get_scene_being_handled()];
     scene->start();
 }
 
-void scene_end_sequence_dispatch() {
+void sceneEndSequenceDispatch() {
     Scene* scene = g_scenes[get_scene_being_handled()];
     scene->end.run();
 }
 
-void scene_set_keys_dispatch() {
+void sceneSetKeysDispatch() {
     //redundant
 }
 
@@ -39,18 +49,22 @@ void config::registerScene(config::Scene* scene, t_gui_list* scene_guis) {
         delete iter->second;
     }
     g_scenes[scene->displayName()] = scene;
-    register_command(&scene->command.commandID, makeCommandData(SCENE, {scene->displayName()}));
-    register_command(&scene->commandForce.commandID, makeCommandData(SCENE, {scene->displayName(), "FORCE"}));
-
+    CommandID_t commandID;
+    register_command(&commandID, makeCommandData(SCENE, {scene->displayName()}));
+    scene->command.setID(commandID);
+    
+    register_command(&commandID, makeCommandData(SCENE, {scene->displayName(), "FORCE"}));
+    scene->commandForce.setID(commandID);
+    
     register_scene(scene->displayName(),
-                   &scene_set_keys_dispatch,
-                   &scene_start_sequence_dispatch,
-                   &scene_end_sequence_dispatch,
+                   &sceneSetKeysDispatch,
+                   &sceneStartSequenceDispatch,
+                   &sceneEndSequenceDispatch,
                    &scene->keys.keys_repeat_modes,
                    &scene->keys.keys_short,
                    &scene->keys.keys_long,
                    scene_guis,
-                   scene->command.commandID);
+                   scene->command.getID());
                    
     
 }

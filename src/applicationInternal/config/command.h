@@ -31,12 +31,28 @@ namespace config {
             return false;
         }
     };
+
+    class RegisteredCommand : public Command {
+    protected:
+        CommandID_t commandID;
+    public:
+        RegisteredCommand(CommandID_t cmdID, Device* device) : commandID(cmdID), Command(device)
+        {}
+        RegisteredCommand(Device* device) : Command(device)
+        {}        
+        void setID(CommandID_t cmdID) {
+            commandID = cmdID;
+        }
+        CommandID_t getID() const {
+            return commandID;
+        }
+    };
     
-    class DeviceCommand : public Command {
+    class DeviceCommand : public RegisteredCommand {
     public:
         JsonObject ref;
-        const CommandID_t ID;
-        DeviceCommand(JsonObject ref, uint16_t ID, Device* device) : ref(ref), ID(ID), Command(device)
+        //const CommandID_t ID;
+        DeviceCommand(JsonObject ref, CommandID_t ID, Device* device) : ref(ref), RegisteredCommand(ID, device)
         {}
         virtual const char* displayName() const {
             return ref["name"];

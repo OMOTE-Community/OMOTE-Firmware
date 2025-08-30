@@ -90,18 +90,42 @@ void parseDevice(JsonPair device)
     registerDevice(dev);
 }
 
-const DeviceCommand* parseCommandReference(JsonObject cmdRef) {
-    Device* dev = getDevice((const char*)cmdRef["device"]);
-    if(dev == NULL) {
-        omote_log_w("Unknown device reference: %s", (const char*)cmdRef["device"]);
-        return NULL;
+namespace AllowedReferences {
+    enum Allowed {
+        Device = 1 << 0,
+        Scene = 1 << 1,
+        All = Device | Scene
+    };
+};
+
+const RegisteredCommand* parseCommandReference(JsonObject cmdRef,
+                                               AllowedReferences::Allowed allowed = AllowedReferences::All)
+{
+    const RegisteredCommand* cmd = NULL;
+    if ((allowed & AllowedReferences::Device) && cmdRef["device"]) {
+        Device* dev = getDevice((const char*)cmdRef["device"]);
+        if(dev == NULL) {
+            omote_log_w("Unknown device reference: %s", (const char*)cmdRef["device"]);
+            return NULL;
+        }
+        cmd = dev->getCommand(cmdRef["command"].as<const char*>());
+        if(cmd == NULL) {
+            omote_log_w("Unknown command reference: %s/%s", (const char*)cmdRef["device"], (const char*)cmdRef["command"]);
+            return NULL;
+        }
+        omote_log_i("Parsed command reference: %s/%s\n", (const char*)cmdRef["device"], (const char*)cmdRef["command"]);
     }
-    const DeviceCommand* cmd = dev->getCommand(cmdRef["command"].as<const char*>());
+    else if ((allowed & AllowedReferences::Scene) && cmdRef["scene"]) {
+        Scene* scene = getScene((const char*)cmdRef["scene"]);
+        if(scene == NULL) {
+            omote_log_w("Unknown scene command reference: %s", (const char*)cmdRef["scene"]);
+            return NULL;
+        }
+        cmd = &scene->command;
+    }
     if(cmd == NULL) {
-        omote_log_w("Unknown command reference: %s/%s", (const char*)cmdRef["device"], (const char*)cmdRef["command"]);
-        return NULL;
+        omote_log_e("No allowed command references found.");
     }
-    omote_log_i("Parsed command reference: %s/%s\n", (const char*)cmdRef["device"], (const char*)cmdRef["command"]);
     return cmd;
 }
 
@@ -112,7 +136,7 @@ void parseSequence(JsonArray sequence, commands_t& out) {
             out.push_back(new DelayCommand(delay));
         }
         else {
-            const DeviceCommand* command = parseCommandReference(cmd);
+            const Command* command = parseCommandReference(cmd);
             if(command == NULL) {
                 continue;
             }
@@ -122,9 +146,13 @@ void parseSequence(JsonArray sequence, commands_t& out) {
 }
 
 
+void allocateScene(JsonPair def) {
+    ConfigScene* scene = new ConfigScene(def);
+    registerScene(scene, &scene_guis);    
+}
 
 void parseScene(JsonPair def) {
-    ConfigScene* scene = new ConfigScene(def);
+    Scene* scene = getScene(def.value()["display_name"]);
     const char* keys_default = def.value()["keys_default"];
     if(keys_default) {
         Device* dev = getDevice(keys_default);
@@ -140,22 +168,22 @@ void parseScene(JsonPair def) {
     JsonObject keys_short = sceneDef["keys_short"];
     if(keys_short) {
         for(JsonPair kv: keys_short) {
-            const DeviceCommand* cmd = parseCommandReference(kv.value());
+            const RegisteredCommand* cmd = parseCommandReference(kv.value());
             if(cmd == NULL) {
                 continue;
             }
-            scene->keys.keys_short[KeyMap::getKeyCode(kv.key().c_str())] = cmd->ID;
+            scene->keys.keys_short[KeyMap::getKeyCode(kv.key().c_str())] = cmd->getID();
         }
     }
 
     JsonObject keys_long = sceneDef["keys_long"];
     if(keys_long) {
         for(JsonPair kv: keys_long) {
-            const DeviceCommand* cmd = parseCommandReference(kv.value());
+            const RegisteredCommand* cmd = parseCommandReference(kv.value());
             if(cmd == NULL) {
                 continue;
             }
-            scene->keys.keys_long[KeyMap::getKeyCode(kv.key().c_str())] = cmd->ID;
+            scene->keys.keys_long[KeyMap::getKeyCode(kv.key().c_str())] = cmd->getID();
         }
     }
 
@@ -173,8 +201,6 @@ void parseScene(JsonPair def) {
     if(shortcuts) {
         parseSequence(shortcuts, scene->shortcuts);
     }
-    
-    registerScene(scene, &scene_guis);
 }
 
 void parseConfig() {
@@ -190,6 +216,13 @@ void parseConfig() {
     }
 
     JsonObject scenes = root["scenes"];
+
+    //allocate scenes before parsing to make sure potential
+    //cross-references to scene commands can be resolved
+    for(JsonPair kv: scenes) {
+        allocateScene(kv);
+    }
+    
     for(JsonPair kv: scenes) {
         parseScene(kv);
     }

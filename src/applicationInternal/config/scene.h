@@ -8,14 +8,13 @@ namespace config {
 
     class Scene;
     
-    class SceneCommand : public Command
+    class SceneCommand : public RegisteredCommand
     {
     protected:
         const Scene* scene;
         static const std::string catName;
     public:
-        CommandID_t commandID;
-        SceneCommand(const Scene* scene_) : scene(scene_), Command(NULL)
+        SceneCommand(const Scene* scene_) : scene(scene_), RegisteredCommand(NULL)
         {}
         virtual void execute() const;
         virtual const char* displayName() const;

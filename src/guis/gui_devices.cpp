@@ -134,7 +134,7 @@ void show_device_details(config::Device& entry)
         lv_obj_add_event_cb(b, cmd_btn_cb, LV_EVENT_CLICKED, (void*)&cmd);
 
         lv_label_set_text(lv_label_create(b), cmd.displayName());
-        omote_log_i("Button created: %s (%d)", cmd.displayName(), cmd.ID);
+        omote_log_i("Button created: %s (%d)", cmd.displayName(), cmd.getID());
 
     }
     if(!any) {

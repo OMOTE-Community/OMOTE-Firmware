@@ -78,7 +78,7 @@ void build_scene_tab(lv_obj_t* parent)
             lv_obj_add_event_cb(b, cmd_btn_cb, LV_EVENT_CLICKED, (void*)cmd);
 
             lv_label_set_text(lv_label_create(b), cmd->displayName());
-            omote_log_i("Button created: %s (%d)", cmd->displayName(), ((config::DeviceCommand*)cmd)->ID);   
+            omote_log_i("Button created: %s (%d)", cmd->displayName(), ((config::RegisteredCommand*)cmd)->getID());   
         }
     }
     if(!any) {

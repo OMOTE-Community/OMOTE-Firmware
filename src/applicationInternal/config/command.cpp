@@ -86,5 +86,5 @@ bool DeviceCommand::hasCategory(const std::string& category_) const {
 void DeviceCommand::execute() const
 {
     omote_log_i("Executing command: %s/%s", device_m->ID(), displayName());
-    executeCommand(ID);
+    executeCommand(commandID);
 }
