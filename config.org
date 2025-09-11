@@ -1,4 +1,61 @@
-* Schema
+* Config Module
+The /Config Module/ for OMOTE introduces the option to define the
+remote's functionality such as the controlled [[id:1670942e-7200-444a-992d-83effa554bc4][Devices]] and [[id:986aceb5-0da2-4742-b214-d283626730a4][Scenes]] in a
+declarative way (using a YAML configuration file) instead of the
+standard imperative approach based on defining the respective
+configurations by implementing respective functions and data
+structures as code.
+
+Please note that while, in principle, the [[id:1670942e-7200-444a-992d-83effa554bc4][Devices]] and [[id:986aceb5-0da2-4742-b214-d283626730a4][Scenes]] defined
+declaratively can live side-by-side with code driven definitions, it
+is not advised as certain functionality (such as [[id:329ebe8e-23b2-4d34-9650-8ddbf8cc4c05][Device List]]
+or [[id:5fe5b25c-59bb-4022-96a0-005d0a06de95][Automated Power on/off]]) will not be available for the imperative
+definitions.
+
+
+
+
+** Devices
+:PROPERTIES:
+:ID:       1670942e-7200-444a-992d-83effa554bc4
+:END:
+Devices defined via the configuration file (see [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]]) are equivalent
+to the code driven definitions that live in =src/devices=. In addition
+to the standard set of attributes and customization options inherited
+from the imperative device definitions, the configuration driven
+device definitions also allow to define a standard key-map for the
+device (see =map_short= and =map_long= attributes in the [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]]) that
+can be used as a convenient baseline for a scene key-map (see =scene= /
+=keys_default= attribute) and will be used in the [[id:329ebe8e-23b2-4d34-9650-8ddbf8cc4c05][Device List]].
+
+Each command defined within a device configuration, may also include a
+new =category= attribute (see [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]]) that is used to enable the [[id:5fe5b25c-59bb-4022-96a0-005d0a06de95][Automated Power on/off]] capability.
+
+*** Device List
+:PROPERTIES:
+:ID:       329ebe8e-23b2-4d34-9650-8ddbf8cc4c05
+:END:
+The /Device List/ is a new top-level GUI screen which aggregates all
+devices defined in the configuration file with their commands. The GUI
+is presented as a list of devices which expands to the list of their
+respective commands once a device is "clicked". As long as a device is
+expanded, the physical key-map will be replaced with the key mappings
+from that device definition (if available). The key-map will be
+restored to default once a device command list is "closed"
+(collapsed).
+
+** Scenes
+:PROPERTIES:
+:ID:       986aceb5-0da2-4742-b214-d283626730a4
+:END:
+*** Automated Power on/off
+:PROPERTIES:
+:ID:       5fe5b25c-59bb-4022-96a0-005d0a06de95
+:END:
+** Schema
+:PROPERTIES:
+:ID:       60e6d396-dd8a-4dd1-a145-da4f5abc01e3
+:END:
 
 | Entity        | Attribute      | Type                                           | Description                                                                                                                                                                                                                                                                                  |
 |---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -14,25 +71,29 @@
 |               | =nbits=        | (optional) integer                             | Number of bits used for the command. Not required if constant for a protocol with no variants                                                                                                                                                                                                |
 |               | =repeats=      | integer                                        | Number of repeats to send with the command.                                                                                                                                                                                                                                                  |
 |               | =category=     | (optional) string                              | A comma delimited string representing the set of standard functional categories that the command belongs to. Two categories are currently supported: /on/ and /off/. For example a "power on" command would support the /on/ category, while "power toggle" would be categorized as /on,off/ |
-|               | =map_short=    | (optional) enum(string)                        | The default key associated with the command on the remote for a "short" press. See [[*Keys][Keys]] for the list of supported key designations.                                                                                                                                                          |
-|               | =map_long=     | (optional) enum(string)                        | The default key associated with the command on the remote for a "long" press. See [[*Keys][Keys]] for the list of supported key designations.                                                                                                                                                           |
+|               | =map_short=    | (optional) enum(string)                        | The default key associated with the command on the remote for a "short" press. See [[id:53fa51e9-bc4f-4167-af8b-1897fcb9ebd4][Keys]] for the list of supported key designations. This will be used when the device is accessed via the "Device List GUI" or if a scene uses the =keys_default= attribute pointing to the parent device.  |
+|               | =map_long=     | (optional) enum(string)                        | The default key associated with the command on the remote for a "long" press. See [[id:53fa51e9-bc4f-4167-af8b-1897fcb9ebd4][Keys]] for the list of supported key designations. This will be used when the device is accessed via the "Device List GUI" or if a scene uses the =keys_default= attribute pointing to the parent device.  |
 |---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| =scenes=      |                | dictionary: string -> =scene=                 | A dictionary mapping a string representing the unique identifier for a scene to a corresponding =scene= object                                                                                                                                                                               |
+| =scenes=      |                | dictionary: string -> =scene=                  | A dictionary mapping a string representing the unique identifier for a scene to a corresponding =scene= object                                                                                                                                                                               |
 |---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | =scene=       | =display_name= | string                                         | The name used for this scene in UI                                                                                                                                                                                                                                                           |
 |               | =keys_default= | (optional) string                              | The unique identifier of a =device= section to be used as source for default physical key mapping in the scene (as retrieved from =command= attributes)                                                                                                                                      |
-|               | =keys_short=   | (optional) dictionary: string -> =command_ref= | A dictionary mapping physical key designators (see [[*Keys][Keys]]) to corresponding  commands (via =command_ref= structures) that should be triggered on short press while the scene is active                                                                                                         |
-|               | =keys_long=    | (optional) dictionary: string -> =command_ref= | A dictionary mapping physical key designators (see [[*Keys][Keys]]) to corresponding  commands (via =command_ref= structures) that should be triggered on long press while the scene is active                                                                                                          |
+|               | =keys_short=   | (optional) dictionary: string -> =command_ref= | A dictionary mapping physical key designators (see [[id:53fa51e9-bc4f-4167-af8b-1897fcb9ebd4][Keys]]) to corresponding  commands (via =command_ref= structures) that should be triggered on short press while the scene is active. Any key mappings define here overwrite the default definition inherited via =keys_default=.          |
+|               | =keys_long=    | (optional) dictionary: string -> =command_ref= | A dictionary mapping physical key designators (see [[id:53fa51e9-bc4f-4167-af8b-1897fcb9ebd4][Keys]]) to corresponding  commands (via =command_ref= structures) that should be triggered on long press while the scene is active. Any key mappings define here overwrite the default definition inherited via =keys_default=.           |
 |               | =start=        | list: =command_ref= \vert =delay=              | A sequence of device commands (represented via =command_ref= structures) or delays (represented via =delay= structure) to be executed when the scene starts.                                                                                                                                 |
 |               | =end=          | list: =command_ref= \vert =delay=              | A sequence of device commands (represented via =command_ref= structures) or delays (represented via =delay= structure) to be executed when the scene ends.                                                                                                                                   |
 |               | =shortcuts=    | list: =command_ref=                            | A list of commands (represented by =command_ref= structures) to be presented on this scene's GUI as buttons.                                                                                                                                                                                 |
 |---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | =command_ref= | =device=       | string                                         | The unique identifier of the device (see =devices=) that this reference points to.                                                                                                                                                                                                           |
-|               | =command=      | string                                         | The name of the =command= with the device's =commands= list that this reference points to.                                                                                                                                                                                                   |
+|               | =command=      | string                                         | The name of the =command= with the device's =commands= list that this reference points to. This attributre is only allowed if =device= attribute is present.                                                                                                                                 |
+|               | =scene=        | string                                         | The =display_name= valye of the =scene= to be activated. This attribute is only allowed if neither =device= nor =command= is present.                                                                                                                                                        |
 |---------------+----------------+------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| =delay=       |                | integer                                        | The number of milliseconds to delay before executing the next step of a sequence.                                                                                                                                                                                                             |
+| =delay=       |                | integer                                        | The number of milliseconds to delay before executing the next step of a sequence.                                                                                                                                                                                                            |
 
-** Keys
+*** Keys
+:PROPERTIES:
+:ID:       53fa51e9-bc4f-4167-af8b-1897fcb9ebd4
+:END:
 The designators for physical keys used in the configuration YAML scheme. Abbreviations are used to limit the amount typing required when authoring a configuration.
  - OFF
  - STOP
