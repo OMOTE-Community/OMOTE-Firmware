@@ -91,22 +91,11 @@ int main(int argc, char *argv[]) {
 
   // register commands for the devices
   register_specialCommands();
-  //   TV
-  // register_device_samsungTV();
+
   register_device_lgTV();
-  //   AV receiver
-  // register_device_yamahaAmp();
   register_device_sonyAvr();
-  // register_device_denonAvr();
-  // register_device_lgsoundbar();
-  //   media player
   register_device_appleTV();
-  // register_device_lgbluray();
-  // register_device_samsungbluray();
-  // register_device_shield();
-  //   misc
-  // register_device_smarthome();
-  // register_device_airconditioner();
+
 
   #if (ENABLE_KEYBOARD_MQTT == 1)
   register_device_keyboard_mqtt();
@@ -125,9 +114,6 @@ int main(int argc, char *argv[]) {
   #if (ENABLE_KEYBOARD_BLE == 1)
   register_gui_blepairing();
   #endif
-  // register_gui_smarthome();
-  // register_gui_airconditioner();
-  // register_gui_yamahaAmp();
   // Only show these GUIs in the main gui list. If you don't set this explicitely, by default all registered guis are shown.
   #if (USE_SCENE_SPECIFIC_GUI_LIST != 0)
   main_gui_list =
@@ -141,8 +127,6 @@ int main(int argc, char *argv[]) {
   // register the scenes and their key_commands_*
   register_scene_defaultKeys();
   register_scene_TV();
-  // register_scene_fireTV();
-  // register_scene_chromecast();
   register_scene_appleTV();
   register_scene_allOff();
   // Only show these scenes on the sceneSelection gui. If you don't set this explicitely, by default all registered scenes are shown.
@@ -161,20 +145,18 @@ int main(int argc, char *argv[]) {
   init_keyboardBLE();
   #endif
 
-    // Initialize hub communication with preferred backend from settings
-  #if (ENABLE_HUB_COMMUNICATION == 1)
-    HubBackend preferredBackend;
+   // Initialize hub communication with preferred transport from settings
+  #if (ENABLE_HUB_COMMUNICATION > 0)
+    HubTransport preferredTransport;
 
-    #if defined(PREFERRED_HUB_BACKEND)
-      preferredBackend = static_cast<HubBackend>(PREFERRED_HUB_BACKEND);
-    #elif (ENABLE_ESPNOW == 1)
-      preferredBackend = HUB_ESPNOW;  // Default to ESP-NOW when available
-    #elif (ENABLE_WIFI_AND_MQTT == 1)
-      preferredBackend = HUB_MQTT;    // Fall back to MQTT if ESP-NOW not available
+    #if (ENABLE_HUB_COMMUNICATION == 1)
+      preferredTransport = HubTransport::ESPNOW;  // ESP-NOW transport
+    #elif (ENABLE_HUB_COMMUNICATION == 2)
+      preferredTransport = HubTransport::MQTT;    // MQTT transport
     #endif
 
-    // Initialize the hub manager with the preferred backend
-    HubManager::getInstance().init(preferredBackend);
+    // Initialize the hub manager with the preferred transport
+    HubManager::getInstance().init(preferredTransport);
   #endif
 
   // setup keyboard matrix driver

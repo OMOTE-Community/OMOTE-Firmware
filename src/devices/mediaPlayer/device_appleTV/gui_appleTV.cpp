@@ -17,7 +17,6 @@ LV_IMG_DECLARE(appleBackIcon);
 static void appleKey_event_cb(lv_event_t* e) {
   // Send IR command based on the event user data  
   int user_data = *((int*)(&(e->user_data)));
-<<<<<<< HEAD:src/devices/mediaPlayer/device_appleTV/gui_appleTV.cpp
   omote_log_v("appleKey_event_cb: Event Id: '%d'.\r\n", user_data);
 
   if (user_data == 2)
@@ -28,16 +27,6 @@ static void appleKey_event_cb(lv_event_t* e) {
   {
     executeCommand(APPLETV_MENU);
   }
-=======
-  
-  CommandExecutionParams params;
-  params.commandId = APPLETV_GUI_EVENT_USER_DATA;
-  params.commandType = CMD_SHORT;
-  params.additionalPayload = std::to_string(50 + user_data);
-  executeCommand(params);
-  
-  omote_log_v("%d\r\n", 50 + user_data);
->>>>>>> d298500 (feat: hub communication and downstairs tv mapping.):Platformio/src/devices/mediaPlayer/device_appleTV/gui_appleTV.cpp
 }
 
 void create_tab_content_appleTV(lv_obj_t* tab) {
