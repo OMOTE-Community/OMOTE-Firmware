@@ -370,18 +370,72 @@ void receiveMQTTmessage_cb(std::string topic, std::string payload) {
 #endif
 
 #if (ENABLE_HUB_COMMUNICATION == 1)
+#include "applicationInternal/hub/commandResult.h"
+#include "applicationInternal/gui/guiNotification.h"
+
 void receiveEspNowMessage_cb(json payload) {
-  // Extract device and command from the payload
-  std::string device, command, jsonStr;
+  // Create CommandResult from the JSON payload
+  Hub::CommandResult result = Hub::CommandResult::fromJson(payload);
   
-  if (payload.contains("device") && payload.contains("command")) {
-    device = payload["device"];
-    command = payload["command"];
+  omote_log_d("Received CommandResult: kind=%d, supports_response=%s\r\n", 
+             static_cast<int>(result.kind), result.supports_response ? "true" : "false");
   
-    // Serialize the payload to a string
-    std::string jsonStr = payload.dump();
+  // Handle different types of responses using the CommandResult object
+  switch (result.kind) {
+    case Hub::ResponseKind::VOLUME: {
+      const auto& volume = result.getVolume();
+      omote_log_d("Volume update: level=%.1f, muted=%s\r\n", 
+                 volume.level, volume.is_muted ? "true" : "false");
+      
+      // Show volume notification that slides down from status bar
+      GuiNotification::showVolumeNotification(volume.level, volume.is_muted);
+      break;
+    }
     
-    // TODO: Process the command based on device and command
+    case Hub::ResponseKind::POWER: {
+      const auto& power = result.getPower();
+      omote_log_d("Power update: is_on=%s\r\n", power.is_on ? "true" : "false");
+      
+      // Show power notification
+      GuiNotification::showPowerNotification(power.is_on);
+      break;
+    }
+    
+    case Hub::ResponseKind::RAW_COMMAND: {
+      const auto& raw_cmd = result.getRawCommand();
+      omote_log_d("Raw command result: success=%s, message=%s\r\n", 
+                 raw_cmd.success ? "true" : "false", raw_cmd.raw_response.c_str());
+      
+      // Show raw command message (e.g., pairing status)
+      GuiNotification::showMessageNotification(raw_cmd.raw_response, !raw_cmd.success);
+      break;
+    }
+    
+    case Hub::ResponseKind::ERROR: {
+      const auto& error = result.getError();
+      omote_log_e("Hub error: %s\r\n", error.message.c_str());
+      
+      // Show error notification
+      GuiNotification::showMessageNotification(error.message, true);
+      break;
+    }
+    
+    case Hub::ResponseKind::ACK: {
+      omote_log_d("Received acknowledgment from hub\r\n");
+      
+      // TODO: Handle acknowledgment (e.g., show success indicator)
+      break;
+    }
+    
+    case Hub::ResponseKind::NONE: {
+      omote_log_d("Received NONE response from hub\r\n");
+      break;
+    }
+    
+    default: {
+      omote_log_w("Received unknown CommandResult kind from hub\r\n");
+      break;
+    }
   }
 }
 #endif

@@ -16,6 +16,9 @@ extern lv_style_t panel_style;
 extern int tabviewTop;
 extern int tabviewHeight;
 extern int panelHeight;
+// used by guiNotification.cpp
+extern int statusbarTop;
+extern int statusbarHeight;
 // used by almost all gui_*.cpp
 extern lv_color_t color_primary;
 
@@ -43,3 +46,5 @@ void setActiveTab(uint32_t index, lv_anim_enable_t anim_en, bool send_tab_change
 void showMemoryUsageBar(bool showBar);
 // used by commandHandler to show WiFi status
 void showWiFiConnected(bool connected);
+// used by main.cpp to initialize notification system
+void init_gui_notification_system();

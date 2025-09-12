@@ -4,6 +4,7 @@
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include "applicationInternal/memoryUsage.h"
 #include "applicationInternal/gui/guiMemoryOptimizer.h"
+#include "applicationInternal/gui/guiNotification.h"
 // for changing to scene Selection gui
 #include "applicationInternal/commandHandler.h"
 #include "applicationInternal/omote_log.h"
@@ -136,6 +137,7 @@ void tabview_tab_changed_event_cb(lv_event_t* e) {
 void setMainWidgetsHeightAndPosition();
 void init_gui_status_bar();
 void init_gui_memoryUsage_bar();
+void init_gui_notification_system();
 void init_gui(void) {
 
   // Setup LVGL ---------------------------------------------------------------------------------------------
@@ -168,6 +170,8 @@ void init_gui(void) {
   init_gui_memoryUsage_bar();
   // status bar
   init_gui_status_bar();
+  // notification system
+  init_gui_notification_system();
 
   // register callback for swipe down event to navigate to the scene selection page
   lv_obj_add_event_cb(lv_scr_act(), screen_gesture_event_cb, LV_EVENT_GESTURE, NULL);
@@ -287,6 +291,11 @@ void init_gui_status_bar() {
   lv_obj_align(BattIconLabel, LV_ALIGN_TOP_RIGHT, 0, labelsPositionTopStatusbar -1);
   lv_obj_set_style_text_font(BattIconLabel, &lv_font_montserrat_16, LV_PART_MAIN);
 
+}
+
+void init_gui_notification_system() {
+  // Initialize the global notification system
+  GuiNotification::init();
 }
 
 static bool waitOneLoop = false;
