@@ -372,15 +372,15 @@ void receiveMQTTmessage_cb(std::string topic, std::string payload) {
 #if (ENABLE_HUB_COMMUNICATION == 1)
 #include "applicationInternal/hub/commandResult.h"
 #include "applicationInternal/gui/guiNotification.h"
+#include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 
+// TODO: Refactor to use hub manager, add a callback to the hub manager to handle receiving data from either MQTT or ESP-NOW. This will prevent duplicate code for each transport type.
 void receiveEspNowMessage_cb(json payload) {
-  // Create CommandResult from the JSON payload
   Hub::CommandResult result = Hub::CommandResult::fromJson(payload);
   
   omote_log_d("Received CommandResult: kind=%d, supports_response=%s\r\n", 
              static_cast<int>(result.kind), result.supports_response ? "true" : "false");
   
-  // Handle different types of responses using the CommandResult object
   switch (result.kind) {
     case Hub::ResponseKind::VOLUME: {
       const auto& volume = result.getVolume();
@@ -420,10 +420,18 @@ void receiveEspNowMessage_cb(json payload) {
       break;
     }
     
+    case Hub::ResponseKind::METADATA: {
+      const auto& metadata = result.getMetadata();
+      omote_log_d("Metadata update: %s by %s (%s)\r\n", 
+                 metadata.title.c_str(), metadata.artist.c_str(), metadata.state.c_str());
+      
+      // Update Apple TV GUI with metadata
+      update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state);
+      break;
+    }
+    
     case Hub::ResponseKind::ACK: {
       omote_log_d("Received acknowledgment from hub\r\n");
-      
-      // TODO: Handle acknowledgment (e.g., show success indicator)
       break;
     }
     

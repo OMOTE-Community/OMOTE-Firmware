@@ -13,6 +13,7 @@ enum class ResponseKind {
     POWER,
     RAW_COMMAND,
     ERROR,
+    METADATA,
     NONE
 };
 
@@ -48,6 +49,19 @@ struct Error {
     Error(const std::string& msg = "") : message(msg) {}
 };
 
+struct Metadata {
+    std::string title;
+    std::string artist;
+    std::string album;
+    int duration;  // Duration in seconds
+    int position;  // Current position in seconds
+    std::string state;  // "playing", "paused", "stopped", etc.
+    
+    Metadata(const std::string& t = "", const std::string& a = "", const std::string& alb = "",
+             int dur = 0, int pos = 0, const std::string& st = "")
+        : title(t), artist(a), album(alb), duration(dur), position(pos), state(st) {}
+};
+
 // Main CommandResult class
 class CommandResult {
 public:
@@ -60,6 +74,7 @@ public:
     Power power_data;
     RawCommand raw_command_data;
     Error error_data;
+    Metadata metadata_data;
     
     // Constructors for different types
     static CommandResult createAck() {
@@ -99,6 +114,16 @@ public:
         result.kind = ResponseKind::ERROR;
         result.supports_response = false;
         result.error_data = Error(message);
+        return result;
+    }
+    
+    static CommandResult createMetadata(const std::string& title = "", const std::string& artist = "", 
+                                       const std::string& album = "", int duration = 0, int position = 0, 
+                                       const std::string& state = "") {
+        CommandResult result;
+        result.kind = ResponseKind::METADATA;
+        result.supports_response = true;
+        result.metadata_data = Metadata(title, artist, album, duration, position, state);
         return result;
     }
     
@@ -158,6 +183,16 @@ public:
             }
             return createError("Invalid error data");
         }
+        else if (kind_str == "METADATA" && payload.contains("data") && payload["data"] != nullptr) {
+            auto data = payload["data"];
+            std::string title = data.value("title", "");
+            std::string artist = data.value("artist", "");
+            std::string album = data.value("album", "");
+            int duration = data.value("duration", 0);
+            int position = data.value("position", 0);
+            std::string state = data.value("state", "");
+            return createMetadata(title, artist, album, duration, position, state);
+        }
         else if (kind_str == "NONE") {
             return createNone();
         }
@@ -170,6 +205,7 @@ public:
     const Power& getPower() const { return power_data; }
     const RawCommand& getRawCommand() const { return raw_command_data; }
     const Error& getError() const { return error_data; }
+    const Metadata& getMetadata() const { return metadata_data; }
     
 private:
     CommandResult() : supports_response(false) {}
