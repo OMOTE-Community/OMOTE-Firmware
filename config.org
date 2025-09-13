@@ -1,3 +1,4 @@
+#+OPTIONS: H:9
 * Config Module
 The /Config Module/ for OMOTE introduces the option to define the
 remote's functionality such as the controlled [[id:1670942e-7200-444a-992d-83effa554bc4][Devices]] and [[id:986aceb5-0da2-4742-b214-d283626730a4][Scenes]] in a
