@@ -3,7 +3,7 @@ The /Config Module/ for OMOTE introduces the option to define the
 remote's functionality such as the controlled [[id:1670942e-7200-444a-992d-83effa554bc4][Devices]] and [[id:986aceb5-0da2-4742-b214-d283626730a4][Scenes]] in a
 declarative way (using a YAML configuration file) instead of the
 standard imperative approach based on defining the respective
-configurations by implementing respective functions and data
+configurations by implementing appropriate functions and data
 structures as code.
 
 Please note that while, in principle, the [[id:1670942e-7200-444a-992d-83effa554bc4][Devices]] and [[id:986aceb5-0da2-4742-b214-d283626730a4][Scenes]] defined
@@ -13,9 +13,21 @@ or [[id:5fe5b25c-59bb-4022-96a0-005d0a06de95][Automated Power on/off]]) will not
 definitions.
 
 
+** Usage
+To enable the /Config Module/ one needs to define the YAML_CONFIG build flag in
+the =platformio.ini= file. Defining that flag has the following effects:
+ 1. The /Config Module/ dependencies (such as the ArduinoJson
+    library) will be *conditionally* enabled and linked.
+ 2. The main YAML configuration file (defined according to the [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]]
+    in a file named =config.yml= - see [[id:17207428-6f3c-4836-abf1-edd39fbfb37b][Example]] ) located in the main
+    OMOTE project directory, will be translated to a header file and
+    compiled into the binary.
 
+The translation and conditional dependencies logic is located in a
+script file under =tools/conditional_config.py=.
 
-** Devices
+** Functionality 
+*** Devices
 :PROPERTIES:
 :ID:       1670942e-7200-444a-992d-83effa554bc4
 :END:
@@ -31,27 +43,71 @@ can be used as a convenient baseline for a scene key-map (see =scene= /
 Each command defined within a device configuration, may also include a
 new =category= attribute (see [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]]) that is used to enable the [[id:5fe5b25c-59bb-4022-96a0-005d0a06de95][Automated Power on/off]] capability.
 
-*** Device List
+**** Device List
 :PROPERTIES:
 :ID:       329ebe8e-23b2-4d34-9650-8ddbf8cc4c05
 :END:
 The /Device List/ is a new top-level GUI screen which aggregates all
-devices defined in the configuration file with their commands. The GUI
-is presented as a list of devices which expands to the list of their
-respective commands once a device is "clicked". As long as a device is
-expanded, the physical key-map will be replaced with the key mappings
-from that device definition (if available). The key-map will be
-restored to default once a device command list is "closed"
-(collapsed).
+devices defined in the configuration file along with their
+commands. This gives the capability (that would be immediately
+familiar to any Logitech Harmony user) to invoke any arbitrary
+command, from any configured device, even if it's not mapped to a
+physical key.
 
-** Scenes
+The GUI presents as a list of devices which expand to the
+list of their respective commands once a device is "clicked". As long
+as a device is expanded, the physical key-map will be replaced with
+the key mappings from that device definition (if available - see
+=map_short= and =map_long= from [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]]). The key-map will be restored
+to default once a device command list is collapsed
+*** Scenes
 :PROPERTIES:
 :ID:       986aceb5-0da2-4742-b214-d283626730a4
 :END:
-*** Automated Power on/off
+Scenes, similarly to [[id:1670942e-7200-444a-992d-83effa554bc4][Devices]], are a direct analog to the standard
+OMOTE's imperatively constructed "scene" entity. The config
+file [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]] allows to define all the standard properties (including
+"start" and "end" sequences) available in a classic, code driven,
+scene definition.
+On top of that the following additional capabilities are available:
+
+**** Scene GUI
+:PROPERTIES:
+:ID:       f882865a-c45e-4173-b546-4d515822efd1
+:END:
+Each scene gets its own standardized GUI that gives easy access to the
+scene's "shortcuts" (see below), ability to quickly swipe do the list
+of devices (see [[id:329ebe8e-23b2-4d34-9650-8ddbf8cc4c05][Device List]])as well as a quick way to turn all devices
+involved in the scene off.
+
+**** Shortcuts    
+The configuration file [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]] enables to define a list of "shortcuts"
+for each scene that include semi-frequently accessed commands that for
+one reason or another are not mapped to physical buttons but should be
+available for easy access. The list of "shortcuts" is presented on the
+[[id:f882865a-c45e-4173-b546-4d515822efd1][Scene GUI]].
+
+
+**** Automated Power on/off
 :PROPERTIES:
 :ID:       5fe5b25c-59bb-4022-96a0-005d0a06de95
 :END:
+The /Config Module/ infrastructure tracks the devices that are being
+turned on (via the =category= attribute attached to commands) in the
+configured scenes' startup sequences and, as the user
+switches from one scene to another, makes sure that:
+ 1. Only the devices required in particular scene remain turned on
+    after switching from a previous scene.
+ 2. Only the devices that haven't been already turned on in the
+    previous scene receive a power on or power toggle command.
+ 3. Only the devices that are actually on (that is used in the current
+    scene) are switched off when requesting the "all off" function.
+
+This is both handy and necessary in case of devices that are turned
+on/off via a toggle command, as without that a device would be
+inadvertently turned off if a new scene was requested that includes
+powering on a device that have already been turned on in the previous scene.
+
 ** Schema
 :PROPERTIES:
 :ID:       60e6d396-dd8a-4dd1-a145-da4f5abc01e3
@@ -94,7 +150,9 @@ restored to default once a device command list is "closed"
 :PROPERTIES:
 :ID:       53fa51e9-bc4f-4167-af8b-1897fcb9ebd4
 :END:
-The designators for physical keys used in the configuration YAML scheme. Abbreviations are used to limit the amount typing required when authoring a configuration.
+The designators for physical keys used in the configuration YAML
+scheme. Abbreviations are used to limit the amount of typing required
+when authoring a configuration.
  - OFF
  - STOP
  - REWI
@@ -120,7 +178,10 @@ The designators for physical keys used in the configuration YAML scheme. Abbrevi
  - YELLO
  - BLUE
 
-* Example   
+** Example   
+:PROPERTIES:
+:ID:       17207428-6f3c-4836-abf1-edd39fbfb37b
+:END:
 #+begin_src yaml
 scenes:
   watch_tv:
