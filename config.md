@@ -1,67 +1,67 @@
-- [Config Module](#org42e5bb4)
-  - [Usage](#org4a6f522)
-  - [Functionality](#orgbd09c88)
-    - [Devices](#org68bb64e)
-    - [Scenes](#orge0d9e30)
-  - [Schema](#org086f29e)
-    - [Keys](#org02a5fe7)
-  - [Example](#org2d8e11c)
+- [Config Module](#org2d0efcf)
+  - [Usage](#orgdd88f0a)
+  - [Functionality](#org77bf325)
+    - [Devices](#org9815585)
+    - [Scenes](#orgb9e4772)
+  - [Schema](#org3858d09)
+    - [Keys](#orgb953597)
+  - [Example](#org867b309)
 
 
-<a id="org42e5bb4"></a>
+<a id="org2d0efcf"></a>
 
 # Config Module
 
-The *Config Module* for OMOTE introduces the option to define the remote's functionality such as the controlled [Devices](#org68bb64e) and [Scenes](#orge0d9e30) in a declarative way (using a YAML configuration file) instead of the standard imperative approach based on defining the respective configurations by implementing appropriate functions and data structures as code.
+The *Config Module* for OMOTE introduces the option to define the remote's functionality such as the controlled [Devices](#org9815585) and [Scenes](#orgb9e4772) in a declarative way (using a YAML configuration file) instead of the standard imperative approach based on defining the respective configurations by implementing appropriate functions and data structures as code.
 
-Please note that while, in principle, the [Devices](#org68bb64e) and [Scenes](#orge0d9e30) defined declaratively can live side-by-side with code driven definitions, it is not advised as certain functionality (such as [Device List](#org773dcc4) or [Automated Power on/off](#orgea7f413)) will not be available for the imperative definitions.
+Please note that while, in principle, the [Devices](#org9815585) and [Scenes](#orgb9e4772) defined declaratively can live side-by-side with code driven definitions, it is not advised as certain functionality (such as [Device List](#org1b5657b) or [Automated Power on/off](#org3354b94)) will not be available for the imperative definitions.
 
 
-<a id="org4a6f522"></a>
+<a id="orgdd88f0a"></a>
 
 ## Usage
 
 To enable the *Config Module* one needs to define the YAML\_CONFIG build flag in the `platformio.ini` file. Defining that flag has the following effects:
 
 1.  The *Config Module* dependencies (such as the ArduinoJson library) will be **conditionally** enabled and linked.
-2.  The main YAML configuration file (defined according to the [Schema](#org086f29e) in a file named `config.yml` - see [Example](#org2d8e11c) ) located in the main OMOTE project directory, will be translated to a header file and compiled into the binary.
+2.  The main YAML configuration file (defined according to the [Schema](#org3858d09) in a file named `config.yml` - see [Example](#org867b309) ) located in the main OMOTE project directory, will be translated to a header file and compiled into the binary.
 
 The translation and conditional dependencies logic is located in a script file under `tools/conditional_config.py`.
 
 
-<a id="orgbd09c88"></a>
+<a id="org77bf325"></a>
 
 ## Functionality
 
 
-<a id="org68bb64e"></a>
+<a id="org9815585"></a>
 
 ### Devices
 
-Devices defined via the configuration file (see [Schema](#org086f29e)) are equivalent to the code driven definitions that live in `src/devices`. In addition to the standard set of attributes and customization options inherited from the imperative device definitions, the configuration driven device definitions also allow to define a standard key-map for the device (see `map_short` and `map_long` attributes in the [Schema](#org086f29e)) that can be used as a convenient baseline for a scene key-map (see `scene` / `keys_default` attribute) and will be used in the [Device List](#org773dcc4).
+Devices defined via the configuration file (see [Schema](#org3858d09)) are equivalent to the code driven definitions that live in `src/devices`. In addition to the standard set of attributes and customization options inherited from the imperative device definitions, the configuration driven device definitions also allow to define a standard key-map for the device (see `map_short` and `map_long` attributes in the [Schema](#org3858d09)) that can be used as a convenient baseline for a scene key-map (see `scene` / `keys_default` attribute) and will be used in the [Device List](#org1b5657b).
 
-Each command defined within a device configuration, may also include a new `category` attribute (see [Schema](#org086f29e)) that is used to enable the [Automated Power on/off](#orgea7f413) capability.
+Each command defined within a device configuration, may also include a new `category` attribute (see [Schema](#org3858d09)) that is used to enable the [Automated Power on/off](#org3354b94) capability.
 
 1.  Device List
 
     The *Device List* is a new top-level GUI screen which aggregates all devices defined in the configuration file along with their commands. This gives the capability (that would be immediately familiar to any Logitech Harmony user) to invoke any arbitrary command, from any configured device, even if it's not mapped to a physical key.
     
-    The GUI presents as a list of devices which expand to the list of their respective commands once a device is "clicked". As long as a device is expanded, the physical key-map will be replaced with the key mappings from that device definition (if available - see `map_short` and `map_long` from [Schema](#org086f29e)). The key-map will be restored to default once a device command list is collapsed
+    The GUI presents as a list of devices which expand to the list of their respective commands once a device is "clicked". As long as a device is expanded, the physical key-map will be replaced with the key mappings from that device definition (if available - see `map_short` and `map_long` from [Schema](#org3858d09)). The key-map will be restored to default once a device command list is collapsed
 
 
-<a id="orge0d9e30"></a>
+<a id="orgb9e4772"></a>
 
 ### Scenes
 
-Scenes, similarly to [Devices](#org68bb64e), are a direct analog to the standard OMOTE's imperatively constructed "scene" entity. The config file [Schema](#org086f29e) allows to define all the standard properties (including "start" and "end" sequences) available in a classic, code driven, scene definition. On top of that the following additional capabilities are available:
+Scenes, similarly to [Devices](#org9815585), are a direct analog to the standard OMOTE's imperatively constructed "scene" entity. The config file [Schema](#org3858d09) allows to define all the standard properties (including "start" and "end" sequences) available in a classic, code driven, scene definition. On top of that the following additional capabilities are available:
 
 1.  Scene GUI
 
-    Each scene gets its own standardized GUI that gives easy access to the scene's "shortcuts" (see below), ability to quickly swipe do the list of devices (see [Device List](#org773dcc4))as well as a quick way to turn all devices involved in the scene off.
+    Each scene gets its own standardized GUI that gives easy access to the scene's "shortcuts" (see below), ability to quickly swipe to the list of devices (see [Device List](#org1b5657b))as well as a quick way to turn all devices involved in the scene off.
 
 2.  Shortcuts
 
-    The configuration file [Schema](#org086f29e) enables to define a list of "shortcuts" for each scene that include semi-frequently accessed commands that for one reason or another are not mapped to physical buttons but should be available for easy access. The list of "shortcuts" is presented on the [Scene GUI](#org543767e).
+    The configuration file [Schema](#org3858d09) allows to define a list of "shortcuts" for each scene that include semi-frequently accessed commands that for one reason or another are not mapped to physical buttons but should be available for easy access. The list of "shortcuts" is presented on the [Scene GUI](#orgabf863f).
 
 3.  Automated Power on/off
 
@@ -74,7 +74,7 @@ Scenes, similarly to [Devices](#org68bb64e), are a direct analog to the standard
     This is both handy and necessary in case of devices that are turned on/off via a toggle command, as without that a device would be inadvertently turned off if a new scene was requested that includes powering on a device that have already been turned on in the previous scene.
 
 
-<a id="org086f29e"></a>
+<a id="org3858d09"></a>
 
 ## Schema
 
@@ -90,13 +90,13 @@ Scenes, similarly to [Devices](#org68bb64e), are a direct analog to the standard
 |               | `nbits`        | (optional) integer                             | Number of bits used for the command. Not required if constant for a protocol with no variants                                                                                                                                                                                                             |
 |               | `repeats`      | integer                                        | Number of repeats to send with the command.                                                                                                                                                                                                                                                               |
 |               | `category`     | (optional) string                              | A comma delimited string representing the set of standard functional categories that the command belongs to. Two categories are currently supported: *on* and *off*. For example a "power on" command would support the *on* category, while "power toggle" would be categorized as *on,off*              |
-|               | `map_short`    | (optional) enum(string)                        | The default key associated with the command on the remote for a "short" press. See [Keys](#org02a5fe7) for the list of supported key designations. This will be used when the device is accessed via the "Device List GUI" or if a scene uses the `keys_default` attribute pointing to the parent device. |
-|               | `map_long`     | (optional) enum(string)                        | The default key associated with the command on the remote for a "long" press. See [Keys](#org02a5fe7) for the list of supported key designations. This will be used when the device is accessed via the "Device List GUI" or if a scene uses the `keys_default` attribute pointing to the parent device.  |
+|               | `map_short`    | (optional) enum(string)                        | The default key associated with the command on the remote for a "short" press. See [Keys](#orgb953597) for the list of supported key designations. This will be used when the device is accessed via the "Device List GUI" or if a scene uses the `keys_default` attribute pointing to the parent device. |
+|               | `map_long`     | (optional) enum(string)                        | The default key associated with the command on the remote for a "long" press. See [Keys](#orgb953597) for the list of supported key designations. This will be used when the device is accessed via the "Device List GUI" or if a scene uses the `keys_default` attribute pointing to the parent device.  |
 | `scenes`      |                | dictionary: string -> `scene`                  | A dictionary mapping a string representing the unique identifier for a scene to a corresponding `scene` object                                                                                                                                                                                            |
 | `scene`       | `display_name` | string                                         | The name used for this scene in UI                                                                                                                                                                                                                                                                        |
 |               | `keys_default` | (optional) string                              | The unique identifier of a `device` section to be used as source for default physical key mapping in the scene (as retrieved from `command` attributes)                                                                                                                                                   |
-|               | `keys_short`   | (optional) dictionary: string -> `command_ref` | A dictionary mapping physical key designators (see [Keys](#org02a5fe7)) to corresponding  commands (via `command_ref` structures) that should be triggered on short press while the scene is active. Any key mappings define here overwrite the default definition inherited via `keys_default`.          |
-|               | `keys_long`    | (optional) dictionary: string -> `command_ref` | A dictionary mapping physical key designators (see [Keys](#org02a5fe7)) to corresponding  commands (via `command_ref` structures) that should be triggered on long press while the scene is active. Any key mappings define here overwrite the default definition inherited via `keys_default`.           |
+|               | `keys_short`   | (optional) dictionary: string -> `command_ref` | A dictionary mapping physical key designators (see [Keys](#orgb953597)) to corresponding  commands (via `command_ref` structures) that should be triggered on short press while the scene is active. Any key mappings define here overwrite the default definition inherited via `keys_default`.          |
+|               | `keys_long`    | (optional) dictionary: string -> `command_ref` | A dictionary mapping physical key designators (see [Keys](#orgb953597)) to corresponding  commands (via `command_ref` structures) that should be triggered on long press while the scene is active. Any key mappings define here overwrite the default definition inherited via `keys_default`.           |
 |               | `start`        | list: `command_ref` &vert; `delay`             | A sequence of device commands (represented via `command_ref` structures) or delays (represented via `delay` structure) to be executed when the scene starts.                                                                                                                                              |
 |               | `end`          | list: `command_ref` &vert; `delay`             | A sequence of device commands (represented via `command_ref` structures) or delays (represented via `delay` structure) to be executed when the scene ends.                                                                                                                                                |
 |               | `shortcuts`    | list: `command_ref`                            | A list of commands (represented by `command_ref` structures) to be presented on this scene's GUI as buttons.                                                                                                                                                                                              |
@@ -106,7 +106,7 @@ Scenes, similarly to [Devices](#org68bb64e), are a direct analog to the standard
 | `delay`       |                | integer                                        | The number of milliseconds to delay before executing the next step of a sequence.                                                                                                                                                                                                                         |
 
 
-<a id="org02a5fe7"></a>
+<a id="orgb953597"></a>
 
 ### Keys
 
@@ -138,7 +138,7 @@ The designators for physical keys used in the configuration YAML scheme. Abbrevi
 -   BLUE
 
 
-<a id="org2d8e11c"></a>
+<a id="org867b309"></a>
 
 ## Example
 

@@ -76,12 +76,12 @@ On top of that the following additional capabilities are available:
 :ID:       f882865a-c45e-4173-b546-4d515822efd1
 :END:
 Each scene gets its own standardized GUI that gives easy access to the
-scene's "shortcuts" (see below), ability to quickly swipe do the list
+scene's "shortcuts" (see below), ability to quickly swipe to the list
 of devices (see [[id:329ebe8e-23b2-4d34-9650-8ddbf8cc4c05][Device List]])as well as a quick way to turn all devices
 involved in the scene off.
 
 **** Shortcuts    
-The configuration file [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]] enables to define a list of "shortcuts"
+The configuration file [[id:60e6d396-dd8a-4dd1-a145-da4f5abc01e3][Schema]] allows to define a list of "shortcuts"
 for each scene that include semi-frequently accessed commands that for
 one reason or another are not mapped to physical buttons but should be
 available for easy access. The list of "shortcuts" is presented on the
