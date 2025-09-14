@@ -4,8 +4,8 @@
 #include <applicationInternal/config/registry.h>
 #include <applicationInternal/commandHandler.h>
 #include <applicationInternal/omote_log.h>
-#include <guis/gui_devices.h>
-#include <guis/gui_scene.h>
+#include "gui_devices.h"
+#include "gui_scene.h"
 
 using namespace config;
 

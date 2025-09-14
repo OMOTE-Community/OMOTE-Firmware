@@ -7,6 +7,7 @@ cppflags = build_flags.get("CPPDEFINES", [])
 deps = env.GetProjectOption("lib_deps") or []
 
 if "YAML_CONFIG" in cppflags:
+    #install non-standard package
     try:
         import yaml
     except ImportError:
@@ -29,6 +30,9 @@ if "YAML_CONFIG" in cppflags:
 
     out = os.path.join(env['PROJECT_SRC_DIR'], "embedded_config.h")
     pathlib.Path(out).write_text(header)
+else:
+    #conditional compilation for config module sources
+    env.AppendUnique(SRC_FILTER=["-<applicationInternal/config/*>"])
 
 
 if "REMOTE_DEBUG" in cppflags:

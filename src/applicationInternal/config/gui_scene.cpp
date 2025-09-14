@@ -1,9 +1,9 @@
 #include "gui_scene.h"
-#include "applicationInternal/hardware/hardwarePresenter.h"
-#include "applicationInternal/gui/guiRegistry.h"
-#include "applicationInternal/config/registry.h"
-#include "applicationInternal/commandHandler.h"
-#include "applicationInternal/omote_log.h"
+#include <applicationInternal/hardware/hardwarePresenter.h>
+#include <applicationInternal/gui/guiRegistry.h>
+#include <applicationInternal/config/registry.h>
+#include <applicationInternal/commandHandler.h>
+#include <applicationInternal/omote_log.h>
 
 const char* const tabName_scene = "Scene";
 extern config::DynamicScene allOff;

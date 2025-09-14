@@ -51,8 +51,8 @@
 #include "guis/gui_BLEpairing.h"
 
 #ifdef YAML_CONFIG
-#include "guis/gui_devices.h"
-#include "guis/gui_scene.h"
+#include "applicationinternal/config/gui_devices.h"
+#include "applicationinternal/config/gui_scene.h"
 #endif
 
 #include "applicationInternal/keys.h"
