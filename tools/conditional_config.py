@@ -1,5 +1,5 @@
 Import("env")
-import yaml, json, pathlib, os
+import json, pathlib, os
 
 
 build_flags = env.ParseFlags(env['BUILD_FLAGS'])
@@ -7,6 +7,13 @@ cppflags = build_flags.get("CPPDEFINES", [])
 deps = env.GetProjectOption("lib_deps") or []
 
 if "YAML_CONFIG" in cppflags:
+    try:
+        import yaml
+    except ImportError:
+        print("Installing missing dependecy: PyYAML")
+        env.Execute("$PYTHONEXE -m pip install PyYAML")
+        import yaml
+
     deps.append("bblanchon/ArduinoJson@^7.4.1")
     
     #generate embedded_config.h representing the contents of config.yml
