@@ -157,6 +157,13 @@ int main(int argc, char *argv[]) {
 
     // Initialize the hub manager with the preferred transport
     HubManager::getInstance().init(preferredTransport);
+    
+    HubManager::getInstance().setMessageHandler(handleHubMessage);
+    
+    if (should_poll_metadata_on_startup()) {
+      clear_metadata_poll_flag();
+      HubManager::getInstance().requestMetadataPolling();
+    }
   #endif
 
   // setup keyboard matrix driver

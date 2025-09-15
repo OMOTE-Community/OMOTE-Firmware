@@ -1,6 +1,10 @@
 #include "espNowHubTransport.h"
+#include "hubManager.h"
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include "applicationInternal/omote_log.h"
+
+// Forward declaration for the internal callback
+void hubMessageReceived_cb(json payload);
 
 #if (ENABLE_HUB_COMMUNICATION == 1)
 EspNowHubTransport::EspNowHubTransport() = default;
@@ -10,6 +14,7 @@ EspNowHubTransport::~EspNowHubTransport() {
 }
 
 bool EspNowHubTransport::init() {
+  set_espnow_message_callback(&hubMessageReceived_cb);
   init_espnow();
   return true;
 }
@@ -34,5 +39,10 @@ bool EspNowHubTransport::isReady() {
 
 void EspNowHubTransport::shutdown() {
   espnow_shutdown();
+}
+
+void hubMessageReceived_cb(json payload) {
+  auto& hubManager = HubManager::getInstance();
+  hubManager.handleIncomingMessage(payload);
 }
 #endif 

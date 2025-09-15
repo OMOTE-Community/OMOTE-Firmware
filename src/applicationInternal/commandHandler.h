@@ -159,6 +159,6 @@ void receiveBLEmessage_cb(std::string message);
 void receiveWiFiConnected_cb(bool connected);
 void receiveMQTTmessage_cb(std::string topic, std::string payload);
 #endif
-#if (ENABLE_HUB_COMMUNICATION == 1)
-void receiveEspNowMessage_cb(json payload);
+#if (ENABLE_HUB_COMMUNICATION > 0)
+void handleHubMessage(const json& payload);
 #endif

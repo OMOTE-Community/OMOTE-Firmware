@@ -43,6 +43,13 @@ void set_wakeupByIMUEnabled(bool aWakeupByIMUEnabled);
 uint8_t get_motionThreshold();
 void set_motionThreshold(uint8_t aMotionThreshold);
 
+// wake-up reason detection
+int get_wakeupReason();
+
+// wake-up state tracking
+bool should_poll_metadata_on_startup();
+void clear_metadata_poll_flag();
+
 // --- keypad -----------------------------------------------------------------
 void init_keys(void);
 const char NO_KEY = '\0';
@@ -137,6 +144,7 @@ bool getIsWifiConnected();
 void mqtt_loop();
 bool publishMQTTMessage(const char *topic, const char *payload);
 void wifi_shutdown();
+void set_mqtt_message_callback(void (*callback)(std::string topic, std::string payload));
 #endif
 
 // --- memory usage -----------------------------------------------------------
@@ -144,9 +152,9 @@ void get_heapUsage(unsigned long *heapSize, unsigned long *freeHeap, unsigned lo
 
 // --- ESP-NOW ----------------------------------------------------------------
 #if (ENABLE_HUB_COMMUNICATION == 1)
-// ESP-NOW hardware presenter functions
 void init_espnow();
 void espnow_loop();
 bool publishEspNowMessage(json payload);
 void espnow_shutdown();
+void set_espnow_message_callback(void (*callback)(json payload));
 #endif

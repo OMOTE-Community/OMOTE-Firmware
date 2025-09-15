@@ -311,3 +311,7 @@ void set_motionThreshold_HAL(uint8_t aMotionThreshold) {
     motionThreshold = DEFAULT_MOTION_THRESHOLD;
   }
 }
+
+int get_wakeupReason_HAL() {
+  return (int)wakeup_reason;
+}

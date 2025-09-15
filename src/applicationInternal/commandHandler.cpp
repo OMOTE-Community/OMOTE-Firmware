@@ -176,6 +176,28 @@ std::string convertStringListToString(std::list<std::string> listOfStrings) {
   return result;
 }
 
+// Helper function to send hub messages with consistent logging
+void sendHubMessage(const std::string& device, const std::string& command, const std::string& type = "SHORT", const json& data = json::array()) {
+  json payload;
+  payload["device"] = device;
+  payload["command"] = command;
+  payload["type"] = type;
+  
+  if (!data.empty()) {
+    payload["data"] = data;
+  }
+  
+  omote_log_d("execute: will send hub message for device '%s', command '%s'\r\n", 
+              device.c_str(), command.c_str());
+  
+  HubManager::getInstance().sendMessage(payload);
+}
+
+void sendHubMessage(const std::string& device, const std::string& command, CommandExecutionType type, const json& data = json::array()) {
+  json typeJson = type;
+  sendHubMessage(device, command, typeJson.get<std::string>(), data);
+}
+
 void executeCommandWithData(uint16_t command, commandData commandData, std::string additionalPayload) {
   switch (commandData.commandHandler) {
     case IR: {
@@ -236,7 +258,6 @@ void executeCommandWithData(uint16_t command, commandData commandData, std::stri
       if (command == MY_SPECIAL_COMMAND) {
         // do your special command here
         omote_log_d("execute: could execute a special command here, if you define one\r\n");
-
       }
       break;
     }
@@ -272,12 +293,6 @@ void executeCommandWithData(const CommandExecutionParams& params, commandData co
   std::string commandName = *current;
   current = std::next(current, 1);
   
-  // Create JSON payload
-  json payload;
-  payload["device"] = deviceName;
-  payload["command"] = commandName;
-  payload["type"] = params.commandType;
-  
   // Create a data array if we have any additional data
   json dataArray = json::array();
   
@@ -292,16 +307,8 @@ void executeCommandWithData(const CommandExecutionParams& params, commandData co
     dataArray.push_back(params.additionalPayload);
   }
   
-  // Only add the data array if it has any content
-  if (!dataArray.empty()) {
-    payload["data"] = dataArray;
-  }
-  
-  omote_log_d("execute: will send hub message for device '%s', command '%s'\r\n", 
-              deviceName.c_str(), commandName.c_str());
-  
-  // Send using the hub manager
-  HubManager::getInstance().sendMessage(payload);
+  // Send using the helper function
+  sendHubMessage(deviceName, commandName, params.commandType, dataArray);
 #endif
 }
 
@@ -369,13 +376,12 @@ void receiveMQTTmessage_cb(std::string topic, std::string payload) {
 }
 #endif
 
-#if (ENABLE_HUB_COMMUNICATION == 1)
+#if (ENABLE_HUB_COMMUNICATION > 0)
 #include "applicationInternal/hub/commandResult.h"
 #include "applicationInternal/gui/guiNotification.h"
 #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 
-// TODO: Refactor to use hub manager, add a callback to the hub manager to handle receiving data from either MQTT or ESP-NOW. This will prevent duplicate code for each transport type.
-void receiveEspNowMessage_cb(json payload) {
+void handleHubMessage(const json& payload) {
   Hub::CommandResult result = Hub::CommandResult::fromJson(payload);
   
   omote_log_d("Received CommandResult: kind=%d, supports_response=%s\r\n", 
@@ -387,7 +393,6 @@ void receiveEspNowMessage_cb(json payload) {
       omote_log_d("Volume update: level=%.1f, muted=%s\r\n", 
                  volume.level, volume.is_muted ? "true" : "false");
       
-      // Show volume notification that slides down from status bar
       GuiNotification::showVolumeNotification(volume.level, volume.is_muted);
       break;
     }
@@ -396,7 +401,6 @@ void receiveEspNowMessage_cb(json payload) {
       const auto& power = result.getPower();
       omote_log_d("Power update: is_on=%s\r\n", power.is_on ? "true" : "false");
       
-      // Show power notification
       GuiNotification::showPowerNotification(power.is_on);
       break;
     }
@@ -406,8 +410,11 @@ void receiveEspNowMessage_cb(json payload) {
       omote_log_d("Raw command result: success=%s, message=%s\r\n", 
                  raw_cmd.success ? "true" : "false", raw_cmd.raw_response.c_str());
       
-      // Show raw command message (e.g., pairing status)
-      GuiNotification::showMessageNotification(raw_cmd.raw_response, !raw_cmd.success);
+      if (raw_cmd.success) {
+        GuiNotification::showMessageNotification(raw_cmd.raw_response);
+      } else {
+        GuiNotification::showErrorNotification(raw_cmd.raw_response);
+      }
       break;
     }
     
@@ -415,8 +422,7 @@ void receiveEspNowMessage_cb(json payload) {
       const auto& error = result.getError();
       omote_log_e("Hub error: %s\r\n", error.message.c_str());
       
-      // Show error notification
-      GuiNotification::showMessageNotification(error.message, true);
+      GuiNotification::showErrorNotification(error.message);
       break;
     }
     
@@ -425,8 +431,9 @@ void receiveEspNowMessage_cb(json payload) {
       omote_log_d("Metadata update: %s by %s (%s)\r\n", 
                  metadata.title.c_str(), metadata.artist.c_str(), metadata.state.c_str());
       
-      // Update Apple TV GUI with metadata
-      update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state);
+      // TODO: Refactor to handle any device that supports metadata updates
+      update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state, 
+                              metadata.duration, metadata.position);
       break;
     }
     

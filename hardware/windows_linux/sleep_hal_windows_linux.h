@@ -11,3 +11,6 @@ bool get_wakeupByIMUEnabled_HAL();
 void set_wakeupByIMUEnabled_HAL(bool aWakeupByIMUEnabled);
 uint8_t get_motionThreshold_HAL();
 void set_motionThreshold_HAL(uint8_t aMotionThreshold);
+
+// wake-up reason detection
+int get_wakeupReason_HAL();

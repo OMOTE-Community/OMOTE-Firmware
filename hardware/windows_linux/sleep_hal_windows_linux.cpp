@@ -34,3 +34,9 @@ void set_motionThreshold_HAL(uint8_t aMotionThreshold) {
   motionThreshold = aMotionThreshold;
   printf("motion threshold set to %u\r\n", aMotionThreshold);
 }
+
+int get_wakeupReason_HAL() {
+  // In the simulator, we can simulate different wake-up reasons for testing
+  // For now, return WAKEUP_BY_RESET (0) to indicate normal startup
+  return 0; // WAKEUP_BY_RESET
+}

@@ -45,30 +45,34 @@ std::unique_ptr<HubTransportBase> HubManager::createTransport(HubTransport trans
 }
 
 bool HubManager::init(HubTransport transport) {
-  // Store the selected transport type
   currentTransport = transport;
 
-  // Create the new transport
   auto newTransport = createTransport(transport);
   if (!newTransport) {
     return false;
   }
 
-  // Initialize the transport
   if (!newTransport->init()) {
     omote_log_e("Failed to initialize hub transport\n");
     return false;
   }
 
-  // If everything succeeded, replace the active transport
   activeTransport = std::move(newTransport);
   return true;
 }
 
 void HubManager::process() {
-  if (activeTransport) {
-    activeTransport->process();
+  if (!activeTransport) {
+    return;
   }
+  
+  activeTransport->process();
+  
+  if (!isMetadataPollRequested()) {
+    return;
+  }
+  
+  pollMetadata();
 }
 
 bool HubManager::sendMessage(const json& payload) {
@@ -102,4 +106,64 @@ void HubManager::shutdown() {
 
 HubTransport HubManager::getCurrentTransport() const {
   return currentTransport;
-} 
+}
+
+void HubManager::requestMetadataPolling() {
+  if (!metadataPollRequested) {
+    metadataPollRequested = true;
+    metadataPollStartTime = millis();
+    omote_log_i("Metadata polling requested\n");
+  }
+}
+
+bool HubManager::isMetadataPollRequested() const {
+  return metadataPollRequested;
+}
+
+void HubManager::resetMetadataPollTimer() {
+  metadataPollStartTime = millis();
+}
+
+bool HubManager::isMetadataPollTimerReady() const {
+  unsigned long currentTime = millis();
+  return (currentTime - metadataPollStartTime) >= METADATA_POLL_DELAY;
+}
+
+void HubManager::pollMetadata() {
+  if (!isMetadataPollTimerReady()) {
+    return;
+  }
+  
+  if (!isReady()) {
+    omote_log_d("Transport not ready for metadata polling, will retry\n");
+    resetMetadataPollTimer();
+    return;
+  }
+  
+  json payload = {
+    {"device", "APPLE_TV"},
+    {"command", "GET_METADATA"},
+    {"type", "SHORT"}
+  };
+  
+  bool sendSuccess = sendMessage(payload);
+  
+  if (!sendSuccess) {
+    omote_log_w("Failed to send metadata polling request, will retry\n");
+    resetMetadataPollTimer();
+    return;
+  }
+  
+  metadataPollRequested = false;
+  omote_log_i("Metadata polling request sent successfully\n");
+}
+
+void HubManager::setMessageHandler(std::function<void(const json&)> handler) {
+  messageHandler = handler;
+}
+
+void HubManager::handleIncomingMessage(const json& payload) {
+  if (messageHandler) {
+    messageHandler(payload);
+  }
+}

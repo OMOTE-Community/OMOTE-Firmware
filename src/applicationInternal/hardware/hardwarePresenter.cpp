@@ -1,6 +1,7 @@
 #include <string>
 #include <list>
 #include "applicationInternal/hardware/hardwarePresenter.h"
+#include "applicationInternal/omote_log.h"
 // for registering the callback to show received IR messages
 #include "guis/gui_irReceiver.h"
 // for registering the callback to receive MQTT messages
@@ -75,8 +76,33 @@ void get_battery_status(int *battery_voltage, int *battery_percentage, bool *bat
 }
 
 // --- sleep / IMU ------------------------------------------------------------
+bool metadata_poll_requested = false;
+bool device_was_woken_up = false;
+
+
+bool should_poll_metadata_on_startup() {
+  return metadata_poll_requested;
+}
+
+void clear_metadata_poll_flag() {
+  metadata_poll_requested = false;
+}
+
+
 void init_sleep() {
   init_sleep_HAL();
+  
+  // Check if we were woken up from sleep (not a fresh boot/reset)
+  // Using constants: WAKEUP_BY_RESET=0, WAKEUP_BY_IMU=1, WAKEUP_BY_KEYPAD=2
+  int reason = get_wakeupReason();
+  device_was_woken_up = (reason == 1 || reason == 2); // WAKEUP_BY_IMU or WAKEUP_BY_KEYPAD
+  
+  omote_log_i("init_sleep: wakeup_reason=%d, device_was_woken_up=%s\r\n", 
+             reason, device_was_woken_up ? "true" : "false");
+  
+  if (device_was_woken_up) {
+    metadata_poll_requested = true;
+  }
 };
 void init_IMU() {
   init_IMU_HAL();
@@ -104,6 +130,9 @@ uint8_t get_motionThreshold() {
 }
 void set_motionThreshold(uint8_t aMotionThreshold) {
   set_motionThreshold_HAL(aMotionThreshold);
+}
+int get_wakeupReason() {
+  return get_wakeupReason_HAL();
 }
 
 // --- keypad -----------------------------------------------------------------
@@ -269,6 +298,10 @@ bool publishMQTTMessage(const char *topic, const char *payload) {
 void wifi_shutdown() {
   wifi_shutdown_HAL();
 }
+
+void set_mqtt_message_callback(void (*callback)(std::string topic, std::string payload)) {
+  set_announceSubscribedTopics_cb_HAL(callback);
+}
 #endif
 
 // --- memory usage -----------------------------------------------------------
@@ -278,9 +311,7 @@ void get_heapUsage(unsigned long *heapSize, unsigned long *freeHeap, unsigned lo
 
 // --- ESP-NOW ----------------------------------------------------------------
 #if (ENABLE_HUB_COMMUNICATION == 1)
-// ESP-NOW hardware presenter functions
 void init_espnow() {
-  set_announceEspNowMessage_cb_HAL(&receiveEspNowMessage_cb);
   init_espnow_HAL();
 }
 
@@ -294,5 +325,9 @@ bool publishEspNowMessage(json payload) {
 
 void espnow_shutdown() {
   espnow_shutdown_HAL();
+}
+
+void set_espnow_message_callback(void (*callback)(json payload)) {
+  set_announceEspNowMessage_cb_HAL(callback);
 }
 #endif
