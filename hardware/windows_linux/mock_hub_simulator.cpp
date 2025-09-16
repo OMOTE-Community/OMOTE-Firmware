@@ -3,10 +3,28 @@
 #include <thread>
 #include <chrono>
 #include <random>
+#include <ctime>
 
 static EspNowMessageCallback messageCallback = nullptr;
 static bool simulatorRunning = false;
 static std::thread simulatorThread;
+
+// Helper function to get current time and timezone offset
+static std::pair<long, int> getCurrentTimeAndOffset() {
+    auto now = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+    
+    // Get timezone offset by comparing UTC and local time
+    std::time_t time_t_now = std::chrono::system_clock::to_time_t(now);
+    std::tm* utc_tm = std::gmtime(&time_t_now);
+    std::tm* local_tm = std::localtime(&time_t_now);
+    
+    // Calculate offset in seconds
+    int offset_seconds = (local_tm->tm_hour - utc_tm->tm_hour) * 3600 + 
+                        (local_tm->tm_min - utc_tm->tm_min) * 60;
+    
+    return {timestamp, offset_seconds};
+}
 
 // Mock hub responses for different commands
 static json createMockResponse(const std::string& device, const std::string& command) {
@@ -59,16 +77,28 @@ static json createMockResponse(const std::string& device, const std::string& com
                 }},
                 {"supports_response", true}
             };
-        } else if (command == "GET_METADATA") {
+        } else if (command == "SYNC_STATE") {
+            auto time_data = getCurrentTimeAndOffset();
+            long timestamp = time_data.first;
+            int timezone_offset = time_data.second;
+            
             response = {
-                {"kind", "METADATA"},
+                {"kind", "STATE_SYNC"},
                 {"data", {
-                    {"title", "S4 · E1: Cakey's Cupcake Cousins"},
-                    {"artist", "Cakey's Cupcake Cousins"},
-                    {"album", "Album 1 • Collection"},
-                    {"duration", 200},
-                    {"position", 75},
-                    {"state", "playing"}
+                    {"metadata", {
+                        {"title", "S4 · E1: Cakey's Cupcake Cousins"},
+                        {"artist", "Cakey's Cupcake Cousins"},
+                        {"album", "Album 1 • Collection"},
+                        {"duration", 200},
+                        {"position", 75},
+                        {"state", "playing"}
+                    }},
+                    {"time", {
+                        {"timestamp", timestamp},
+                        {"timezone_offset", timezone_offset}
+                    }},
+                    {"has_metadata", true},
+                    {"has_time", true}
                 }},
                 {"supports_response", true}
             };
@@ -82,15 +112,27 @@ static json createMockResponse(const std::string& device, const std::string& com
                 if (position > 240) position = 10;
             }
             
+            auto time_data = getCurrentTimeAndOffset();
+            long timestamp = time_data.first;
+            int timezone_offset = time_data.second;
+            
             response = {
-                {"kind", "METADATA"},
+                {"kind", "STATE_SYNC"},
                 {"data", {
-                    {"title", "Song 2 • Test"},
-                    {"artist", "Artist's Music"},
-                    {"album", "Album 2 · Collection"},
-                    {"duration", 240},
-                    {"position", position},
-                    {"state", playing ? "playing" : "paused"}
+                    {"metadata", {
+                        {"title", "Song 2 • Test"},
+                        {"artist", "Artist's Music"},
+                        {"album", "Album 2 · Collection"},
+                        {"duration", 240},
+                        {"position", position},
+                        {"state", playing ? "playing" : "paused"}
+                    }},
+                    {"time", {
+                        {"timestamp", timestamp},
+                        {"timezone_offset", timezone_offset}
+                    }},
+                    {"has_metadata", true},
+                    {"has_time", true}
                 }},
                 {"supports_response", true}
             };
@@ -146,21 +188,33 @@ static void simulatePeriodicUpdates() {
                     break;
             }
             
-            json metadata = {
-                {"kind", "METADATA"},
+            auto time_data = getCurrentTimeAndOffset();
+            long timestamp = time_data.first;
+            int timezone_offset = time_data.second;
+            
+            json state_sync = {
+                {"kind", "STATE_SYNC"},
                 {"data", {
-                    {"title", title},
-                    {"artist", artist},
-                    {"album", album},
-                    {"duration", song_duration},
-                    {"position", song_position},
-                    {"state", (counter % 2) ? "playing" : "paused"}
+                    {"metadata", {
+                        {"title", title},
+                        {"artist", artist},
+                        {"album", album},
+                        {"duration", song_duration},
+                        {"position", song_position},
+                        {"state", (counter % 2) ? "playing" : "paused"}
+                    }},
+                    {"time", {
+                        {"timestamp", timestamp},
+                        {"timezone_offset", timezone_offset}
+                    }},
+                    {"has_metadata", true},
+                    {"has_time", true}
                 }},
                 {"supports_response", true}
             };
             
-            std::cout << "Mock Hub: Sending periodic metadata update..." << std::endl;
-            messageCallback(metadata);
+            std::cout << "Mock Hub: Sending periodic state sync update..." << std::endl;
+            messageCallback(state_sync);
             counter++;
         }
     }
@@ -175,8 +229,8 @@ void startMockHubSimulator(EspNowMessageCallback callback) {
     std::cout << "Mock Hub Simulator started!" << std::endl;
     std::cout << "   - Volume commands will show notifications" << std::endl;
     std::cout << "   - Power commands will show status" << std::endl;
-    std::cout << "   - Apple TV commands will update metadata" << std::endl;
-    std::cout << "   - Periodic metadata updates every 5-8 seconds" << std::endl;
+    std::cout << "   - Apple TV SYNC_STATE commands will update metadata and time" << std::endl;
+    std::cout << "   - Periodic state sync updates every 5-8 seconds" << std::endl;
 }
 
 void stopMockHubSimulator() {

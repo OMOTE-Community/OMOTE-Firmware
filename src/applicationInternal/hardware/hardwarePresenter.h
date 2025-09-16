@@ -47,8 +47,8 @@ void set_motionThreshold(uint8_t aMotionThreshold);
 int get_wakeupReason();
 
 // wake-up state tracking
-bool should_poll_metadata_on_startup();
-void clear_metadata_poll_flag();
+bool should_poll_hub_state_on_startup();
+void clear_hub_state_poll_flag();
 
 // --- keypad -----------------------------------------------------------------
 void init_keys(void);

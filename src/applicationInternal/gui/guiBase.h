@@ -9,6 +9,7 @@ extern lv_obj_t* MemoryUsageLabel;
 extern lv_obj_t* BluetoothLabel;
 extern lv_obj_t* BattPercentageLabel;
 extern lv_obj_t* BattIconLabel;
+extern lv_obj_t* TimeLabel;
 // used by sceneHandler.cpp
 extern lv_obj_t* SceneLabel;
 // used by guiMemoryOptimizer.cpp

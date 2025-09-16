@@ -12,10 +12,10 @@ private:
   std::unique_ptr<HubTransportBase> activeTransport;
   HubTransport currentTransport;
   
-  // Metadata polling state
-  bool metadataPollRequested = false;
-  unsigned long metadataPollStartTime = 0;
-  static const unsigned long METADATA_POLL_DELAY = 100; // ms
+  // State sync state
+  bool stateSyncRequested = false;
+  unsigned long stateSyncStartTime = 0;
+  static const unsigned long STATE_SYNC_DELAY = 100; // ms
 
   // Message handling
   std::function<void(const json&)> messageHandler;
@@ -26,10 +26,10 @@ private:
   // Factory method for creating transports
   static std::unique_ptr<HubTransportBase> createTransport(HubTransport transport);
   
-  // Metadata polling helpers
-  bool isMetadataPollTimerReady() const;
-  void pollMetadata();
-  void resetMetadataPollTimer();
+  // State sync helpers
+  bool isStateSyncTimerReady() const;
+  void syncState();
+  void resetStateSyncTimer();
 
 public:
   static HubManager& getInstance();
@@ -54,9 +54,9 @@ public:
   
   HubTransport getCurrentTransport() const;
   
-  // Metadata polling interface
-  void requestMetadataPolling();
-  bool isMetadataPollRequested() const;
+  // State sync interface
+  void requestStateSync();
+  bool isStateSyncRequested() const;
   
   // Message handling interface
   void setMessageHandler(std::function<void(const json&)> handler);

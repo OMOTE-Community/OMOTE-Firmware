@@ -68,11 +68,11 @@ void HubManager::process() {
   
   activeTransport->process();
   
-  if (!isMetadataPollRequested()) {
+  if (!isStateSyncRequested()) {
     return;
   }
   
-  pollMetadata();
+  syncState();
 }
 
 bool HubManager::sendMessage(const json& payload) {
@@ -108,54 +108,56 @@ HubTransport HubManager::getCurrentTransport() const {
   return currentTransport;
 }
 
-void HubManager::requestMetadataPolling() {
-  if (!metadataPollRequested) {
-    metadataPollRequested = true;
-    metadataPollStartTime = millis();
-    omote_log_i("Metadata polling requested\n");
+
+void HubManager::requestStateSync() {
+  if (!stateSyncRequested) {
+    stateSyncRequested = true;
+    stateSyncStartTime = millis();
+    omote_log_i("State sync requested\n");
   }
 }
 
-bool HubManager::isMetadataPollRequested() const {
-  return metadataPollRequested;
+bool HubManager::isStateSyncRequested() const {
+  return stateSyncRequested;
 }
 
-void HubManager::resetMetadataPollTimer() {
-  metadataPollStartTime = millis();
+void HubManager::resetStateSyncTimer() {
+  stateSyncStartTime = millis();
 }
 
-bool HubManager::isMetadataPollTimerReady() const {
+bool HubManager::isStateSyncTimerReady() const {
   unsigned long currentTime = millis();
-  return (currentTime - metadataPollStartTime) >= METADATA_POLL_DELAY;
+  return (currentTime - stateSyncStartTime) >= STATE_SYNC_DELAY;
 }
 
-void HubManager::pollMetadata() {
-  if (!isMetadataPollTimerReady()) {
+void HubManager::syncState() {
+  if (!isStateSyncTimerReady()) {
     return;
   }
   
   if (!isReady()) {
-    omote_log_d("Transport not ready for metadata polling, will retry\n");
-    resetMetadataPollTimer();
+    omote_log_d("Transport not ready for state sync, will retry\n");
+    resetStateSyncTimer();
     return;
   }
   
   json payload = {
-    {"device", "APPLE_TV"},
-    {"command", "GET_METADATA"},
-    {"type", "SHORT"}
+    {"device", "HUB"},
+    {"command", "SYNC_STATE"},
+    {"type", "SHORT"},
+    {"requested_states", {"metadata", "time"}}
   };
   
   bool sendSuccess = sendMessage(payload);
   
   if (!sendSuccess) {
-    omote_log_w("Failed to send metadata polling request, will retry\n");
-    resetMetadataPollTimer();
+    omote_log_w("Failed to send state sync request, will retry\n");
+    resetStateSyncTimer();
     return;
   }
   
-  metadataPollRequested = false;
-  omote_log_i("Metadata polling request sent successfully\n");
+  stateSyncRequested = false;
+  omote_log_i("State sync request sent successfully\n");
 }
 
 void HubManager::setMessageHandler(std::function<void(const json&)> handler) {

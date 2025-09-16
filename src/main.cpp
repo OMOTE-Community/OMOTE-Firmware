@@ -160,9 +160,9 @@ int main(int argc, char *argv[]) {
     
     HubManager::getInstance().setMessageHandler(handleHubMessage);
     
-    if (should_poll_metadata_on_startup()) {
-      clear_metadata_poll_flag();
-      HubManager::getInstance().requestMetadataPolling();
+    if (should_poll_hub_state_on_startup()) {
+      clear_hub_state_poll_flag();
+      HubManager::getInstance().requestStateSync();
     }
   #endif
 

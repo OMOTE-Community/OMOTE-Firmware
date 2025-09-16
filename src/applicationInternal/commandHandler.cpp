@@ -15,6 +15,7 @@
 // show received BLE connection messages
 #include "guis/gui_BLEpairing.h"
 #include "hub/hubManager.h"
+#include "applicationInternal/gui/guiStatusUpdate.h"
 
 uint16_t COMMAND_UNKNOWN;
 
@@ -426,19 +427,35 @@ void handleHubMessage(const json& payload) {
       break;
     }
     
-    case Hub::ResponseKind::METADATA: {
-      const auto& metadata = result.getMetadata();
-      omote_log_d("Metadata update: %s by %s (%s)\r\n", 
-                 metadata.title.c_str(), metadata.artist.c_str(), metadata.state.c_str());
-      
-      // TODO: Refactor to handle any device that supports metadata updates
-      update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state, 
-                              metadata.duration, metadata.position);
+    case Hub::ResponseKind::ACK: {
+      omote_log_d("Received acknowledgment from hub\r\n");
       break;
     }
     
-    case Hub::ResponseKind::ACK: {
-      omote_log_d("Received acknowledgment from hub\r\n");
+    case Hub::ResponseKind::STATE_SYNC: {
+      const auto& state_sync = result.getStateSync();
+      omote_log_d("State sync received: has_metadata=%s, has_time=%s\r\n", 
+                 state_sync.has_metadata ? "true" : "false",
+                 state_sync.has_time ? "true" : "false");
+      
+      // Handle metadata if present
+      if (state_sync.has_metadata) {
+        const auto& metadata = state_sync.metadata;
+        omote_log_d("Metadata update: %s by %s (%s)\r\n", 
+                   metadata.title.c_str(), metadata.artist.c_str(), metadata.state.c_str());
+        
+        update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state, 
+                                metadata.duration, metadata.position);
+      }
+      
+      // Handle time if present
+      if (state_sync.has_time) {
+        const auto& time_data = state_sync.time;
+        omote_log_d("Time sync: timestamp=%lu, timezone_offset=%d\r\n", 
+                   time_data.timestamp, time_data.timezone_offset);
+        
+        setTime(time_data.timestamp, time_data.timezone_offset);
+      }
       break;
     }
     

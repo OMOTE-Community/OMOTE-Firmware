@@ -1,8 +1,16 @@
 #include <lvgl.h>
+#include <time.h>
+#include <sys/time.h>
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include "applicationInternal/memoryUsage.h"
 #include "guis/gui_settings.h"
 #include "applicationInternal/gui/guiBase.h"
+#include "applicationInternal/omote_log.h"
+
+#if (ENABLE_HUB_COMMUNICATION > 0)
+// Hub sends positive seconds WEST of UTC (EDT = +14400)
+static int32_t g_seconds_west_of_utc = 0;
+#endif
 
 // --- regularly update hardware values and update GUI, used by "main.cpp" ----
 void updateBatteryStatusOnGUI() {
@@ -80,12 +88,69 @@ void updateKeyboardBLEstatusOnGUI() {
 }
 #endif
 
+#if (ENABLE_HUB_COMMUNICATION > 0)
+static bool isTimeSetOrValid(time_t timestamp) {
+  return timestamp != (time_t)-1 && timestamp >= 1000000000; // After year 2001
+}
+
+static const char* TIME_PLACEHOLDER = "--:--";
+
+static void formatTime12Hour(const struct tm* timeinfo, char* buffer, size_t buffer_size) {
+  strftime(buffer, buffer_size, "%I:%M %p", timeinfo);
+  
+  // Remove leading zero from hour if present
+  if (buffer[0] == '0') {
+    memmove(buffer, buffer + 1, strlen(buffer));
+  }
+}
+
+void updateTimeOnGUI() {
+  if (TimeLabel == NULL) return;
+  time_t now_utc = time(NULL);
+  if (!isTimeSetOrValid(now_utc)) {
+    lv_label_set_text(TimeLabel, TIME_PLACEHOLDER);
+    return;
+  }
+  // Render local time explicitly: local = UTC - seconds_west_of_utc
+  time_t local_secs = now_utc - (time_t)g_seconds_west_of_utc;
+  struct tm tm_local;
+  if (gmtime_r(&local_secs, &tm_local) == nullptr) {
+    lv_label_set_text(TimeLabel, TIME_PLACEHOLDER);
+    return;
+  }
+  char time_buffer[16];
+  formatTime12Hour(&tm_local, time_buffer, sizeof(time_buffer));
+  lv_label_set_text(TimeLabel, time_buffer);
+}
+
+void setTime(uint32_t timestamp_utc, int32_t seconds_west_of_utc) {
+  // Keep device clock in UTC
+  g_seconds_west_of_utc = seconds_west_of_utc;
+  struct timeval tv;
+  tv.tv_sec  = (time_t)timestamp_utc;
+  tv.tv_usec = 0;
+  if (settimeofday(&tv, nullptr) == 0) {
+    omote_log_d("Time synchronized (UTC): ts=%lu, west=%ld",
+                (unsigned long)timestamp_utc, (long)g_seconds_west_of_utc);
+  } else {
+    #if defined(__APPLE__) || defined(__linux__)
+    omote_log_d("Time sync failed (expected on macOS/Linux simulator - requires root privileges)");
+    #else
+    omote_log_e("Failed to set time");
+    #endif
+  }
+}
+#endif
+
 // update user_led, battery, BLE, memoryUsage on GUI
 void updateHardwareStatusAndShowOnGUI(void) {
 
   update_userled();
 
   updateBatteryStatusOnGUI();
+  #if (ENABLE_HUB_COMMUNICATION > 0)
+  updateTimeOnGUI();
+  #endif
   #if (ENABLE_BLUETOOTH == 1)
     // adjust this if you implement other bluetooth devices than the BLE keyboard
     #if (ENABLE_KEYBOARD_BLE == 1)

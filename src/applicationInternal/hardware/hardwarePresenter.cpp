@@ -80,11 +80,11 @@ bool metadata_poll_requested = false;
 bool device_was_woken_up = false;
 
 
-bool should_poll_metadata_on_startup() {
+bool should_poll_hub_state_on_startup() {
   return metadata_poll_requested;
 }
 
-void clear_metadata_poll_flag() {
+void clear_hub_state_poll_flag() {
   metadata_poll_requested = false;
 }
 

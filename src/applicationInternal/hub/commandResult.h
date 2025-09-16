@@ -13,7 +13,7 @@ enum class ResponseKind {
     POWER,
     RAW_COMMAND,
     ERROR,
-    METADATA,
+    STATE_SYNC,
     NONE
 };
 
@@ -62,6 +62,22 @@ struct Metadata {
         : title(t), artist(a), album(alb), duration(dur), position(pos), state(st) {}
 };
 
+struct Time {
+    unsigned long timestamp;  // Unix epoch timestamp
+    int timezone_offset;      // Timezone offset in seconds
+    
+    Time(unsigned long ts = 0, int tz_offset = 0) : timestamp(ts), timezone_offset(tz_offset) {}
+};
+
+struct StateSync {
+    Metadata metadata;
+    Time time;
+    bool has_metadata;
+    bool has_time;
+    
+    StateSync() : has_metadata(false), has_time(false) {}
+};
+
 // Main CommandResult class
 class CommandResult {
 public:
@@ -74,7 +90,7 @@ public:
     Power power_data;
     RawCommand raw_command_data;
     Error error_data;
-    Metadata metadata_data;
+    StateSync state_sync_data;
     
     // Constructors for different types
     static CommandResult createAck() {
@@ -117,13 +133,11 @@ public:
         return result;
     }
     
-    static CommandResult createMetadata(const std::string& title = "", const std::string& artist = "", 
-                                       const std::string& album = "", int duration = 0, int position = 0, 
-                                       const std::string& state = "") {
+    static CommandResult createStateSync(const StateSync& state_sync) {
         CommandResult result;
-        result.kind = ResponseKind::METADATA;
+        result.kind = ResponseKind::STATE_SYNC;
         result.supports_response = true;
-        result.metadata_data = Metadata(title, artist, album, duration, position, state);
+        result.state_sync_data = state_sync;
         return result;
     }
     
@@ -183,15 +197,37 @@ public:
             }
             return createError("Invalid error data");
         }
-        else if (kind_str == "METADATA" && payload.contains("data") && payload["data"] != nullptr) {
+        else if (kind_str == "STATE_SYNC" && payload.contains("data") && payload["data"] != nullptr) {
             auto data = payload["data"];
-            std::string title = data.value("title", "");
-            std::string artist = data.value("artist", "");
-            std::string album = data.value("album", "");
-            int duration = data.value("duration", 0);
-            int position = data.value("position", 0);
-            std::string state = data.value("state", "");
-            return createMetadata(title, artist, album, duration, position, state);
+            StateSync state_sync;
+            
+            // Parse metadata if present
+            if (data.contains("metadata") && data["metadata"] != nullptr) {
+                auto metadata = data["metadata"];
+                state_sync.metadata = Metadata(
+                    metadata.value("title", ""),
+                    metadata.value("artist", ""),
+                    metadata.value("album", ""),
+                    metadata.value("duration", 0),
+                    metadata.value("position", 0),
+                    metadata.value("state", "")
+                );
+                state_sync.has_metadata = true;
+            }
+            
+            // Parse time if present
+            if (data.contains("time") && data["time"] != nullptr) {
+                auto time_data = data["time"];
+                if (time_data.contains("timestamp")) {
+                    state_sync.time = Time(
+                        time_data["timestamp"],
+                        time_data.value("timezone_offset", 0)
+                    );
+                    state_sync.has_time = true;
+                }
+            }
+            
+            return createStateSync(state_sync);
         }
         else if (kind_str == "NONE") {
             return createNone();
@@ -205,7 +241,7 @@ public:
     const Power& getPower() const { return power_data; }
     const RawCommand& getRawCommand() const { return raw_command_data; }
     const Error& getError() const { return error_data; }
-    const Metadata& getMetadata() const { return metadata_data; }
+    const StateSync& getStateSync() const { return state_sync_data; }
     
 private:
     CommandResult() : supports_response(false) {}

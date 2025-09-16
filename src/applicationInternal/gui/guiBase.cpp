@@ -17,6 +17,7 @@ lv_obj_t* BluetoothLabel = NULL;
 lv_obj_t* BattPercentageLabel = NULL;
 lv_obj_t* BattIconLabel = NULL;
 lv_obj_t* SceneLabel = NULL;
+lv_obj_t* TimeLabel = NULL;
 
 lv_obj_t* tabview = NULL;
 // page indicator
@@ -262,15 +263,20 @@ void init_gui_status_bar() {
   lv_obj_align(statusbar, LV_ALIGN_TOP_MID, 0, statusbarTop);
 
   int labelsPositionTopStatusbar = labelsPositionTop + 3;
+  // Time -------------------------------------------------------------------------
+  TimeLabel = lv_label_create(statusbar);
+  lv_label_set_text(TimeLabel, "12:00");
+  lv_obj_align(TimeLabel, LV_ALIGN_TOP_LEFT, 0, labelsPositionTopStatusbar);
+  lv_obj_set_style_text_font(TimeLabel, &lv_font_montserrat_12, LV_PART_MAIN);
   // WiFi -------------------------------------------------------------------------
   WifiLabel = lv_label_create(statusbar);
   lv_label_set_text(WifiLabel, "");
-  lv_obj_align(WifiLabel, LV_ALIGN_TOP_LEFT, 0, labelsPositionTopStatusbar);
+  lv_obj_align(WifiLabel, LV_ALIGN_TOP_LEFT, 50, labelsPositionTopStatusbar);
   lv_obj_set_style_text_font(WifiLabel, &lv_font_montserrat_12, LV_PART_MAIN);
   // Bluetooth --------------------------------------------------------------------
   BluetoothLabel = lv_label_create(statusbar);
   lv_label_set_text(BluetoothLabel, "");
-  lv_obj_align(BluetoothLabel, LV_ALIGN_TOP_LEFT, 20, labelsPositionTopStatusbar);
+  lv_obj_align(BluetoothLabel, LV_ALIGN_TOP_LEFT, 70, labelsPositionTopStatusbar);
   lv_obj_set_style_text_font(BluetoothLabel, &lv_font_montserrat_12, LV_PART_MAIN);
   // Scene ------------------------------------------------------------------------
   SceneLabel = lv_label_create(statusbar);
