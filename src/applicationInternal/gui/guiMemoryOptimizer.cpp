@@ -248,7 +248,7 @@ void setGUIlistIndicesToBeShown_afterSlide(t_gui_state *gui_state) {
     // swipe to previous item in list
     omote_log_d("  Will swipe to previous item in list\r\n");
     oldListIndex = gui_state->gui_on_tab[1].gui_list_index_previous;
-    if ((oldListIndex == 1)) {
+    if (oldListIndex == 1) {
       // next state is the "first state"
       gui_state->gui_on_tab[0] = {NULL, "", 0};
       gui_state->gui_on_tab[1] = {NULL, "", 1};
