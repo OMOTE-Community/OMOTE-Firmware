@@ -12,6 +12,6 @@
 #define WIFI_PASSWORD              "YourWifiPassword"          // override here
 #define MQTT_SERVER                "IPAddressOfYourBroker"     // override here
 
-// MAC address of the hub (replace with your actual hub's MAC)
+// MAC address of the hub
+// For unicast communication, use the hub's actual MAC address
 #define ESPNOW_HUB_MAC {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
-

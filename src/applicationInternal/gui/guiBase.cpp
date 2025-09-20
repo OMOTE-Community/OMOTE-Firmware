@@ -365,6 +365,12 @@ void guis_doTabCreationForNavigateToLastActiveGUIofPreviousGUIlist() {
 // ------------------------------------------------------------------------------------------------------------
 
 void setActiveTab(uint32_t index, lv_anim_enable_t anim_en, bool send_tab_changed_event) {
+  // Check if tabview is initialized before using it
+  if (tabview == NULL) {
+    omote_log_w("setActiveTab: tabview is NULL, cannot set active tab\n");
+    return;
+  }
+  
   // unsigned long startTime = millis();
   if (anim_en == LV_ANIM_ON) {
     lv_tabview_set_act(tabview, index, LV_ANIM_ON);
