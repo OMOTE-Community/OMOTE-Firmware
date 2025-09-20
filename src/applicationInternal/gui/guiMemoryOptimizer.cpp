@@ -330,9 +330,10 @@ void fillPanelWithPageIndicator_strategyMax3(lv_obj_t* panel, lv_obj_t* img1, lv
   }
   
   // Check available memory before creating many objects
-  size_t free_heap = esp_get_free_heap_size();
-  if (free_heap < 5000) { // Less than 5KB free
-    omote_log_w("fillPanelWithPageIndicator: Low memory (%zu bytes), skipping page indicators\n", free_heap);
+  unsigned long heapSize, freeHeap, maxAllocHeap, minFreeHeap;
+  get_heapUsage(&heapSize, &freeHeap, &maxAllocHeap, &minFreeHeap);
+  if (freeHeap < 5000) { // Less than 5KB free
+    omote_log_w("fillPanelWithPageIndicator: Low memory (%lu bytes), skipping page indicators\n", freeHeap);
     lv_obj_add_style(panel, &panel_style, 0);
     #ifdef drawRedBorderAroundMainWidgets
     lv_obj_add_style(panel, &style_red_border, LV_PART_MAIN);
