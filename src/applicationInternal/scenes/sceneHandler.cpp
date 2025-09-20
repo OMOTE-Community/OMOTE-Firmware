@@ -17,6 +17,19 @@ void setLabelActiveScene() {
 
 void showSpecificGUI(GUIlists GUIlist, std::string GUIname);
 
+static unsigned long last_gui_navigation_time = 0;
+const unsigned long GUI_NAVIGATION_DEBOUNCE_MS = 100;
+
+bool isGuiNavigationDebounced() {
+  unsigned long current_time = millis();
+  if (current_time - last_gui_navigation_time < GUI_NAVIGATION_DEBOUNCE_MS) {
+    omote_log_d("scene: GUI navigation debounced, too soon since last navigation\r\n");
+    return true;
+  }
+  last_gui_navigation_time = current_time;
+  return false;
+}
+
 void handleScene(uint16_t command, commandData commandData, std::string additionalPayload = "") {
 
   auto current = commandData.commandPayloads.begin();
@@ -31,6 +44,10 @@ void handleScene(uint16_t command, commandData commandData, std::string addition
 
   // --- do not switch scene, but navigate to the prev or next gui in the currently active list of guis ---------------
   if ((scene_name == scene_gui_next) || (scene_name == scene_gui_prev)) {
+    if (isGuiNavigationDebounced()) {
+      return;
+    }
+    
     if (scene_name == scene_gui_prev) {
       if (gui_memoryOptimizer_getActiveTabID() == 0) {
         omote_log_d("scene: cannot navigate to prev gui, because there is none\r\n");
