@@ -381,9 +381,6 @@ void receiveEspNowMessage_cb(json payload) {
     // Serialize the payload to a string
     std::string jsonStr = payload.dump();
     
-    // Show the message in the UI
-    showEspNowMessage(jsonStr);
-    
     // TODO: Process the command based on device and command
   }
 }

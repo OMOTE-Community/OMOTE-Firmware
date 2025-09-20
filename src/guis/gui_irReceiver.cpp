@@ -189,9 +189,3 @@ void notify_tab_before_delete_irReceiver(void) {
 void register_gui_irReceiver(void){
   register_gui(std::string(tabName_irReceiver), & create_tab_content_irReceiver, & notify_tab_before_delete_irReceiver);
 }
-
-void showEspNowMessage(std::string payload) {
-  lastTopic = "ESP-NOW";
-  lastPayload = payload;
-  printMQTTmessage();
-}

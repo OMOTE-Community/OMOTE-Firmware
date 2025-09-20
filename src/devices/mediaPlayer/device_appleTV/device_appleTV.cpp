@@ -3,6 +3,10 @@
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include "device_appleTV.h"
 
+#if (ENABLE_HUB_COMMUNICATION == 1)
+#include "devices/misc/device_hub_helper.h"
+#endif
+
 uint16_t APPLETV_UP;
 uint16_t APPLETV_DOWN;
 uint16_t APPLETV_LEFT;
@@ -30,8 +34,6 @@ uint16_t APPLETV_STOP;
 void register_device_appleTV() {
     #if (ENABLE_HUB_COMMUNICATION == 1)
     // Register hub commands for Apple TV when Hub is enabled
-    register_hub_command(&APPLETV_GUI_EVENT_USER_DATA, "APPLE_TV", "GUI_EVENT");
-
     register_hub_command(&APPLETV_POWER_ON, "APPLE_TV", "POWER_ON");
     register_hub_command(&APPLETV_POWER_OFF, "APPLE_TV", "POWER_OFF");
     register_hub_command(&APPLETV_PLAY_PAUSE, "APPLE_TV", "PLAY_PAUSE");
