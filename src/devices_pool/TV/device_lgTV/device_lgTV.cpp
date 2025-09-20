@@ -3,7 +3,7 @@
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include "device_lgTV.h"
 
-#if (ENABLE_HUB_COMMUNICATION == 1)
+#if (ENABLE_HUB_COMMUNICATION > 0)
 #include "devices/misc/device_hub_helper.h"
 #endif
 
@@ -127,7 +127,7 @@ void register_device_lgTV()
   register_command(&LGTV_3D             , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC), "0x20DF3BC4"}));
   register_command(&LGTV_HOME           , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC), "0x20DF3EC1"}));
 
-  #if (ENABLE_HUB_COMMUNICATION == 1)
+  #if (ENABLE_HUB_COMMUNICATION > 0)
     register_hub_command(&LGTV_POWER_OFF, "LG_TV", "POWER_OFF");
     register_hub_command(&LGTV_POWER_ON, "LG_TV", "POWER_ON");
     register_hub_command(&LGTV_SOURCE, "LG_TV", "SOURCE");

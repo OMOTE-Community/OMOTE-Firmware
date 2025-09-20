@@ -3,7 +3,7 @@
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include <string>
 
-#if (ENABLE_HUB_COMMUNICATION == 1)
+#if (ENABLE_HUB_COMMUNICATION > 0)
 #include "devices/misc/device_hub_helper.h"
 #endif
 
@@ -16,7 +16,7 @@ uint16_t SONY_VOL_MUTE;
 
 void register_device_sonyAvr() {
 
-  #if (ENABLE_HUB_COMMUNICATION == 1)
+  #if (ENABLE_HUB_COMMUNICATION > 0)
     register_hub_command(&SONY_POWER_ON, "SONY_AVR", "POWER_ON");
     register_hub_command(&SONY_POWER_OFF, "SONY_AVR", "POWER_OFF");
     register_hub_command(&SONY_VOL_MINUS, "SONY_AVR", "VOL_MINUS");
