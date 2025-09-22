@@ -265,7 +265,7 @@ void init_gui_status_bar() {
   int labelsPositionTopStatusbar = labelsPositionTop + 3;
   // Time -------------------------------------------------------------------------
   TimeLabel = lv_label_create(statusbar);
-  lv_label_set_text(TimeLabel, "12:00");
+  lv_label_set_text(TimeLabel, "--:--");
   lv_obj_align(TimeLabel, LV_ALIGN_TOP_LEFT, 0, labelsPositionTopStatusbar);
   lv_obj_set_style_text_font(TimeLabel, &lv_font_montserrat_12, LV_PART_MAIN);
   // WiFi -------------------------------------------------------------------------
