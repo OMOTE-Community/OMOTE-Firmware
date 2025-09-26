@@ -77,20 +77,14 @@ void doShortPress(char keyChar, int keyCode){
   }
   
   omote_log_d("key: key '%c', will use command '%u'\r\n", keyChar, command);
-  CommandExecutionParams params;
-  params.commandId = command;
-  params.commandType = CMD_SHORT;
-  executeCommand(params);
+  executeCommand(command);
 }
 
 void doLongPress(char keyChar, int keyCode){
   uint16_t command = get_command_long(gui_memoryOptimizer_getActiveSceneName(), keyChar);
   if (command != COMMAND_UNKNOWN) {
     omote_log_d("key: key '%c' (long press), will use command '%u'\r\n", keyChar, command);
-    CommandExecutionParams params;
-    params.commandId = command;
-    params.commandType = CMD_LONG;
-    executeCommand(params);
+    executeCommand(command);
   } else {
     omote_log_w("key: key '%c' (long press), but no command defined\r\n", keyChar);
   }
