@@ -35,8 +35,8 @@
 #include "lib/MQTT-C/include/posix_sockets.h"
 
 int sockfd = -1;
-uint8_t sendmem1[1024], sendmem2[1024];
-uint8_t recvmem1[1024], recvmem2[1024];
+uint8_t sendmem1[4096];
+uint8_t recvmem1[4096];
 struct mqtt_client mqttClient;
 std::string uniqueClientSuffix = "";
 int state = 0;

@@ -18,4 +18,7 @@ extern uint16_t APPLETV_PREVIOUS;
 extern uint16_t APPLETV_MENU;
 extern uint16_t APPLETV_HOME;
 
+extern uint16_t APPLETV_POWER_ON;
+extern uint16_t APPLETV_POWER_OFF;
+
 void register_device_appleTV();
