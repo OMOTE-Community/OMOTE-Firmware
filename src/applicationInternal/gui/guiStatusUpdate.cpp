@@ -13,7 +13,7 @@ void updateBatteryStatusOnGUI() {
   get_battery_status(&battery_voltage, &battery_percentage, &battery_ischarging);
 
   char buffer1[20];
-  sprintf(buffer1, "Voltage: %.2f V", (float)battery_voltage / 1000);
+  snprintf(buffer1, sizeof(buffer1), "Voltage: %.2f V", (float)battery_voltage / 1000);
 
   // GUI settings
   if (objBattSettingsVoltage    != NULL) {lv_label_set_text_fmt(objBattSettingsVoltage, "%s", buffer1);}
@@ -23,9 +23,9 @@ void updateBatteryStatusOnGUI() {
   // GUI status bar at the top
   char buffer2[12];
   // Voltage and percentage
-  // sprintf(buffer2, "%.1fV, %d%%", (float)getBatteryVoltage() / 1000, battery_percentage);
+  // snprintf(buffer2, sizeof(buffer2), "%.1fV, %d%%", (float)getBatteryVoltage() / 1000, battery_percentage);
   // only percentage
-  sprintf(buffer2, "%d%%", battery_percentage);
+  snprintf(buffer2, sizeof(buffer2), "%d%%", battery_percentage);
   for (int i=0; i<strlen(buffer2); i++) {
     if (buffer2[i] == '.') {
       buffer2[i] = ',';

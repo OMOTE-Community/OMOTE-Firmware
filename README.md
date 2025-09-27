@@ -7,7 +7,7 @@
 
 ## Overview
 
-This it the ESP32 arduino based firmware for the OMOTE - Open Universal Remote.
+This is the ESP32 Arduino based firmware for the OMOTE - Open Universal Remote.
 
 To run this firmware, you have two options
 *  run it on the [OMOTE ESP32 Hardware](https://github.com/OMOTE-Community/OMOTE-Hardware/)
@@ -23,11 +23,11 @@ The software can be adjusted to your needs. You can add your own amplifier, TV a
 
 Please see the [wiki on how to understand and modify the firmware.](https://github.com/OMOTE-Community/OMOTE-Firmware/wiki/How-to-understand-and-modify-the-firmware)
 
-You need to have PlatformIO running, and you need to know how to compile and flash your own firmware with PlatformIO. There is no prebuild firmware.
+You need to have PlatformIO running, and you need to know how to compile and flash your own firmware with PlatformIO. There is no prebuilt firmware.
 
 The remote can be charged and programmed via its USB-C port. Open the PlatformIO project to compile and upload the code to the ESP32.
 
-As a long term goal, maybe a prebuild firmware will be published, where you can configure your OMOTE via a web interface.
+As a long term goal, maybe a prebuilt firmware will be published, where you can configure your OMOTE via a web interface.
 
 ### LVGL GUI simulator for Windows, Linux, and macOS
 
@@ -40,7 +40,7 @@ You can run the simulator in Visual Studio Code with PlatformIO. No need for any
 
 For details, please see the [wiki for the software simulator for fast creating and testing of LVGL GUIs.](https://github.com/OMOTE-Community/OMOTE-Firmware/wiki/Software-simulator-for-fast-creating-and-testing-of-LVGL-GUIs)
 
-### To Dos for software
+### To-dos for software
 
 Long term goals (not yet scheduled)
 - [ ] Add an interface for graphically editing the configuration
@@ -50,7 +50,7 @@ See the [open issues](https://github.com/OMOTE-Community/OMOTE-Firmware/issues) 
 
 ## Contributing
 
-If you have a suggestion for an improvement, please fork the repo and create a pull request. You can also simply open an issue or for more general feature requests, head over to the [discussions](https://github.com/OMOTE-Community/OMOTE-Firmware/discussions).
+If you have a suggestion for an improvement, please fork the repo and create a pull request. You can also simply open an issue or - for more general feature requests - head over to the [discussions](https://github.com/OMOTE-Community/OMOTE-Firmware/discussions).
 
 ## License
 
