@@ -77,7 +77,12 @@ void doShortPress(char keyChar, int keyCode){
   }
   
   omote_log_d("key: key '%c', will use command '%u'\r\n", keyChar, command);
-  executeCommand(command);
+  
+  CommandExecutionParams params;
+  params.commandId = command;
+  params.commandType = CMD_SHORT;
+  params.additionalPayload = "";
+  executeCommand(params);
 }
 
 void doLongPress(char keyChar, int keyCode){
