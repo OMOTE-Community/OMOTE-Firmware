@@ -7,6 +7,11 @@
 #endif
 #include "secrets.h"
 
+// Function to get MAC address for ESP32
+std::string getMACaddress() {
+  return std::string(WiFi.macAddress().c_str());
+}
+
 #if (ENABLE_WIFI_AND_MQTT == 1)
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
@@ -159,7 +164,7 @@ bool checkMQTTconnection() {
       //mqttClient.setSocketTimeout(15); // default is 15   This determines how long the client will wait for incoming data when it expects data to arrive - for example, whilst it is in the middle of reading an MQTT packet.
       mqttClient.setServer(MQTT_SERVER, MQTT_SERVER_PORT); // MQTT initialization
       
-      std::string mqttClientName = std::string(MQTT_CLIENTNAME) + "_esp32_" + std::string(WiFi.macAddress().c_str());
+      std::string mqttClientName = std::string(MQTT_CLIENTNAME) + "_esp32_" + getMACaddress();
       if (mqttClient.connect(mqttClientName.c_str(), MQTT_USER, MQTT_PASS)) {
         Serial.printf("  Successfully connected to MQTT broker\r\n");
     

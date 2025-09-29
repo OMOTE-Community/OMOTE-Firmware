@@ -1,5 +1,8 @@
 #pragma once
 
+// Function to get MAC address for Windows/Linux
+std::string getMACaddress();
+
 #if (ENABLE_WIFI_AND_MQTT == 1)
 
 void init_mqtt_HAL(void);

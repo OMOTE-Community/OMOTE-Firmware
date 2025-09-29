@@ -142,6 +142,13 @@ std::string getMACaddress() {
 }
 #endif
 
+#if defined(__APPLE__)
+std::string getMACaddress() {
+  // For macOS simulator, return a mock MAC address
+  return "AA:BB:CC:DD:EE:FF";
+}
+#endif
+
 void init_mqtt_HAL(void) {
   #if defined(WIN32)
     WSADATA wsaData;

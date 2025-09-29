@@ -2,7 +2,6 @@
 #include "hubManager.h"
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include "applicationInternal/omote_log.h"
-#include <WiFi.h>
 
 // Forward declaration for the internal callback
 void hubMessageReceived_cb(json payload);
@@ -52,7 +51,7 @@ void hubMessageReceived_cb(json payload) {
       json response = {
         {"type", "discovery_response"},
         {"hub_mac", payload["hub_mac"]},
-        {"omote_mac", WiFi.macAddress().c_str()}
+        {"omote_mac", getMACaddress()}
       };
       
       omote_log_i("Sending discovery response to hub\n");

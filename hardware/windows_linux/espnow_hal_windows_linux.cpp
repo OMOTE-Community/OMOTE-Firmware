@@ -2,6 +2,42 @@
 #include "mock_hub_simulator.h"
 #include <iostream>
 
+#if !defined(WIN32)
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <unistd.h>
+#endif
+
+// Function to get MAC address for Windows/Linux/macOS
+std::string getMACaddress() {
+#if defined(__APPLE__)
+  // For macOS simulator, return a mock MAC address
+  return "AA:BB:CC:DD:EE:FF";
+#elif defined(WIN32)
+  // For Windows, return a mock MAC address
+  return "AA:BB:CC:DD:EE:FF";
+#else
+  // For Linux, try to get real MAC address
+  struct ifreq s;
+  int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+
+  strcpy(s.ifr_name, "eth0");
+  if (0 == ioctl(fd, SIOCGIFHWADDR, &s)) {
+    char buffer[6*3];
+    int i;
+    for (i = 0; i < 6; ++i) {
+      sprintf(&buffer[i*3], "%02x:", (unsigned char) s.ifr_addr.sa_data[i]);
+    }
+    std::string MACaddress = std::string(buffer, 17);
+    close(fd);
+    return MACaddress;
+  }
+  close(fd);
+  return "AA:BB:CC:DD:EE:FF"; // Fallback to mock MAC
+#endif
+}
+
 // Callback function pointer
 static EspNowMessageCallback espNowMessageCallback = nullptr;
 

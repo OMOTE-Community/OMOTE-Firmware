@@ -26,7 +26,7 @@ static std::pair<long, int> getCurrentTimeAndOffset() {
     return {timestamp, offset_seconds};
 }
 
-// Mock hub responses for different commands
+// Mock hub responses for different commands using new CommandResult format
 static json createMockResponse(const std::string& device, const std::string& command) {
     json response;
     

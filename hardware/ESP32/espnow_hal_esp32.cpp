@@ -7,6 +7,11 @@
 #include <esp_wifi.h>
 #include "secrets.h"
 
+// Function to get MAC address for ESP32
+std::string getMACaddress() {
+  return std::string(WiFi.macAddress().c_str());
+}
+
 using json = nlohmann::json;
 
 // Define the MAC address of the Raspberry Pi hub

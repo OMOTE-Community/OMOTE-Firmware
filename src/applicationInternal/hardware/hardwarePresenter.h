@@ -150,6 +150,9 @@ void set_mqtt_message_callback(void (*callback)(std::string topic, std::string p
 // --- memory usage -----------------------------------------------------------
 void get_heapUsage(unsigned long *heapSize, unsigned long *freeHeap, unsigned long *maxAllocHeap, unsigned long *minFreeHeap);
 
+// --- MAC address -----------------------------------------------------------
+std::string getMACaddress();
+
 // --- ESP-NOW ----------------------------------------------------------------
 #if (ENABLE_HUB_COMMUNICATION == 1)
 void init_espnow();

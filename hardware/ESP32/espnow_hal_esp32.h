@@ -5,6 +5,9 @@
 
 using json = nlohmann::json;
 
+// Function to get MAC address for ESP32
+std::string getMACaddress();
+
 void init_espnow_HAL(void);
 void espnow_loop_HAL();
 bool publishEspNowMessage_HAL(json payload);

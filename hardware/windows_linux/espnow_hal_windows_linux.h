@@ -3,6 +3,9 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+// Function to get MAC address for Windows/Linux/macOS
+std::string getMACaddress();
+
 // Callback type definition
 typedef void (*EspNowMessageCallback)(json);
 
