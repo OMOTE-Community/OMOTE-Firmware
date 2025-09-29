@@ -40,22 +40,44 @@ unsigned long lastTimeSent[keypadROWS][keypadCOLS] ={
   {0, 0, 0, 0, 0},
 };
 
+bool isKeyPressInBounds(int keyCode, int& row, int& col) {
+  row = keyCode / keypadCOLS;
+  col = keyCode % keypadCOLS;
+  
+  if (row >= keypadROWS || col >= keypadCOLS) {
+    omote_log_e("doShortPress: keyCode %d results in invalid row=%d, col=%d (max: %d, %d)\n", 
+                keyCode, row, col, keypadROWS-1, keypadCOLS-1);
+    return false;
+  }
+  return true;
+}
+
+bool isKeyPressRateLimited(int row, int col, unsigned long currentMillis) {
+  return (currentMillis - lastTimeSent[row][col]) <= repeatRate;
+}
+
 void doShortPress(char keyChar, int keyCode){
   unsigned long currentMillis = millis();
-  if ((currentMillis - lastTimeSent[keyCode/keypadROWS][keyCode%keypadROWS]) > repeatRate) {
-    lastTimeSent[keyCode/keypadROWS][keyCode%keypadROWS] = currentMillis;
-
-    uint16_t command = get_command_short(gui_memoryOptimizer_getActiveSceneName(), keyChar);
-    if (command != COMMAND_UNKNOWN) {
-      omote_log_d("key: key '%c', will use command '%u'\r\n", keyChar, command);
-      CommandExecutionParams params;
-      params.commandId = command;
-      params.commandType = CMD_SHORT;
-      executeCommand(params);
-    } else {
-      omote_log_w("key: key '%c', but no command defined\r\n", keyChar);
-    }
+  int row, col;
+  
+  if (!isKeyPressInBounds(keyCode, row, col)) {
+    return;
   }
+  
+  if (isKeyPressRateLimited(row, col, currentMillis)) {
+    return;
+  }
+  
+  lastTimeSent[row][col] = currentMillis;
+
+  uint16_t command = get_command_short(gui_memoryOptimizer_getActiveSceneName(), keyChar);
+  if (command == COMMAND_UNKNOWN) {
+    omote_log_w("key: key '%c', but no command defined\r\n", keyChar);
+    return;
+  }
+  
+  omote_log_d("key: key '%c', will use command '%u'\r\n", keyChar, command);
+  executeCommand(command);
 }
 
 void doLongPress(char keyChar, int keyCode){
@@ -118,7 +140,7 @@ void keypad_processKeyStates() {
 
       keypad_keyStates singleKeyState = keyState[row][col];
       char keyChar = rawKeys[row][col].keyChar;
-      int keyCode = row * keypadROWS + col;
+      int keyCode = row * keypadCOLS + col;
 
       if (singleKeyState == PRESSED) {
         omote_log_v("pressed\r\n");

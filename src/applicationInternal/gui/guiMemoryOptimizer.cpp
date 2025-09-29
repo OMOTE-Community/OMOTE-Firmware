@@ -108,15 +108,35 @@ void notify_active_tabs_before_delete(t_gui_state *gui_state) {
   }
 }
 
-void clear_tabview(lv_obj_t* tabview, t_gui_state *gui_state) {
-  if (tabview != NULL) {
-    // first remove events for the tabview
-    lv_obj_remove_event_cb(tabview, tabview_tab_changed_event_cb);
-    lv_obj_remove_event_cb(tabview, tabview_content_is_scrolling_event_cb);
-    // delete tabview
-    lv_obj_del(tabview);
-    tabview = NULL;
+void safe_delete_lv_obj(lv_obj_t* obj, const char* obj_name) {
+  if (obj == NULL) {
+    return;
   }
+  
+  if (!lv_obj_is_valid(obj)) {
+    omote_log_w("safe_delete_lv_obj: %s object is invalid, skipping deletion\n", obj_name);
+    return;
+  }
+  
+  lv_obj_del(obj);
+}
+
+void clear_tabview(lv_obj_t* tabview, t_gui_state *gui_state) {
+  if (tabview == NULL) {
+    return;
+  }
+  
+  if (!lv_obj_is_valid(tabview)) {
+    omote_log_w("clear_tabview: tabview object is invalid, skipping deletion\n");
+    return;
+  }
+  
+  // first remove events for the tabview
+  lv_obj_remove_event_cb(tabview, tabview_tab_changed_event_cb);
+  lv_obj_remove_event_cb(tabview, tabview_content_is_scrolling_event_cb);
+  // delete tabview
+  lv_obj_del(tabview);
+  tabview = NULL;
 
   // the gui_list_index_previous is needed for setGUIlistIndicesToBeShown_afterSlide();
   gui_state->gui_on_tab[0] = {NULL, "", -1, gui_state->gui_on_tab[0].gui_list_index};
@@ -126,19 +146,9 @@ void clear_tabview(lv_obj_t* tabview, t_gui_state *gui_state) {
 }
 
 void clear_panel(lv_obj_t* panel, lv_obj_t* img1, lv_obj_t* img2) {
-  if (panel != NULL) {
-    lv_obj_del(panel);
-    panel = NULL;
-  }
-  if (img1 != NULL) {
-    lv_obj_del(img1);
-    img1 = NULL;
-  } 
-  if (img2 != NULL) {
-    lv_obj_del(img2);
-    img2 = NULL;
-  } 
-
+  safe_delete_lv_obj(panel, "panel");
+  safe_delete_lv_obj(img1, "img1");
+  safe_delete_lv_obj(img2, "img2");
 }
 
 lv_obj_t* create_tabview() {
@@ -248,7 +258,7 @@ void setGUIlistIndicesToBeShown_afterSlide(t_gui_state *gui_state) {
     // swipe to previous item in list
     omote_log_d("  Will swipe to previous item in list\r\n");
     oldListIndex = gui_state->gui_on_tab[1].gui_list_index_previous;
-    if ((oldListIndex == 1)) {
+    if (oldListIndex == 1) {
       // next state is the "first state"
       gui_state->gui_on_tab[0] = {NULL, "", 0};
       gui_state->gui_on_tab[1] = {NULL, "", 1};
@@ -312,6 +322,18 @@ void fillPanelWithPageIndicator_strategyMax3(lv_obj_t* panel, lv_obj_t* img1, lv
   if (get_gui_list_active_withFallback()->size() == 0) {
     omote_log_d("    no tab available, so no page indicators\r\n");
     // at least add the style
+    lv_obj_add_style(panel, &panel_style, 0);
+    #ifdef drawRedBorderAroundMainWidgets
+    lv_obj_add_style(panel, &style_red_border, LV_PART_MAIN);
+    #endif
+    return;
+  }
+  
+  // Check available memory before creating many objects
+  unsigned long heapSize, freeHeap, maxAllocHeap, minFreeHeap;
+  get_heapUsage(&heapSize, &freeHeap, &maxAllocHeap, &minFreeHeap);
+  if (freeHeap < 5000) { // Less than 5KB free
+    omote_log_w("fillPanelWithPageIndicator: Low memory (%lu bytes), skipping page indicators\n", freeHeap);
     lv_obj_add_style(panel, &panel_style, 0);
     #ifdef drawRedBorderAroundMainWidgets
     lv_obj_add_style(panel, &style_red_border, LV_PART_MAIN);
@@ -409,8 +431,14 @@ void fillPanelWithPageIndicator_strategyMax3(lv_obj_t* panel, lv_obj_t* img1, lv
       // create a breadcrump dot for each gui in the main_gui_list
       for (int j=0; j<breadcrumpMainGuiListLength; j++) {
         lv_obj_t* dot = lv_obj_create(btn);
+        if (dot == NULL) {
+          omote_log_e("fillPanelWithPageIndicator: Failed to create dot object, out of memory\n");
+          continue;
+        }
+        
         lv_obj_set_size(dot, breadcrumpDotSize, breadcrumpDotSize);
         lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+        
         // hightlight dot if it is the one for the currently active tab
         #if (USE_SCENE_SPECIFIC_GUI_LIST != 0)
         if ( ((gui_memoryOptimizer_getActiveGUIlist() == MAIN_GUI_LIST) || !get_scene_has_gui_list(gui_memoryOptimizer_getActiveSceneName()))
@@ -437,6 +465,11 @@ void fillPanelWithPageIndicator_strategyMax3(lv_obj_t* panel, lv_obj_t* img1, lv
       if (show_scene_gui_list) {
       for (int j=0; j<breadcrumpSceneGuiListLength; j++) {
         lv_obj_t* dot = lv_obj_create(btn);
+        if (dot == NULL) {
+          omote_log_e("fillPanelWithPageIndicator: Failed to create scene dot object, out of memory\n");
+          continue;
+        }
+        
         lv_obj_set_size(dot, breadcrumpDotSize, breadcrumpDotSize);
         lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, LV_PART_MAIN);
         if ((gui_memoryOptimizer_getActiveGUIlist() == SCENE_GUI_LIST) && (j == (breadcrumpPosition-1))) {
