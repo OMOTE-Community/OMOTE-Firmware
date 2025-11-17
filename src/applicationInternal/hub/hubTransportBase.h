@@ -1,9 +1,7 @@
 #pragma once
 
 #include <string>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
+#include "remote_messages.pb.h"
 
 // Define the hub transport types
 enum class HubTransport {
@@ -23,8 +21,8 @@ public:
   // Process hub communication tasks (called in loop)
   virtual void process() = 0;
   
-  // Send a message to the hub
-  virtual bool sendMessage(const json& payload) = 0;
+  // Send a RemoteEvent protobuf message to the hub
+  virtual bool sendRemoteEvent(const omote_RemoteEvent& event) = 0;
   
   // Check if connected/ready
   virtual bool isReady() = 0;

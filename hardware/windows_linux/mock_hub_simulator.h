@@ -1,12 +1,12 @@
 #pragma once
 
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
+#include <cstdint>
+#include <cstddef>
 
-// Callback type definition (same as ESP-NOW)
-typedef void (*EspNowMessageCallback)(json);
+// Callback type definition for protobuf messages
+typedef void (*EspNowMessageProtoCallback)(const uint8_t* data, size_t len);
 
 // Mock Hub Simulator functions
-void startMockHubSimulator(EspNowMessageCallback callback);
+void startMockHubSimulatorProto(EspNowMessageProtoCallback callback);
 void stopMockHubSimulator();
-void handleMockHubCommand(const json& command);
+void handleMockHubCommandProto(const uint8_t* data, size_t len);

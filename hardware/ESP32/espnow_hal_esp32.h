@@ -1,17 +1,17 @@
 #pragma once
 
 #include <string>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
+#include <cstdint>
+#include <cstddef>
 
 // Function to get MAC address for ESP32
 std::string getMACaddress();
 
 void init_espnow_HAL(void);
 void espnow_loop_HAL();
-bool publishEspNowMessage_HAL(json payload);
+bool publishEspNowMessageProto_HAL(const uint8_t* data, size_t len);
 void espnow_shutdown_HAL();
 
-typedef void (*tAnnounceEspNowMessage_cb)(json payload);
-void set_announceEspNowMessage_cb_HAL(tAnnounceEspNowMessage_cb pAnnounceEspNowMessage_cb); 
+typedef void (*tAnnounceEspNowMessageProto_cb)(const uint8_t* data, size_t len);
+
+void set_announceEspNowMessageProto_cb_HAL(tAnnounceEspNowMessageProto_cb pAnnounceEspNowMessageProto_cb); 

@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
     // Initialize the hub manager with the preferred transport
     HubManager::getInstance().init(preferredTransport);
     
-    HubManager::getInstance().setMessageHandler(handleHubMessage);
+    HubManager::getInstance().setMessageHandler(handleHubCommandResult);
     
     if (should_poll_hub_state_on_startup()) {
       clear_hub_state_poll_flag();

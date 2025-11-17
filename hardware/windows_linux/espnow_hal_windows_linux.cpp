@@ -1,6 +1,7 @@
 #include "espnow_hal_windows_linux.h"
 #include "mock_hub_simulator.h"
 #include <iostream>
+#include <cstring>
 
 #if !defined(WIN32)
 #include <sys/socket.h>
@@ -39,11 +40,11 @@ std::string getMACaddress() {
 }
 
 // Callback function pointer
-static EspNowMessageCallback espNowMessageCallback = nullptr;
+static tAnnounceEspNowMessageProto_cb espNowMessageCallback = nullptr;
 
-void set_announceEspNowMessage_cb_HAL(EspNowMessageCallback callback) {
+void set_announceEspNowMessageProto_cb_HAL(tAnnounceEspNowMessageProto_cb callback) {
   espNowMessageCallback = callback;
-  std::cout << "ESP-NOW callback registered (simulator with mock hub)" << std::endl;
+  std::cout << "ESP-NOW protobuf callback registered (simulator with mock hub)" << std::endl;
 }
 
 void init_espnow_HAL() {
@@ -51,7 +52,7 @@ void init_espnow_HAL() {
   
   // Start the mock hub simulator
   if (espNowMessageCallback) {
-    startMockHubSimulator(espNowMessageCallback);
+    startMockHubSimulatorProto(espNowMessageCallback);
   }
 }
 
@@ -59,11 +60,16 @@ void espnow_loop_HAL() {
   // Nothing to do in the simulator - mock hub runs in background thread
 }
 
-bool publishEspNowMessage_HAL(json payload) {
-  std::cout << "ESP-NOW message sent to mock hub: " << payload.dump() << std::endl;
+bool publishEspNowMessageProto_HAL(const uint8_t* data, size_t len) {
+  if (len > 250) {
+    std::cout << "Error: Protobuf message exceeds ESP-NOW maximum size" << std::endl;
+    return false;
+  }
   
-  // Forward the command to the mock hub for processing
-  handleMockHubCommand(payload);
+  std::cout << "ESP-NOW protobuf message sent to mock hub (" << len << " bytes)" << std::endl;
+  
+  // Forward the protobuf command to the mock hub for processing
+  handleMockHubCommandProto(data, len);
   
   return true; // Always return success in the simulator
 }

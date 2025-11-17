@@ -1,11 +1,9 @@
 #pragma once
 
 #include "hubTransportBase.h"
-#include <nlohmann/json.hpp>
+#include "remote_messages.pb.h"
 #include <memory>
 #include <functional>
-
-using json = nlohmann::json;
 
 class HubManager {
 private:
@@ -18,7 +16,7 @@ private:
   static const unsigned long STATE_SYNC_DELAY = 100; // ms
 
   // Message handling
-  std::function<void(const json&)> messageHandler;
+  std::function<void(const omote_CommandResult&)> messageHandler;
 
   // Private constructor for singleton
   HubManager();
@@ -44,7 +42,8 @@ public:
   
   void process();
   
-  bool sendMessage(const json& payload);
+  // Send a RemoteEvent protobuf message
+  bool sendRemoteEvent(const omote_RemoteEvent& event);
   
   bool isReady() const;
   
@@ -59,6 +58,6 @@ public:
   bool isStateSyncRequested() const;
   
   // Message handling interface
-  void setMessageHandler(std::function<void(const json&)> handler);
-  void handleIncomingMessage(const json& payload);
+  void setMessageHandler(std::function<void(const omote_CommandResult&)> handler);
+  void handleIncomingCommandResult(const omote_CommandResult& result);
 }; 

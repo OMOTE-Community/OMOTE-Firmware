@@ -3,9 +3,10 @@
 #include <string>
 #include <list>
 #include <map>
-#include <nlohmann/json.hpp>
 
-using json = nlohmann::json;
+#if (ENABLE_HUB_COMMUNICATION > 0)
+#include "remote_messages.pb.h"
+#endif
 
 #include "devices/keyboard/device_keyboard_mqtt/device_keyboard_mqtt.h"
 #include "devices/keyboard/device_keyboard_ble/device_keyboard_ble.h"
@@ -130,11 +131,6 @@ enum CommandExecutionType {
   CMD_LONG
 };
 
-NLOHMANN_JSON_SERIALIZE_ENUM(CommandExecutionType, {
-    {CMD_SHORT, "SHORT"},
-    {CMD_LONG, "LONG"}
-})
-
 struct CommandExecutionParams {
   uint16_t commandId;
   CommandExecutionType commandType = CMD_SHORT;
@@ -160,9 +156,5 @@ void receiveWiFiConnected_cb(bool connected);
 void receiveMQTTmessage_cb(std::string topic, std::string payload);
 #endif
 #if (ENABLE_HUB_COMMUNICATION > 0)
-void handleHubMessage(const json& payload);
-#endif
-
-#if (ENABLE_HUB_COMMUNICATION == 3)
-void receiveWebSocketMessage_cb(json payload);
+void handleHubCommandResult(const omote_CommandResult& result);
 #endif

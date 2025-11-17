@@ -1,5 +1,6 @@
 #include "hubManager.h"
 #include "hubTransportBase.h"
+#include "protoCodec.h"
 #include "applicationInternal/omote_log.h"
 #include "applicationInternal/hardware/arduinoLayer.h"
 
@@ -87,7 +88,7 @@ void HubManager::process() {
   syncState();
 }
 
-bool HubManager::sendMessage(const json& payload) {
+bool HubManager::sendRemoteEvent(const omote_RemoteEvent& event) {
   if (!activeTransport) {
     omote_log_w("Cannot send message: no hub transport initialized\n");
     return false;
@@ -98,7 +99,7 @@ bool HubManager::sendMessage(const json& payload) {
     return false;
   }
   
-  return activeTransport->sendMessage(payload);
+  return activeTransport->sendRemoteEvent(event);
 }
 
 bool HubManager::isInitialized() const {
@@ -153,14 +154,13 @@ void HubManager::syncState() {
     return;
   }
   
-  json payload = {
-    {"device", "HUB"},
-    {"command", "SYNC_STATE"},
-    {"type", "SHORT"},
-    {"requested_states", {"metadata", "time"}}
-  };
+  omote_RemoteEvent event = Hub::ProtoCodec::createRemoteEvent(
+    "HUB",
+    omote_OmoteCommand_SYNC_STATE,
+    omote_OmoteCommandType_SHORT
+  );
   
-  bool sendSuccess = sendMessage(payload);
+  bool sendSuccess = sendRemoteEvent(event);
   
   if (!sendSuccess) {
     omote_log_w("Failed to send state sync request, will retry\n");
@@ -172,12 +172,12 @@ void HubManager::syncState() {
   omote_log_i("State sync request sent successfully\n");
 }
 
-void HubManager::setMessageHandler(std::function<void(const json&)> handler) {
+void HubManager::setMessageHandler(std::function<void(const omote_CommandResult&)> handler) {
   messageHandler = handler;
 }
 
-void HubManager::handleIncomingMessage(const json& payload) {
+void HubManager::handleIncomingCommandResult(const omote_CommandResult& result) {
   if (messageHandler) {
-    messageHandler(payload);
+    messageHandler(result);
   }
 }

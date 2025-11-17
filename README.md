@@ -13,6 +13,28 @@ To run this firmware, you have two options
 *  run it on the [OMOTE ESP32 Hardware](https://github.com/OMOTE-Community/OMOTE-Hardware/)
 *  run it in the simulator on Linux, macOs or Windows
 
+## Development Setup
+
+```bash
+# Create and activate virtualenv
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install protobuf dependencies
+pip install protobuf grpcio-tools
+
+# Generate protobuf code (after PlatformIO installs libraries)
+make protos
+
+# Build firmware
+pio run -e esp32-Rev1toRev4
+
+# Upload to device
+pio run -e esp32-Rev1toRev4 --target upload
+```
+
+**Note:** Open the project in VS Code/Cursor to let PlatformIO install libraries automatically. Alternatively, install PlatformIO CLI: `pip install platformio` and run `pio lib install`.
+
 ### The state of this project
 
 The software can be adjusted to your needs. You can add your own amplifier, TV and media player. Smart home devices can be controlled with MQTT. The software is an example made up of:

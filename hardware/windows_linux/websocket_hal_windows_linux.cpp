@@ -6,10 +6,11 @@
 #include <mutex>
 #include <vector>
 #include <cstring>
+#include <string>
 
 using easywsclient::WebSocket;
 
-tAnnounceWebSocketMessage_cb thisAnnounceWebSocketMessage_cb = nullptr;
+tAnnounceWebSocketMessageProto_cb thisAnnounceWebSocketMessageProto_cb = nullptr;
 WebSocket::pointer ws = nullptr;
 std::string hubUrl;
 std::mutex wsMutex;
@@ -17,8 +18,8 @@ std::thread reconnectThread;
 bool shouldReconnect = true;
 const int RECONNECT_DELAY_MS = 5000;
 
-void set_announceWebSocketMessage_cb_HAL(tAnnounceWebSocketMessage_cb pAnnounceWebSocketMessage_cb) {
-    thisAnnounceWebSocketMessage_cb = pAnnounceWebSocketMessage_cb;
+void set_announceWebSocketMessageProto_cb_HAL(tAnnounceWebSocketMessageProto_cb pAnnounceWebSocketMessageProto_cb) {
+    thisAnnounceWebSocketMessageProto_cb = pAnnounceWebSocketMessageProto_cb;
 }
 
 void attempt_connection() {
@@ -85,22 +86,17 @@ void websocket_loop_HAL() {
     
     ws->poll(0);
     
-    if (!thisAnnounceWebSocketMessage_cb) {
+    if (!thisAnnounceWebSocketMessageProto_cb) {
         return;
     }
     
-    auto callback = thisAnnounceWebSocketMessage_cb;
+    auto callback = thisAnnounceWebSocketMessageProto_cb;
     ws->dispatchBinary([callback](const std::vector<uint8_t>& message) {
-        try {
-            auto unpacked_json = json::from_msgpack(message);
-            callback(unpacked_json);
-        } catch (const std::exception& e) {
-            std::cout << "[WebSocket HAL] Error parsing message: " << e.what() << std::endl;
-        }
+        callback(message.data(), message.size());
     });
 }
 
-bool publishWebSocketMessage_HAL(json payload) {
+bool publishWebSocketMessageProto_HAL(const uint8_t* data, size_t len) {
     std::lock_guard<std::mutex> lock(wsMutex);
     
     if (!ws) {
@@ -114,9 +110,9 @@ bool publishWebSocketMessage_HAL(json payload) {
     }
     
     try {
-        std::vector<uint8_t> packed_json = json::to_msgpack(payload);
-        ws->sendBinary(packed_json);
-        std::cout << "[WebSocket HAL] Sent message: " << payload.dump() << std::endl;
+        std::vector<uint8_t> message(data, data + len);
+        ws->sendBinary(message);
+        std::cout << "[WebSocket HAL] Sent protobuf message (" << len << " bytes)" << std::endl;
         return true;
     } catch (const std::exception& e) {
         std::cout << "[WebSocket HAL] Error sending message: " << e.what() << std::endl;

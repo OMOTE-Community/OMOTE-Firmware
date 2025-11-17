@@ -1,17 +1,16 @@
 #pragma once
 
-#include <string>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
+#include <cstdint>
+#include <cstddef>
 
 void init_websocket_HAL(const char* hub_url);
 void websocket_loop_HAL();
-bool publishWebSocketMessage_HAL(json payload);
+bool publishWebSocketMessageProto_HAL(const uint8_t* data, size_t len);
 void websocket_shutdown_HAL();
 bool websocket_is_connected_HAL();
 const char* get_websocket_hub_url_HAL();
 
-typedef void (*tAnnounceWebSocketMessage_cb)(json payload);
-void set_announceWebSocketMessage_cb_HAL(tAnnounceWebSocketMessage_cb pAnnounceWebSocketMessage_cb);
+typedef void (*tAnnounceWebSocketMessageProto_cb)(const uint8_t* data, size_t len);
+
+void set_announceWebSocketMessageProto_cb_HAL(tAnnounceWebSocketMessageProto_cb pAnnounceWebSocketMessageProto_cb);
 

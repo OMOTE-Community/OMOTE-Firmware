@@ -1,14 +1,11 @@
 #include <WiFi.h>
 #include <WebSocketsClient.h>
 #include <string>
-#include <nlohmann/json.hpp>
 #include "websocket_hal_esp32.h"
 #include "secrets.h"
 
-using json = nlohmann::json;
-
 WebSocketsClient webSocket;
-tAnnounceWebSocketMessage_cb thisAnnounceWebSocketMessage_cb = NULL;
+tAnnounceWebSocketMessageProto_cb thisAnnounceWebSocketMessageProto_cb = NULL;
 bool isConnected = false;
 
 void onWebSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
@@ -24,13 +21,8 @@ void onWebSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
       break;
       
     case WStype_BIN:
-      if (thisAnnounceWebSocketMessage_cb == NULL) return;
-      
-      try {
-        auto unpacked_json = json::from_msgpack(payload, payload + length);
-        thisAnnounceWebSocketMessage_cb(unpacked_json);
-      } catch (const std::exception& e) {
-        Serial.printf("Error parsing WebSocket message: %s\n", e.what());
+      if (thisAnnounceWebSocketMessageProto_cb != NULL) {
+        thisAnnounceWebSocketMessageProto_cb(payload, length);
       }
       break;
       
@@ -43,8 +35,8 @@ void onWebSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
   }
 }
 
-void set_announceWebSocketMessage_cb_HAL(tAnnounceWebSocketMessage_cb pAnnounceWebSocketMessage_cb) {
-  thisAnnounceWebSocketMessage_cb = pAnnounceWebSocketMessage_cb;
+void set_announceWebSocketMessageProto_cb_HAL(tAnnounceWebSocketMessageProto_cb pAnnounceWebSocketMessageProto_cb) {
+  thisAnnounceWebSocketMessageProto_cb = pAnnounceWebSocketMessageProto_cb;
 }
 
 void init_websocket_HAL(const char* hub_url) {
@@ -91,23 +83,21 @@ void websocket_loop_HAL() {
   webSocket.loop();
 }
 
-bool publishWebSocketMessage_HAL(json payload) {
+bool publishWebSocketMessageProto_HAL(const uint8_t* data, size_t len) {
   if (!isConnected) {
-    Serial.println("WebSocket not connected, cannot send message");
+    Serial.println("WebSocket not connected, cannot send protobuf message");
     return false;
   }
   
-  std::vector<std::uint8_t> packed_json = json::to_msgpack(payload);
-  
-  if (packed_json.size() > 1024) {
-    Serial.println("Error: Message exceeds reasonable WebSocket size");
+  if (len > 1024) {
+    Serial.println("Error: Protobuf message exceeds reasonable WebSocket size");
     return false;
   }
   
-  bool result = webSocket.sendBIN(packed_json.data(), packed_json.size());
+  bool result = webSocket.sendBIN(data, len);
   
   if (!result) {
-    Serial.println("WebSocket failed to send message");
+    Serial.println("WebSocket failed to send protobuf message");
   }
   
   return result;

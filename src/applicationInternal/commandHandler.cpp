@@ -15,6 +15,7 @@
 // show received BLE connection messages
 #include "guis/gui_BLEpairing.h"
 #include "hub/hubManager.h"
+#include "hub/protoCodec.h"
 #include "applicationInternal/gui/guiStatusUpdate.h"
 
 uint16_t COMMAND_UNKNOWN;
@@ -177,26 +178,19 @@ std::string convertStringListToString(std::list<std::string> listOfStrings) {
   return result;
 }
 
-// Helper function to send hub messages with consistent logging
-void sendHubMessage(const std::string& device, const std::string& command, const std::string& type = "SHORT", const json& data = json::array()) {
-  json payload;
-  payload["device"] = device;
-  payload["command"] = command;
-  payload["type"] = type;
+// Helper function to send hub messages with enum command (preferred)
+void sendHubMessage(const std::string& device, omote_OmoteCommand command, omote_OmoteCommandType type) {
+  omote_log_d("execute: will send hub message for device '%s', command %d\r\n", 
+              device.c_str(), command);
   
-  if (!data.empty()) {
-    payload["data"] = data;
-  }
-  
-  omote_log_d("execute: will send hub message for device '%s', command '%s'\r\n", 
-              device.c_str(), command.c_str());
-  
-  HubManager::getInstance().sendMessage(payload);
+  omote_RemoteEvent event = Hub::ProtoCodec::createRemoteEvent(device, command, type);
+  HubManager::getInstance().sendRemoteEvent(event);
 }
 
-void sendHubMessage(const std::string& device, const std::string& command, CommandExecutionType type, const json& data = json::array()) {
-  json typeJson = type;
-  sendHubMessage(device, command, typeJson.get<std::string>(), data);
+// Overload for string commands (for backward compatibility with scene registration)
+void sendHubMessage(const std::string& device, const std::string& command, CommandExecutionType type) {
+  omote_OmoteCommandType cmdType = (type == CMD_LONG) ? omote_OmoteCommandType_LONG : omote_OmoteCommandType_SHORT;
+  sendHubMessage(device, Hub::ProtoCodec::stringToCommand(command), cmdType);
 }
 
 void executeCommandWithData(uint16_t command, commandData commandData, std::string additionalPayload) {
@@ -294,22 +288,8 @@ void executeCommandWithData(const CommandExecutionParams& params, commandData co
   std::string commandName = *current;
   current = std::next(current, 1);
   
-  // Create a data array if we have any additional data
-  json dataArray = json::array();
-  
-  // Add all remaining items from commandPayloads to the data array
-  while (current != commandData.commandPayloads.end()) {
-    dataArray.push_back(*current);
-    current = std::next(current, 1);
-  }
-  
-  // If additionalPayload is provided, add it to the data array
-  if (!params.additionalPayload.empty()) {
-    dataArray.push_back(params.additionalPayload);
-  }
-  
   // Send using the helper function
-  sendHubMessage(deviceName, commandName, params.commandType, dataArray);
+  sendHubMessage(deviceName, commandName, params.commandType);
 #endif
 }
 
@@ -378,88 +358,96 @@ void receiveMQTTmessage_cb(std::string topic, std::string payload) {
 #endif
 
 #if (ENABLE_HUB_COMMUNICATION > 0)
-#include "applicationInternal/hub/commandResult.h"
 #include "applicationInternal/gui/guiNotification.h"
 #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 
-void handleHubMessage(const json& payload) {
-  Hub::CommandResult result = Hub::CommandResult::fromJson(payload);
-  
+void handleHubCommandResult(const omote_CommandResult& result) {
   omote_log_d("Received CommandResult: kind=%d, supports_response=%s\r\n", 
-             static_cast<int>(result.kind), result.supports_response ? "true" : "false");
+             result.kind, result.supports_response ? "true" : "false");
   
   switch (result.kind) {
-    case Hub::ResponseKind::VOLUME: {
-      const auto& volume = result.getVolume();
-      omote_log_d("Volume update: level=%.1f, muted=%s\r\n", 
-                 volume.level, volume.is_muted ? "true" : "false");
-      
-      GuiNotification::showVolumeNotification(volume.level, volume.is_muted);
-      break;
-    }
-    
-    case Hub::ResponseKind::POWER: {
-      const auto& power = result.getPower();
-      omote_log_d("Power update: is_on=%s\r\n", power.is_on ? "true" : "false");
-      
-      GuiNotification::showPowerNotification(power.is_on);
-      break;
-    }
-    
-    case Hub::ResponseKind::RAW_COMMAND: {
-      const auto& raw_cmd = result.getRawCommand();
-      omote_log_d("Raw command result: success=%s, message=%s\r\n", 
-                 raw_cmd.success ? "true" : "false", raw_cmd.raw_response.c_str());
-      
-      if (raw_cmd.success) {
-        GuiNotification::showMessageNotification(raw_cmd.raw_response);
-      } else {
-        GuiNotification::showErrorNotification(raw_cmd.raw_response);
+    case omote_ResponseKind_VOLUME: {
+      if (result.which_data == omote_CommandResult_volume_tag) {
+        const auto& volume = result.data.volume;
+        omote_log_d("Volume update: level=%u, muted=%s\r\n", 
+                   volume.level, volume.is_muted ? "true" : "false");
+        
+        GuiNotification::showVolumeNotification(static_cast<double>(volume.level), volume.is_muted);
       }
       break;
     }
     
-    case Hub::ResponseKind::ERROR: {
-      const auto& error = result.getError();
-      omote_log_e("Hub error: %s\r\n", error.message.c_str());
-      
-      GuiNotification::showErrorNotification(error.message);
+    case omote_ResponseKind_POWER: {
+      if (result.which_data == omote_CommandResult_power_tag) {
+        const auto& power = result.data.power;
+        omote_log_d("Power update: is_on=%s\r\n", power.is_on ? "true" : "false");
+        
+        GuiNotification::showPowerNotification(power.is_on);
+      }
       break;
     }
     
-    case Hub::ResponseKind::ACK: {
+    case omote_ResponseKind_RAW_COMMAND: {
+      if (result.which_data == omote_CommandResult_raw_command_tag) {
+        const auto& raw_cmd = result.data.raw_command;
+        std::string raw_response((const char*)raw_cmd.raw_response.bytes, raw_cmd.raw_response.size);
+        omote_log_d("Raw command result: success=%s, message=%s\r\n", 
+                   raw_cmd.success ? "true" : "false", raw_response.c_str());
+        
+        if (raw_cmd.success) {
+          GuiNotification::showMessageNotification(raw_response);
+        } else {
+          GuiNotification::showErrorNotification(raw_response);
+        }
+      }
+      break;
+    }
+    
+    case omote_ResponseKind_ERROR: {
+      if (result.which_data == omote_CommandResult_error_tag) {
+        const auto& error = result.data.error;
+        omote_log_e("Hub error: %s\r\n", error.message);
+        
+        GuiNotification::showErrorNotification(error.message);
+      }
+      break;
+    }
+    
+    case omote_ResponseKind_ACK: {
       omote_log_d("Received acknowledgment from hub\r\n");
       break;
     }
     
-    case Hub::ResponseKind::STATE_SYNC: {
-      const auto& state_sync = result.getStateSync();
-      omote_log_d("State sync received: has_metadata=%s, has_time=%s\r\n", 
-                 state_sync.has_metadata ? "true" : "false",
-                 state_sync.has_time ? "true" : "false");
-      
-      // Handle metadata if present
-      if (state_sync.has_metadata) {
-        const auto& metadata = state_sync.metadata;
-        omote_log_d("Metadata update: %s by %s (%s)\r\n", 
-                   metadata.title.c_str(), metadata.artist.c_str(), metadata.state.c_str());
+    case omote_ResponseKind_STATE_SYNC: {
+      if (result.which_data == omote_CommandResult_state_sync_tag) {
+        const auto& state_sync = result.data.state_sync;
+        omote_log_d("State sync received: has_metadata=%s, has_time=%s\r\n", 
+                   state_sync.has_metadata ? "true" : "false",
+                   state_sync.has_time ? "true" : "false");
         
-        update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state, 
-                                metadata.duration, metadata.position);
-      }
-      
-      // Handle time if present
-      if (state_sync.has_time) {
-        const auto& time_data = state_sync.time;
-        omote_log_d("Time sync: timestamp=%lu, timezone_offset=%d\r\n", 
-                   time_data.timestamp, time_data.timezone_offset);
+        // Handle metadata if present
+        if (state_sync.has_metadata) {
+          const auto& metadata = state_sync.metadata;
+          omote_log_d("Metadata update: %s by %s (%s)\r\n", 
+                     metadata.title, metadata.artist, metadata.state);
+          
+          update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state, 
+                                  metadata.duration, metadata.position);
+        }
         
-        setTime(time_data.timestamp, time_data.timezone_offset);
+        // Handle time if present
+        if (state_sync.has_time) {
+          const auto& time_data = state_sync.time;
+          omote_log_d("Time sync: timestamp=%lu, timezone_offset=%d\r\n", 
+                     time_data.timestamp, time_data.timezone_offset);
+          
+          setTime(time_data.timestamp, time_data.timezone_offset);
+        }
       }
       break;
     }
     
-    case Hub::ResponseKind::NONE: {
+    case omote_ResponseKind_NONE: {
       omote_log_d("Received NONE response from hub\r\n");
       break;
     }
@@ -468,23 +456,6 @@ void handleHubMessage(const json& payload) {
       omote_log_w("Received unknown CommandResult kind from hub\r\n");
       break;
     }
-  }
-}
-#endif
-
-#if (ENABLE_HUB_COMMUNICATION == 3)
-void receiveWebSocketMessage_cb(json payload) {
-  // Extract device and command from the payload
-  std::string device, command, jsonStr;
-  
-  if (payload.contains("device") && payload.contains("command")) {
-    device = payload["device"];
-    command = payload["command"];
-  
-    // Serialize the payload to a string
-    std::string jsonStr = payload.dump();
-    
-    // TODO: Process the command based on device and command
   }
 }
 #endif

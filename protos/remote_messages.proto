@@ -1,0 +1,178 @@
+syntax = "proto3";
+
+package omote;
+
+// Command types for button presses
+enum OmoteCommandType {
+  OMOTE_COMMAND_TYPE_UNSPECIFIED = 0;
+  SHORT = 1;
+  LONG = 2;
+}
+
+// Remote control commands
+// These map to physical buttons and actions on the OMOTE remote
+enum OmoteCommand {
+  OMOTE_COMMAND_UNSPECIFIED = 0;
+  POWER_ON = 1;
+  POWER_OFF = 2;
+  DOWN = 3;
+  UP = 4;
+  RIGHT = 5;
+  LEFT = 6;
+  SELECT = 7;
+  HOME = 8;
+  MENU = 9;
+  PLAY_PAUSE = 10;
+  VOL_PLUS = 11;
+  VOL_MINUS = 12;
+  VOL_MUTE = 13;
+  SKIP_BACKWARD = 14;
+  SKIP_FORWARD = 15;
+  
+  // Apple TV pairing commands
+  ATV_PAIR_START = 16;
+  ATV_PAIR_PIN = 17;
+  
+  // State synchronization
+  SYNC_STATE = 18;
+  
+  // Additional commands to be mapped
+  STOP = 19;
+  REWIND = 20;
+  FORWARD = 21;
+  CONF = 22;
+  INFO = 23;
+  OK = 24;
+  BACK = 25;
+  SRC = 26;
+  CHANNEL_UP = 27;
+  REC = 28;
+  CHANNEL_DOWN = 29;
+  RED = 30;
+  GREEN = 31;
+  YELLOW = 32;
+  BLUE = 33;
+  GUI_EVENT = 34;
+}
+
+// Event sent from OMOTE remote to hub
+message RemoteEvent {
+  // Device identifier (string for now, may migrate to uint32 device_id later)
+  string device = 1;
+  
+  // Remote control command
+  OmoteCommand command = 2;
+  
+  // Command type (short press, long press)
+  OmoteCommandType type = 3;
+  
+  // Optional remote identifier
+  string remote_id = 4;
+  
+  // MAC address of the remote (8 bytes for EUI-64)
+  // Using fixed64 for consistent encoding
+  fixed64 remote_mac = 5;
+  
+  // Optional additional data (escape hatch for custom payloads)
+  // Limited to 32 bytes for ESP-NOW compatibility
+  bytes data = 10;
+}
+
+// Response kind for command results
+enum ResponseKind {
+  RESPONSE_KIND_UNSPECIFIED = 0;
+  ACK = 1;
+  VOLUME = 2;
+  POWER = 3;
+  RAW_COMMAND = 4;
+  ERROR = 5;
+  STATE_SYNC = 6;
+  NONE = 7;
+}
+
+// Acknowledgment response (empty)
+message Ack {
+  // Empty message - presence indicates acknowledgment
+}
+
+// Volume level response
+message Volume {
+  // Volume level (0-100, using fixed32 for consistent encoding)
+  fixed32 level = 1;
+  
+  // Mute state
+  bool is_muted = 2;
+}
+
+// Power state response
+message Power {
+  bool is_on = 1;
+}
+
+// Raw command response
+message RawCommand {
+  // Raw response data (string or bytes)
+  bytes raw_response = 1;
+  
+  // Success indicator
+  bool success = 2;
+}
+
+// Error response
+message Error {
+  string message = 1;
+}
+
+// Media metadata
+message Metadata {
+  string title = 1;
+  string artist = 2;
+  string album = 3;
+  
+  // Duration in seconds (0 if unknown)
+  uint32 duration = 4;
+  
+  // Current position in seconds
+  uint32 position = 5;
+  
+  // Playback state: "playing", "paused", "stopped", etc.
+  string state = 6;
+}
+
+// Time synchronization data
+message Time {
+  // Unix epoch timestamp (using fixed64 for consistent encoding)
+  fixed64 timestamp = 1;
+  
+  // Timezone offset in seconds
+  int32 timezone_offset = 2;
+}
+
+// State synchronization response
+message StateSync {
+  // Optional metadata (NanoPB will generate has_metadata automatically)
+  Metadata metadata = 1;
+  
+  // Optional time data (NanoPB will generate has_time automatically)
+  Time time = 2;
+}
+
+// Command result sent from hub to OMOTE remote
+message CommandResult {
+  // Response type
+  ResponseKind kind = 1;
+  
+  // Whether the device driver supports bidirectional responses
+  bool supports_response = 2;
+  
+  // Response data (only one will be set based on kind)
+  oneof data {
+    Ack ack = 10;
+    Volume volume = 11;
+    Power power = 12;
+    RawCommand raw_command = 13;
+    Error error = 14;
+    StateSync state_sync = 15;
+  }
+}
+

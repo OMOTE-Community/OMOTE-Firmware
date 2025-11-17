@@ -5,7 +5,7 @@
 #include <random>
 #include <ctime>
 
-static EspNowMessageCallback messageCallback = nullptr;
+static EspNowMessageProtoCallback messageCallback = nullptr;
 static bool simulatorRunning = false;
 static std::thread simulatorThread;
 
@@ -220,17 +220,14 @@ static void simulatePeriodicUpdates() {
     }
 }
 
-void startMockHubSimulator(EspNowMessageCallback callback) {
+void startMockHubSimulatorProto(EspNowMessageProtoCallback callback) {
     messageCallback = callback;
-    simulatorRunning = true;
+    simulatorRunning = false;  // Disable for now
     
-    simulatorThread = std::thread(simulatePeriodicUpdates);
-    
-    std::cout << "Mock Hub Simulator started!" << std::endl;
-    std::cout << "   - Volume commands will show notifications" << std::endl;
-    std::cout << "   - Power commands will show status" << std::endl;
-    std::cout << "   - Apple TV SYNC_STATE commands will update metadata and time" << std::endl;
-    std::cout << "   - Periodic state sync updates every 5-8 seconds" << std::endl;
+    std::cout << "Mock Hub Simulator (Protobuf mode):" << std::endl;
+    std::cout << "   NOTE: Mock hub simulator not yet implemented for protobuf." << std::endl;
+    std::cout << "   The simulator requires NanoPB integration to encode/decode messages." << std::endl;
+    std::cout << "   For now, use a real hub instance for testing protobuf communication." << std::endl;
 }
 
 void stopMockHubSimulator() {
@@ -241,21 +238,8 @@ void stopMockHubSimulator() {
     std::cout << "Mock Hub Simulator stopped!" << std::endl;
 }
 
-void handleMockHubCommand(const json& command) {
-    if (!messageCallback) return;
-    
-    std::string device = command.value("device", "");
-    std::string cmd = command.value("command", "");
-    
-    std::cout << "Mock Hub: Receive... " << device << " -> " << cmd << std::endl;
-    
-    // Simulate processing delay
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    
-    json response = createMockResponse(device, cmd);
-    
-    if (!response.empty()) {
-        std::cout << "Mock Hub: Sending response..." << std::endl;
-        messageCallback(response);
-    }
+void handleMockHubCommandProto(const uint8_t* data, size_t len) {
+    std::cout << "Mock Hub: Received protobuf command (" << len << " bytes)" << std::endl;
+    std::cout << "   NOTE: Protobuf decoding not yet implemented in simulator." << std::endl;
+    std::cout << "   Use a real hub instance to test protobuf messages." << std::endl;
 }

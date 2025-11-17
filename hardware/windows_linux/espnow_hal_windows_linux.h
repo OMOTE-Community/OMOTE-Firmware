@@ -1,17 +1,17 @@
 #pragma once
 
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
+#include <string>
+#include <cstdint>
+#include <cstddef>
 
 // Function to get MAC address for Windows/Linux/macOS
 std::string getMACaddress();
 
-// Callback type definition
-typedef void (*EspNowMessageCallback)(json);
-
-// Function declarations
-void set_announceEspNowMessage_cb_HAL(EspNowMessageCallback callback);
-void init_espnow_HAL();
+void init_espnow_HAL(void);
 void espnow_loop_HAL();
-bool publishEspNowMessage_HAL(json payload);
+bool publishEspNowMessageProto_HAL(const uint8_t* data, size_t len);
 void espnow_shutdown_HAL();
+
+typedef void (*tAnnounceEspNowMessageProto_cb)(const uint8_t* data, size_t len);
+
+void set_announceEspNowMessageProto_cb_HAL(tAnnounceEspNowMessageProto_cb pAnnounceEspNowMessageProto_cb);
