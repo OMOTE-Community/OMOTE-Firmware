@@ -161,3 +161,14 @@ bool publishEspNowMessage(json payload);
 void espnow_shutdown();
 void set_espnow_message_callback(void (*callback)(json payload));
 #endif
+
+// --- WebSocket --------------------------------------------------------------
+#if (ENABLE_HUB_COMMUNICATION == 3)
+// WebSocket hardware presenter functions
+void init_websocket(const char* hub_url);
+void websocket_loop();
+bool publishWebSocketMessage(json payload);
+void websocket_shutdown();
+bool websocket_is_connected();
+const char* get_websocketHubURL();
+#endif

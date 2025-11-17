@@ -119,36 +119,6 @@ void reconnect_mqtt(struct mqtt_client *mqttClient, void**) {
   }
 }
 
-#if !defined(WIN32) && !defined(__APPLE__)
-std::string getMACaddress() {
-  struct ifreq s;
-  int fd = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
-
-  strcpy(s.ifr_name, "eth0");
-  if (0 == ioctl(fd, SIOCGIFHWADDR, &s)) {
-    char buffer[6*3];
-    int i;
-    for (i = 0; i < 6; ++i) {
-      sprintf(&buffer[i*3], "%02x:", (unsigned char) s.ifr_addr.sa_data[i]);
-      // printf(" %02x", (unsigned char) s.ifr_addr.sa_data[i]);
-    }
-    //printf("\r\n");
-
-    std::string MACaddress = std::string(buffer, 17);
-    printf("  result in MACaddress(): %s\r\n", MACaddress.c_str());
-    return MACaddress;
-  }
-  return "";
-}
-#endif
-
-#if defined(__APPLE__)
-std::string getMACaddress() {
-  // For macOS simulator, return a mock MAC address
-  return "AA:BB:CC:DD:EE:FF";
-}
-#endif
-
 void init_mqtt_HAL(void) {
   #if defined(WIN32)
     WSADATA wsaData;

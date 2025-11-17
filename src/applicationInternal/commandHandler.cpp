@@ -471,3 +471,20 @@ void handleHubMessage(const json& payload) {
   }
 }
 #endif
+
+#if (ENABLE_HUB_COMMUNICATION == 3)
+void receiveWebSocketMessage_cb(json payload) {
+  // Extract device and command from the payload
+  std::string device, command, jsonStr;
+  
+  if (payload.contains("device") && payload.contains("command")) {
+    device = payload["device"];
+    command = payload["command"];
+  
+    // Serialize the payload to a string
+    std::string jsonStr = payload.dump();
+    
+    // TODO: Process the command based on device and command
+  }
+}
+#endif

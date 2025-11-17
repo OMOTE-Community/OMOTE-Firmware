@@ -331,3 +331,31 @@ void set_espnow_message_callback(void (*callback)(json payload)) {
   set_announceEspNowMessage_cb_HAL(callback);
 }
 #endif
+
+#if (ENABLE_HUB_COMMUNICATION == 3)
+// WebSocket hardware presenter functions
+void init_websocket(const char* hub_url) {
+  set_announceWebSocketMessage_cb_HAL(&receiveWebSocketMessage_cb);
+  init_websocket_HAL(hub_url);
+}
+
+void websocket_loop() {
+  websocket_loop_HAL();
+}
+
+bool publishWebSocketMessage(json payload) {
+  return publishWebSocketMessage_HAL(payload);
+}
+
+void websocket_shutdown() {
+  websocket_shutdown_HAL();
+}
+
+bool websocket_is_connected() {
+  return websocket_is_connected_HAL();
+}
+
+const char* get_websocketHubURL() {
+  return get_websocket_hub_url_HAL();
+}
+#endif

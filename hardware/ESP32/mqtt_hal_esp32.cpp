@@ -7,11 +7,6 @@
 #endif
 #include "secrets.h"
 
-// Function to get MAC address for ESP32
-std::string getMACaddress() {
-  return std::string(WiFi.macAddress().c_str());
-}
-
 #if (ENABLE_WIFI_AND_MQTT == 1)
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);

@@ -16,6 +16,9 @@
 // ESP-NOW Configuration
 #define ESPNOW_HUB_MAC             {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}  // override it in file "secrets_override.h"
 
+// WebSocket Configuration
+#define WEBSOCKET_HUB_URL          "ws://192.168.1.100:8765"    // override it in file "secrets_override.h"
+
 // --- include override settings from seperate file ---------------------------------------------------------------------------------------------------------------
 #if __has_include("secrets_override.h")
   #include "secrets_override.h"

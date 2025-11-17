@@ -11,6 +11,10 @@
 #include "mqttHubTransport.h"
 #endif
 
+#if (ENABLE_WIFI_AND_MQTT == 1 && ENABLE_HUB_COMMUNICATION == 3)
+#include "websocketHubTransport.h"
+#endif
+
 HubManager& HubManager::getInstance() {
   static HubManager instance;
   return instance;
@@ -36,6 +40,14 @@ std::unique_ptr<HubTransportBase> HubManager::createTransport(HubTransport trans
       return nullptr;
       #else
       return std::unique_ptr<HubTransportBase>(new MqttHubTransport());
+      #endif
+    
+    case HubTransport::WEBSOCKET:
+      #if (ENABLE_WIFI_AND_MQTT != 1 || ENABLE_HUB_COMMUNICATION != 3)
+      omote_log_e("WebSocket transport is not available in this build\n");
+      return nullptr;
+      #else
+      return std::unique_ptr<HubTransportBase>(new WebSocketHubTransport());
       #endif
     
     default:

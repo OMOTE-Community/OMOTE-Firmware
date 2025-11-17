@@ -8,7 +8,8 @@ using json = nlohmann::json;
 // Define the hub transport types
 enum class HubTransport {
   ESPNOW,
-  MQTT
+  MQTT,
+  WEBSOCKET
 };
 
 // Abstract interface for hub communication transports

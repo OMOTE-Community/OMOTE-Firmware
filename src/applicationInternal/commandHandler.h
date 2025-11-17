@@ -162,3 +162,7 @@ void receiveMQTTmessage_cb(std::string topic, std::string payload);
 #if (ENABLE_HUB_COMMUNICATION > 0)
 void handleHubMessage(const json& payload);
 #endif
+
+#if (ENABLE_HUB_COMMUNICATION == 3)
+void receiveWebSocketMessage_cb(json payload);
+#endif
