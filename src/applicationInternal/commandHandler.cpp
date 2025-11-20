@@ -358,6 +358,7 @@ void receiveMQTTmessage_cb(std::string topic, std::string payload) {
 #endif
 
 #if (ENABLE_HUB_COMMUNICATION > 0)
+#include "applicationInternal/hub/pairingManager.h"
 #include "applicationInternal/gui/guiNotification.h"
 #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 
@@ -443,6 +444,17 @@ void handleHubCommandResult(const omote_CommandResult& result) {
           
           setTime(time_data.timestamp, time_data.timezone_offset);
         }
+      }
+      break;
+    }
+    
+    case omote_ResponseKind_PAIRING: {
+      if (result.which_data == omote_CommandResult_pairing_tag) {
+        const auto& pairing = result.data.pairing;
+        omote_log_d("Pairing status: device=%s, step=%s, message=%s\r\n",
+                   pairing.device_id, pairing.step, pairing.message);
+        
+        Hub::PairingManager::getInstance().handlePairingStatus(pairing);
       }
       break;
     }

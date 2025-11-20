@@ -29,30 +29,31 @@ enum OmoteCommand {
   SKIP_BACKWARD = 14;
   SKIP_FORWARD = 15;
   
-  // Apple TV pairing commands
-  ATV_PAIR_START = 16;
-  ATV_PAIR_PIN = 17;
+  // Generic device pairing commands
+  PAIRING_START = 16;
+  PAIRING_SUBMIT_PIN = 17;
+  PAIRING_CANCEL = 18;
   
   // State synchronization
-  SYNC_STATE = 18;
+  SYNC_STATE = 19;
   
   // Additional commands to be mapped
-  STOP = 19;
-  REWIND = 20;
-  FORWARD = 21;
-  CONF = 22;
-  INFO = 23;
-  OK = 24;
-  BACK = 25;
-  SRC = 26;
-  CHANNEL_UP = 27;
-  REC = 28;
-  CHANNEL_DOWN = 29;
-  RED = 30;
-  GREEN = 31;
-  YELLOW = 32;
-  BLUE = 33;
-  GUI_EVENT = 34;
+  STOP = 20;
+  REWIND = 21;
+  FORWARD = 22;
+  CONF = 23;
+  INFO = 24;
+  OK = 25;
+  BACK = 26;
+  SRC = 27;
+  CHANNEL_UP = 28;
+  REC = 29;
+  CHANNEL_DOWN = 30;
+  RED = 31;
+  GREEN = 32;
+  YELLOW = 33;
+  BLUE = 34;
+  GUI_EVENT = 35;
 }
 
 // Event sent from OMOTE remote to hub
@@ -87,7 +88,8 @@ enum ResponseKind {
   RAW_COMMAND = 4;
   ERROR = 5;
   STATE_SYNC = 6;
-  NONE = 7;
+  PAIRING = 7;
+  NONE = 8;
 }
 
 // Acknowledgment response (empty)
@@ -157,6 +159,27 @@ message StateSync {
   Time time = 2;
 }
 
+// Pairing status response
+message PairingStatus {
+  // Device identifier
+  string device_id = 1;
+  
+  // Pairing step: "started", "awaiting_pin", "success", "failed", "cancelled"
+  string step = 2;
+  
+  // User-facing message (e.g., "Enter PIN shown on Apple TV")
+  string message = 3;
+  
+  // Whether a PIN is required for this step
+  bool requires_pin = 4;
+  
+  // Expected PIN length (0 if unknown or not applicable)
+  uint32 expected_pin_length = 5;
+  
+  // Optional context token to track pairing session
+  string context_token = 6;
+}
+
 // Command result sent from hub to OMOTE remote
 message CommandResult {
   // Response type
@@ -173,6 +196,7 @@ message CommandResult {
     RawCommand raw_command = 13;
     Error error = 14;
     StateSync state_sync = 15;
+    PairingStatus pairing = 16;
   }
 }
 

@@ -36,28 +36,29 @@ typedef enum _omote_OmoteCommand {
     omote_OmoteCommand_VOL_MUTE = 13,
     omote_OmoteCommand_SKIP_BACKWARD = 14,
     omote_OmoteCommand_SKIP_FORWARD = 15,
-    /* Apple TV pairing commands */
-    omote_OmoteCommand_ATV_PAIR_START = 16,
-    omote_OmoteCommand_ATV_PAIR_PIN = 17,
+    /* Generic device pairing commands */
+    omote_OmoteCommand_PAIRING_START = 16,
+    omote_OmoteCommand_PAIRING_SUBMIT_PIN = 17,
+    omote_OmoteCommand_PAIRING_CANCEL = 18,
     /* State synchronization */
-    omote_OmoteCommand_SYNC_STATE = 18,
+    omote_OmoteCommand_SYNC_STATE = 19,
     /* Additional commands to be mapped */
-    omote_OmoteCommand_STOP = 19,
-    omote_OmoteCommand_REWIND = 20,
-    omote_OmoteCommand_FORWARD = 21,
-    omote_OmoteCommand_CONF = 22,
-    omote_OmoteCommand_INFO = 23,
-    omote_OmoteCommand_OK = 24,
-    omote_OmoteCommand_BACK = 25,
-    omote_OmoteCommand_SRC = 26,
-    omote_OmoteCommand_CHANNEL_UP = 27,
-    omote_OmoteCommand_REC = 28,
-    omote_OmoteCommand_CHANNEL_DOWN = 29,
-    omote_OmoteCommand_RED = 30,
-    omote_OmoteCommand_GREEN = 31,
-    omote_OmoteCommand_YELLOW = 32,
-    omote_OmoteCommand_BLUE = 33,
-    omote_OmoteCommand_GUI_EVENT = 34
+    omote_OmoteCommand_STOP = 20,
+    omote_OmoteCommand_REWIND = 21,
+    omote_OmoteCommand_FORWARD = 22,
+    omote_OmoteCommand_CONF = 23,
+    omote_OmoteCommand_INFO = 24,
+    omote_OmoteCommand_OK = 25,
+    omote_OmoteCommand_BACK = 26,
+    omote_OmoteCommand_SRC = 27,
+    omote_OmoteCommand_CHANNEL_UP = 28,
+    omote_OmoteCommand_REC = 29,
+    omote_OmoteCommand_CHANNEL_DOWN = 30,
+    omote_OmoteCommand_RED = 31,
+    omote_OmoteCommand_GREEN = 32,
+    omote_OmoteCommand_YELLOW = 33,
+    omote_OmoteCommand_BLUE = 34,
+    omote_OmoteCommand_GUI_EVENT = 35
 } omote_OmoteCommand;
 
 /* Response kind for command results */
@@ -69,7 +70,8 @@ typedef enum _omote_ResponseKind {
     omote_ResponseKind_RAW_COMMAND = 4,
     omote_ResponseKind_ERROR = 5,
     omote_ResponseKind_STATE_SYNC = 6,
-    omote_ResponseKind_NONE = 7
+    omote_ResponseKind_PAIRING = 7,
+    omote_ResponseKind_NONE = 8
 } omote_ResponseKind;
 
 /* Struct definitions */
@@ -174,6 +176,24 @@ typedef struct _omote_StateSync {
 PB_PACKED_STRUCT_END
 
 PB_PACKED_STRUCT_START
+/* Pairing status response */
+typedef struct _omote_PairingStatus {
+    /* Device identifier */
+    char device_id[32];
+    /* Pairing step: "started", "awaiting_pin", "success", "failed", "cancelled" */
+    char step[16];
+    /* User-facing message (e.g., "Enter PIN shown on Apple TV") */
+    char message[128];
+    /* Whether a PIN is required for this step */
+    bool requires_pin;
+    /* Expected PIN length (0 if unknown or not applicable) */
+    uint32_t expected_pin_length;
+    /* Optional context token to track pairing session */
+    char context_token[32];
+} pb_packed omote_PairingStatus;
+PB_PACKED_STRUCT_END
+
+PB_PACKED_STRUCT_START
 /* Command result sent from hub to OMOTE remote */
 typedef struct _omote_CommandResult {
     /* Response type */
@@ -188,6 +208,7 @@ typedef struct _omote_CommandResult {
         omote_RawCommand raw_command;
         omote_Error error;
         omote_StateSync state_sync;
+        omote_PairingStatus pairing;
     } data;
 } pb_packed omote_CommandResult;
 PB_PACKED_STRUCT_END
@@ -221,6 +242,7 @@ extern "C" {
 
 
 
+
 #define omote_CommandResult_kind_ENUMTYPE omote_ResponseKind
 
 
@@ -234,6 +256,7 @@ extern "C" {
 #define omote_Metadata_init_default              {"", "", "", 0, 0, ""}
 #define omote_Time_init_default                  {0, 0}
 #define omote_StateSync_init_default             {false, omote_Metadata_init_default, false, omote_Time_init_default}
+#define omote_PairingStatus_init_default         {"", "", "", 0, 0, ""}
 #define omote_CommandResult_init_default         {_omote_ResponseKind_MIN, 0, 0, {omote_Ack_init_default}}
 #define omote_RemoteEvent_init_zero              {"", _omote_OmoteCommand_MIN, _omote_OmoteCommandType_MIN, "", 0, {0, {0}}}
 #define omote_Ack_init_zero                      {0}
@@ -244,6 +267,7 @@ extern "C" {
 #define omote_Metadata_init_zero                 {"", "", "", 0, 0, ""}
 #define omote_Time_init_zero                     {0, 0}
 #define omote_StateSync_init_zero                {false, omote_Metadata_init_zero, false, omote_Time_init_zero}
+#define omote_PairingStatus_init_zero            {"", "", "", 0, 0, ""}
 #define omote_CommandResult_init_zero            {_omote_ResponseKind_MIN, 0, 0, {omote_Ack_init_zero}}
 
 /* Field tags (for use in manual encoding/decoding) */
@@ -269,6 +293,12 @@ extern "C" {
 #define omote_Time_timezone_offset_tag           2
 #define omote_StateSync_metadata_tag             1
 #define omote_StateSync_time_tag                 2
+#define omote_PairingStatus_device_id_tag        1
+#define omote_PairingStatus_step_tag             2
+#define omote_PairingStatus_message_tag          3
+#define omote_PairingStatus_requires_pin_tag     4
+#define omote_PairingStatus_expected_pin_length_tag 5
+#define omote_PairingStatus_context_token_tag    6
 #define omote_CommandResult_kind_tag             1
 #define omote_CommandResult_supports_response_tag 2
 #define omote_CommandResult_ack_tag              10
@@ -277,6 +307,7 @@ extern "C" {
 #define omote_CommandResult_raw_command_tag      13
 #define omote_CommandResult_error_tag            14
 #define omote_CommandResult_state_sync_tag       15
+#define omote_CommandResult_pairing_tag          16
 
 /* Struct field encoding specification for nanopb */
 #define omote_RemoteEvent_FIELDLIST(X, a) \
@@ -340,6 +371,16 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  time,              2)
 #define omote_StateSync_metadata_MSGTYPE omote_Metadata
 #define omote_StateSync_time_MSGTYPE omote_Time
 
+#define omote_PairingStatus_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, STRING,   device_id,         1) \
+X(a, STATIC,   SINGULAR, STRING,   step,              2) \
+X(a, STATIC,   SINGULAR, STRING,   message,           3) \
+X(a, STATIC,   SINGULAR, BOOL,     requires_pin,      4) \
+X(a, STATIC,   SINGULAR, UINT32,   expected_pin_length,   5) \
+X(a, STATIC,   SINGULAR, STRING,   context_token,     6)
+#define omote_PairingStatus_CALLBACK NULL
+#define omote_PairingStatus_DEFAULT NULL
+
 #define omote_CommandResult_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, UENUM,    kind,              1) \
 X(a, STATIC,   SINGULAR, BOOL,     supports_response,   2) \
@@ -348,7 +389,8 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (data,volume,data.volume),  11) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (data,power,data.power),  12) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (data,raw_command,data.raw_command),  13) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (data,error,data.error),  14) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (data,state_sync,data.state_sync),  15)
+X(a, STATIC,   ONEOF,    MESSAGE,  (data,state_sync,data.state_sync),  15) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (data,pairing,data.pairing),  16)
 #define omote_CommandResult_CALLBACK NULL
 #define omote_CommandResult_DEFAULT NULL
 #define omote_CommandResult_data_ack_MSGTYPE omote_Ack
@@ -357,6 +399,7 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (data,state_sync,data.state_sync),  15)
 #define omote_CommandResult_data_raw_command_MSGTYPE omote_RawCommand
 #define omote_CommandResult_data_error_MSGTYPE omote_Error
 #define omote_CommandResult_data_state_sync_MSGTYPE omote_StateSync
+#define omote_CommandResult_data_pairing_MSGTYPE omote_PairingStatus
 
 extern const pb_msgdesc_t omote_RemoteEvent_msg;
 extern const pb_msgdesc_t omote_Ack_msg;
@@ -367,6 +410,7 @@ extern const pb_msgdesc_t omote_Error_msg;
 extern const pb_msgdesc_t omote_Metadata_msg;
 extern const pb_msgdesc_t omote_Time_msg;
 extern const pb_msgdesc_t omote_StateSync_msg;
+extern const pb_msgdesc_t omote_PairingStatus_msg;
 extern const pb_msgdesc_t omote_CommandResult_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
@@ -379,6 +423,7 @@ extern const pb_msgdesc_t omote_CommandResult_msg;
 #define omote_Metadata_fields &omote_Metadata_msg
 #define omote_Time_fields &omote_Time_msg
 #define omote_StateSync_fields &omote_StateSync_msg
+#define omote_PairingStatus_fields &omote_PairingStatus_msg
 #define omote_CommandResult_fields &omote_CommandResult_msg
 
 /* Maximum encoded size of messages (where known) */
@@ -387,6 +432,7 @@ extern const pb_msgdesc_t omote_CommandResult_msg;
 #define omote_CommandResult_size                 256
 #define omote_Error_size                         130
 #define omote_Metadata_size                      224
+#define omote_PairingStatus_size                 221
 #define omote_Power_size                         2
 #define omote_RawCommand_size                    133
 #define omote_RemoteEvent_size                   113

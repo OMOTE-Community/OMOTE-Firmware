@@ -19,8 +19,9 @@ omote_OmoteCommand ProtoCodec::stringToCommand(const std::string& cmd) {
     if (cmd == "VOL_MUTE") return omote_OmoteCommand_VOL_MUTE;
     if (cmd == "SKIP_BACKWARD") return omote_OmoteCommand_SKIP_BACKWARD;
     if (cmd == "SKIP_FORWARD") return omote_OmoteCommand_SKIP_FORWARD;
-    if (cmd == "ATV_PAIR_START") return omote_OmoteCommand_ATV_PAIR_START;
-    if (cmd == "ATV_PAIR_PIN") return omote_OmoteCommand_ATV_PAIR_PIN;
+    if (cmd == "PAIRING_START") return omote_OmoteCommand_PAIRING_START;
+    if (cmd == "PAIRING_SUBMIT_PIN") return omote_OmoteCommand_PAIRING_SUBMIT_PIN;
+    if (cmd == "PAIRING_CANCEL") return omote_OmoteCommand_PAIRING_CANCEL;
     if (cmd == "SYNC_STATE") return omote_OmoteCommand_SYNC_STATE;
     if (cmd == "STOP") return omote_OmoteCommand_STOP;
     if (cmd == "REWIND") return omote_OmoteCommand_REWIND;

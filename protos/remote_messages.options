@@ -19,4 +19,8 @@ omote.Metadata.title max_size:64
 omote.Metadata.artist max_size:64
 omote.Metadata.album max_size:64
 omote.Metadata.state max_size:16
+omote.PairingStatus.device_id max_size:32
+omote.PairingStatus.step max_size:16
+omote.PairingStatus.message max_size:128
+omote.PairingStatus.context_token max_size:32
 
