@@ -6,7 +6,6 @@
 class EspNowHubTransport : public HubTransportBase {
 public:
   EspNowHubTransport();
-  ~EspNowHubTransport() override;
   
   bool init() override;
   void process() override;

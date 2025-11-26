@@ -15,6 +15,9 @@
 // The rest of the code is only allowed to use "hardwarePresenter.h".
 #include "hardwareLayer.h"
 
+#if (ENABLE_HUB_COMMUNICATION > 0)
+#include <applicationInternal/hub/hubManager.h>
+#endif
 // --- hardware general -------------------------------------------------------
 void init_hardware_general(void) {
   init_hardware_general_HAL();
@@ -88,16 +91,22 @@ void clear_hub_state_poll_flag() {
   metadata_poll_requested = false;
 }
 
+void enter_sleep() {
+  #if(ENABLE_HUB_COMMUNICATION > 0)
+  HubManager::getInstance().shutdown();
+  #endif
+  enter_sleep_HAL();
+}
 
-void init_sleep() {
-  init_sleep_HAL();
+void init_from_sleep() {
+  init_from_sleep_HAL();
   
   // Check if we were woken up from sleep (not a fresh boot/reset)
   // Using constants: WAKEUP_BY_RESET=0, WAKEUP_BY_IMU=1, WAKEUP_BY_KEYPAD=2
   int reason = get_wakeupReason();
   device_was_woken_up = (reason == 1 || reason == 2); // WAKEUP_BY_IMU or WAKEUP_BY_KEYPAD
   
-  omote_log_i("init_sleep: wakeup_reason=%d, device_was_woken_up=%s\r\n", 
+  omote_log_i("init_from_sleep: wakeup_reason=%d, device_was_woken_up=%s\r\n", 
              reason, device_was_woken_up ? "true" : "false");
   
   if (device_was_woken_up) {
@@ -107,8 +116,8 @@ void init_sleep() {
 void init_IMU() {
   init_IMU_HAL();
 };
-void check_activity() {
-  check_activity_HAL();
+bool is_no_activity() {
+  return check_activity_HAL();
 };
 void setLastActivityTimestamp() {
   setLastActivityTimestamp_HAL();
@@ -281,9 +290,15 @@ void init_lvgl_hardware() {
 // --- WiFi / MQTT ------------------------------------------------------------
 #if (ENABLE_WIFI_AND_MQTT == 1)
 void init_mqtt(void) {
+  // Always set up WiFi callback and initialize WiFi
   set_announceWiFiconnected_cb_HAL(&receiveWiFiConnected_cb);
-  set_announceSubscribedTopics_cb_HAL(receiveMQTTmessage_cb);
   init_mqtt_HAL();
+  
+  // Only set up MQTT callbacks if MQTT is actually being used
+  // (hub disabled or MQTT is the hub transport)
+  #if (ENABLE_HUB_COMMUNICATION == 0 || ENABLE_HUB_COMMUNICATION == 2)
+  set_announceSubscribedTopics_cb_HAL(receiveMQTTmessage_cb);
+  #endif
 }
 // used by "commandHandler.cpp", "sleep.cpp"
 bool getIsWifiConnected() {

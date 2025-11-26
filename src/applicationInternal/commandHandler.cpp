@@ -282,10 +282,10 @@ void executeCommandWithData(const CommandExecutionParams& params, commandData co
   auto current = commandData.commandPayloads.begin();
   
   // Extract device and command
-  std::string deviceName = *current;
+  const std::string deviceName = *current;
   current = std::next(current, 1);
-  
-  std::string commandName = *current;
+
+  const std::string commandName = *current;
   current = std::next(current, 1);
   
   // Send using the helper function
@@ -360,7 +360,7 @@ void receiveMQTTmessage_cb(std::string topic, std::string payload) {
 #if (ENABLE_HUB_COMMUNICATION > 0)
 #include "applicationInternal/hub/pairingManager.h"
 #include "applicationInternal/gui/guiNotification.h"
-#include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
+// #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 
 void handleHubCommandResult(const omote_CommandResult& result) {
   omote_log_d("Received CommandResult: kind=%d, supports_response=%s\r\n", 
@@ -373,7 +373,7 @@ void handleHubCommandResult(const omote_CommandResult& result) {
         omote_log_d("Volume update: level=%u, muted=%s\r\n", 
                    volume.level, volume.is_muted ? "true" : "false");
         
-        GuiNotification::showVolumeNotification(static_cast<double>(volume.level), volume.is_muted);
+        GuiNotification::showVolumeNotification(volume.level, volume.is_muted);
       }
       break;
     }
@@ -391,7 +391,7 @@ void handleHubCommandResult(const omote_CommandResult& result) {
     case omote_ResponseKind_RAW_COMMAND: {
       if (result.which_data == omote_CommandResult_raw_command_tag) {
         const auto& raw_cmd = result.data.raw_command;
-        std::string raw_response((const char*)raw_cmd.raw_response.bytes, raw_cmd.raw_response.size);
+        const std::string raw_response(reinterpret_cast<const char*>(raw_cmd.raw_response.bytes), raw_cmd.raw_response.size);
         omote_log_d("Raw command result: success=%s, message=%s\r\n", 
                    raw_cmd.success ? "true" : "false", raw_response.c_str());
         
@@ -431,9 +431,9 @@ void handleHubCommandResult(const omote_CommandResult& result) {
           const auto& metadata = state_sync.metadata;
           omote_log_d("Metadata update: %s by %s (%s)\r\n", 
                      metadata.title, metadata.artist, metadata.state);
-          
-          update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state, 
-                                  metadata.duration, metadata.position);
+          // TODO: Make metadata compatible with multiple devices.
+          // update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state, 
+          //                         metadata.duration, metadata.position);
         }
         
         // Handle time if present

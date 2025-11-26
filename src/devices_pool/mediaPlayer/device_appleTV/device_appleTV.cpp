@@ -3,7 +3,7 @@
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include "device_appleTV.h"
 
-#if (ENABLE_HUB_COMMUNICATION == 1)
+#if (ENABLE_HUB_COMMUNICATION > 0)
 #include "devices/misc/device_hub_helper.h"
 #endif
 
@@ -26,7 +26,7 @@ uint16_t APPLETV_HOME;
 
 void register_device_appleTV() {
 
-  #if (ENABLE_HUB_COMMUNICATION == 1)
+  #if (ENABLE_HUB_COMMUNICATION > 0)
     // Register hub commands for Apple TV when Hub is enabled
     register_hub_command(&APPLETV_POWER_ON, "APPLE_TV", "POWER_ON");
     register_hub_command(&APPLETV_POWER_OFF, "APPLE_TV", "POWER_OFF");

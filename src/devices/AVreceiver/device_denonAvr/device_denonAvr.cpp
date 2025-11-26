@@ -3,6 +3,10 @@
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include "device_denonAvr.h"
 
+#if (ENABLE_HUB_COMMUNICATION > 0)
+#include "devices/misc/device_hub_helper.h"
+#endif
+
 // Only activate the commands that are used. Every command takes 100 bytes, wether used or not.
 // uint16_t DENON_POWER_TOGGLE      ; //"DENON_POWER_TOGGLE";
 // uint16_t DENON_POWER_SLEEP       ; //"DENON_POWER_SLEEP";
@@ -46,7 +50,23 @@
 // uint16_t DENON_MEDIA_PLAYPAUSE   ; //"DENON_MEDIA_PLAYPAUSE";
 // uint16_t DENON_MEDIA_NEXT        ; //"DENON_MEDIA_NEXT";
 
+uint16_t DENONAVR_POWER_ON;
+uint16_t DENONAVR_POWER_OFF;
+uint16_t DENONAVR_VOL_MINUS;
+uint16_t DENONAVR_VOL_PLUS;
+uint16_t DENONAVR_VOL_MUTE;
+
 void register_device_denonAvr() {
+
+
+  #if (ENABLE_HUB_COMMUNICATION > 0)
+    register_hub_command(&DENONAVR_POWER_ON, "DENON_AVR", "POWER_ON");
+    register_hub_command(&DENONAVR_POWER_OFF, "DENON_AVR", "POWER_OFF");
+    register_hub_command(&DENONAVR_VOL_MINUS, "DENON_AVR", "VOL_MINUS");
+    register_hub_command(&DENONAVR_VOL_PLUS, "DENON_AVR", "VOL_PLUS");
+    register_hub_command(&DENONAVR_VOL_MUTE, "DENON_AVR", "VOL_MUTE");
+  #endif
+
   // tested with Denon AVR-S660H, works also with others
 
   // Only activate the commands that are used. Every command takes 100 bytes, wether used or not.

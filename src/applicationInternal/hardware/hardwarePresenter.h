@@ -32,9 +32,10 @@ void init_battery(void);
 void get_battery_status(int *battery_voltage, int *battery_percentage, bool *battery_ischarging);
 
 // --- sleep / IMU ------------------------------------------------------------
-void init_sleep();
+void enter_sleep();
+void init_from_sleep();
 void init_IMU();
-void check_activity();
+bool is_no_activity();
 void setLastActivityTimestamp();
 uint32_t get_sleepTimeout();
 void set_sleepTimeout(uint32_t aSleepTimeout);

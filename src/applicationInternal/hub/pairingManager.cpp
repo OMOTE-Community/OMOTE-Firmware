@@ -70,13 +70,15 @@ void PairingManager::submitPin(const char* pin) {
     
     // Create protobuf message with PIN and context token in data field
     // Format: PIN first, then context token (both null-terminated strings)
-    uint8_t data_buffer[32];
+    // Buffer needs to hold: PIN (up to 16 hex chars) + null + UUID (36 chars) + null = 54 bytes
+    uint8_t data_buffer[64];
     size_t pin_len = strlen(pin);
     size_t token_len = contextToken.length();
     size_t data_len = pin_len + 1 + token_len + 1;
     
     if (data_len > sizeof(data_buffer)) {
-        omote_log_e("PIN and context token too large\r\n");
+        omote_log_e("PIN and context token too large: pin_len=%zu, token_len=%zu, total=%zu\r\n", 
+                   pin_len, token_len, data_len);
         return;
     }
     

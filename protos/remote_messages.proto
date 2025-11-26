@@ -99,8 +99,9 @@ message Ack {
 
 // Volume level response
 message Volume {
-  // Volume level (0-100, using fixed32 for consistent encoding)
-  fixed32 level = 1;
+  // Volume level in dB (can be negative, using sfixed32 for signed values)
+  // Examples: -23.0 dB, 0.0 dB, +12.0 dB
+  sfixed32 level = 1;
   
   // Mute state
   bool is_muted = 2;

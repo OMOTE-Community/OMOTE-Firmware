@@ -11,10 +11,6 @@ void mqttMessageReceived_cb(std::string topic, std::string payload);
 MqttHubTransport::MqttHubTransport() : baseTopic("omote/") {
 }
 
-MqttHubTransport::~MqttHubTransport() {
-  shutdown();
-}
-
 bool MqttHubTransport::init() {
   set_mqtt_message_callback(&mqttMessageReceived_cb);
   init_mqtt();

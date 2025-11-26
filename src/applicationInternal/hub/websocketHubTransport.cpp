@@ -17,17 +17,13 @@ extern bool websocket_is_connected();
 
 WebSocketHubTransport::WebSocketHubTransport() = default;
 
-WebSocketHubTransport::~WebSocketHubTransport() {
-  shutdown();
-}
-
 bool WebSocketHubTransport::init() {
   const char* hub_url = get_websocketHubURL();
   if (hub_url == nullptr || strlen(hub_url) == 0) {
     omote_log_e("WebSocket hub URL not configured\n");
     return false;
   }
-  
+
   omote_log_i("Initializing WebSocket transport to %s\n", hub_url);
   set_websocket_message_callback_proto(&websocketMessageReceived_cb_proto);
   init_websocket(hub_url);
@@ -35,6 +31,10 @@ bool WebSocketHubTransport::init() {
 }
 
 void WebSocketHubTransport::process() {
+  if (!getIsWifiConnected()) {
+    return;
+  }
+
   websocket_loop();
 }
 
@@ -59,6 +59,7 @@ bool WebSocketHubTransport::isReady() {
 }
 
 void WebSocketHubTransport::shutdown() {
+  omote_log_i("WebSocket: Shutting down WebSocket transport\n");
   websocket_shutdown();
 }
 
@@ -74,4 +75,3 @@ void websocketMessageReceived_cb_proto(const uint8_t* data, size_t len) {
 }
 
 #endif
-

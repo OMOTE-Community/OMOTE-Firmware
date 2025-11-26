@@ -20,11 +20,12 @@
 #include "devices/TV/device_lgTV/device_lgTV.h"
 //   AV receiver
 // #include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
-#include "devices/AVreceiver/device_sonyAvr/device_sonyAvr.h"
-// #include "devices/AVreceiver/device_denonAvr/device_denonAvr.h"
+// #include "devices/AVreceiver/device_sonyAvr/device_sonyAvr.h"
+#include "devices/AVreceiver/device_denonAvr/device_denonAvr.h"
 // #include "devices/AVreceiver/device_lgsoundbar/device_lgsoundbar.h"
 //   media player
-#include "devices/mediaPlayer/device_appleTV/device_appleTV.h"
+//#include "devices/mediaPlayer/device_appleTV/device_appleTV.h"
+#include "devices/mediaPlayer/device_shield/device_shield.h"
 // #include "devices/mediaPlayer/device_lgbluray/device_lgbluray.h"
 // #include "devices/mediaPlayer/device_samsungbluray/device_samsungbluray.h"
 // #include "devices/mediaPlayer/device_shield/device_shield.h"
@@ -41,7 +42,7 @@
 #include "guis/gui_pairing.h"
 #include "guis/gui_BLEpairing.h"
 // #include "devices/AVreceiver/device_yamahaAmp/gui_yamahaAmp.h"
-#include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
+// #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 // #include "devices/misc/device_smarthome/gui_smarthome.h"
 // #include "devices/misc/device_airconditioner/gui_airconditioner.h"
 #include "applicationInternal/keys.h"
@@ -52,7 +53,8 @@
 #include "scenes/scene_TV.h"
 #include "scenes/scene_fireTV.h"
 #include "scenes/scene_chromecast.h"
-#include "scenes/scene_appleTV.h"
+// #include "scenes/scene_appleTV.h"
+#include "scenes/scene_shield.h"
 #include "applicationInternal/scenes/sceneHandler.h"
 #if (ENABLE_HUB_COMMUNICATION > 0)
 #include "applicationInternal/hub/hubManager.h"
@@ -76,7 +78,7 @@ int main(int argc, char *argv[]) {
   // do some general hardware setup, like powering the TFT, I2C, ...
   init_hardware_general();
   // get wakeup reason
-  init_sleep();
+  init_from_sleep();
   // Restore settings from internal flash memory
   init_preferences();
   // blinking led
@@ -94,8 +96,10 @@ int main(int argc, char *argv[]) {
   register_specialCommands();
 
   register_device_lgTV();
-  register_device_sonyAvr();
-  register_device_appleTV();
+  //  register_device_sonyAvr();
+  register_device_denonAvr();
+  //  register_device_appleTV();
+  register_device_shield();
 
 
   #if (ENABLE_KEYBOARD_MQTT == 1)
@@ -110,7 +114,7 @@ int main(int argc, char *argv[]) {
   register_gui_sceneSelection();
   register_gui_irReceiver();
   register_gui_settings();
-  register_gui_appleTV();
+  //  register_gui_appleTV();
   register_gui_numpad();
   register_gui_pairing();
   #if (ENABLE_KEYBOARD_BLE == 1)
@@ -119,7 +123,7 @@ int main(int argc, char *argv[]) {
   // Only show these GUIs in the main gui list. If you don't set this explicitely, by default all registered guis are shown.
   #if (USE_SCENE_SPECIFIC_GUI_LIST != 0)
   main_gui_list =
-    {tabName_sceneSelection, tabName_settings, tabName_irReceiver
+    {tabName_sceneSelection, tabName_settings, tabName_irReceiver, tabName_pairing
     #if (ENABLE_KEYBOARD_BLE == 1)
     , tabName_blepairing
     #endif
@@ -129,10 +133,12 @@ int main(int argc, char *argv[]) {
   // register the scenes and their key_commands_*
   register_scene_defaultKeys();
   register_scene_TV();
-  register_scene_appleTV();
+  // register_scene_appleTV();
+  register_scene_shield();
   register_scene_allOff();
   // Only show these scenes on the sceneSelection gui. If you don't set this explicitely, by default all registered scenes are shown.
-  set_scenes_on_sceneSelectionGUI({scene_name_TV, scene_name_appleTV});
+  // set_scenes_on_sceneSelectionGUI({scene_name_TV, scene_name_appleTV});
+  set_scenes_on_sceneSelectionGUI({scene_name_TV, scene_name_shield});
 
   // init GUI - will initialize tft, touch and lvgl
   init_gui(); // This has to come before any other i2c devices are initialized, otherwise the i2c bus will not be powered
@@ -147,6 +153,12 @@ int main(int argc, char *argv[]) {
   init_keyboardBLE();
   #endif
 
+  // init WiFi - needs to be after init_gui() because WifiLabel must be available
+  // init_mqtt() always initializes WiFi, but only sets up MQTT if needed
+  #if (ENABLE_WIFI_AND_MQTT == 1)
+  init_mqtt();
+  #endif
+
    // Initialize hub communication with preferred transport from settings
   #if (ENABLE_HUB_COMMUNICATION > 0)
     HubTransport preferredTransport;
@@ -155,6 +167,10 @@ int main(int argc, char *argv[]) {
       preferredTransport = HubTransport::ESPNOW;  // ESP-NOW transport
     #elif (ENABLE_HUB_COMMUNICATION == 2)
       preferredTransport = HubTransport::MQTT;    // MQTT transport
+    #elif (ENABLE_HUB_COMMUNICATION == 3)
+      preferredTransport = HubTransport::WEBSOCKET;  // WebSocket transport
+    #else
+      #error "Invalid ENABLE_HUB_COMMUNICATION value"
     #endif
 
     // Initialize the hub manager with the preferred transport
@@ -173,11 +189,6 @@ int main(int argc, char *argv[]) {
 
   // setup the Inertial Measurement Unit (IMU) for motion detection. Has to be after init_gui(), otherwise I2C will not work
   init_IMU();
-
-  // init WiFi - needs to be after init_gui() because WifiLabel must be available
-  #if (ENABLE_WIFI_AND_MQTT == 1)
-  init_mqtt();
-  #endif
 
   omote_log_i("Setup finished in %lu ms.\r\n", millis());
 
@@ -218,7 +229,10 @@ void loop(unsigned long *pIMUTaskTimer, unsigned long *pUpdateStatusTimer) {
   gui_loop();
   // call mqtt loop to receive mqtt messages, if you are subscribed to some topics
   #if (ENABLE_WIFI_AND_MQTT == 1)
+  // Only run MQTT loop if hub is disabled or if MQTT is the hub transport
+  #if (ENABLE_HUB_COMMUNICATION == 0 || ENABLE_HUB_COMMUNICATION == 2)
   mqtt_loop();
+  #endif
   #endif
 
   // --- every 100 ms -------------------------------------------------------------------
@@ -227,7 +241,9 @@ void loop(unsigned long *pIMUTaskTimer, unsigned long *pUpdateStatusTimer) {
   if(millis() - *pIMUTaskTimer >= 100){
     *pIMUTaskTimer = millis();
 
-    check_activity();
+    if (is_no_activity()) {
+      enter_sleep();
+    }
 
   }
 

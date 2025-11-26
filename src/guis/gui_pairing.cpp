@@ -52,8 +52,8 @@ static void pairing_backspace_event_cb(lv_event_t* e) {
   }
 }
 
-// Number button handler
-static void pairing_number_event_cb(lv_event_t* e) {
+// Hex button handler (0-9, A-F)
+static void pairing_hex_event_cb(lv_event_t* e) {
   lv_obj_t* target = lv_event_get_target(e);
   lv_obj_t* cont = lv_event_get_current_target(e);
   if (target == cont) return;
@@ -67,16 +67,24 @@ static void pairing_number_event_cb(lv_event_t* e) {
     return;
   }
   
-  // Append digit to PIN buffer
-  pairing_pin_buffer += std::to_string((user_data + 1) % 10);
+  // Map user_data to hex character (0-15 -> 0-9, A-F)
+  char hex_char;
+  if (user_data < 10) {
+    hex_char = '0' + user_data;
+  } else {
+    hex_char = 'A' + (user_data - 10);
+  }
   
-  // Update display with asterisks
+  // Append hex character to PIN buffer
+  pairing_pin_buffer += hex_char;
+  
+  // Update display with asterisks (for security, but we store the actual hex)
   std::string display_pin(pairing_pin_buffer.length(), '*');
   if (pairing_pin_display) {
     lv_label_set_text(pairing_pin_display, display_pin.c_str());
   }
   
-  omote_log_d("Pairing PIN: %zu digits\r\n", pairing_pin_buffer.length());
+  omote_log_d("Pairing PIN: %zu characters (hex)\r\n", pairing_pin_buffer.length());
 }
 
 void create_tab_content_pairing(lv_obj_t* tab) {
@@ -103,51 +111,53 @@ void create_tab_content_pairing(lv_obj_t* tab) {
   lv_obj_set_style_text_font(pairing_pin_display, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_obj_align(pairing_pin_display, LV_ALIGN_TOP_MID, 0, 80);
   
-  // Configure number button grid (3x4 + backspace)
-  static lv_coord_t col_dsc[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST };
-  static lv_coord_t row_dsc[] = { 60, 60, 60, 60, LV_GRID_TEMPLATE_LAST };
+  // Configure hex keypad grid (4x4 for 0-9, A-F)
+  static lv_coord_t col_dsc[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST };
+  static lv_coord_t row_dsc[] = { 50, 50, 50, 50, LV_GRID_TEMPLATE_LAST };
   
-  // Create numpad container
+  // Create hex keypad container
   numpad_container = lv_obj_create(tab);
   lv_obj_set_style_shadow_width(numpad_container, 0, LV_PART_MAIN);
   lv_obj_set_style_bg_color(numpad_container, lv_color_black(), LV_PART_MAIN);
   lv_obj_set_style_border_width(numpad_container, 0, LV_PART_MAIN);
   lv_obj_set_style_grid_column_dsc_array(numpad_container, col_dsc, 0);
   lv_obj_set_style_grid_row_dsc_array(numpad_container, row_dsc, 0);
-  lv_obj_set_size(numpad_container, SCR_WIDTH - 20, 280);
+  lv_obj_set_size(numpad_container, SCR_WIDTH - 20, 220);
   lv_obj_set_layout(numpad_container, LV_LAYOUT_GRID);
   lv_obj_align(numpad_container, LV_ALIGN_TOP_MID, 0, 120);
   lv_obj_set_style_radius(numpad_container, 0, LV_PART_MAIN);
   
-  // Create number buttons (0-9)
-  for (int i = 0; i < 12; i++) {
-    uint8_t col = i % 3;
-    uint8_t row = i / 3;
-    
-    // Skip empty cells (backspace will go in row 3, col 2)
-    if ((row == 3) && ((col == 0) || (col == 2))) continue;
+  // Create hex buttons (0-9, A-F) - 16 buttons in 4x4 grid
+  for (int i = 0; i < 16; i++) {
+    uint8_t col = i % 4;
+    uint8_t row = i / 4;
     
     lv_obj_t* btn = lv_btn_create(numpad_container);
     lv_obj_set_grid_cell(btn, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
     lv_obj_set_style_bg_color(btn, color_primary, LV_PART_MAIN);
     lv_obj_set_style_radius(btn, 14, LV_PART_MAIN);
     lv_obj_add_flag(btn, LV_OBJ_FLAG_EVENT_BUBBLE);
+    lv_obj_set_user_data(btn, (void*)(intptr_t)i);
     
     lv_obj_t* label = lv_label_create(btn);
-    if (i < 9) {
-      lv_label_set_text(label, std::to_string(i + 1).c_str());
-      lv_obj_set_user_data(btn, (void*)(intptr_t)i);
+    // Map 0-15 to hex characters: 0-9, A-F
+    if (i < 10) {
+      lv_label_set_text(label, std::to_string(i).c_str());
     } else {
-      lv_label_set_text(label, "0");
-      lv_obj_set_user_data(btn, (void*)(intptr_t)9);
+      char hex_label[2] = { (char)('A' + (i - 10)), '\0' };
+      lv_label_set_text(label, hex_label);
     }
     lv_obj_set_style_text_font(label, &lv_font_montserrat_24, LV_PART_MAIN);
     lv_obj_center(label);
   }
   
-  // Create backspace button in row 3, col 2
-  lv_obj_t* backspace_btn = lv_btn_create(numpad_container);
-  lv_obj_set_grid_cell(backspace_btn, LV_GRID_ALIGN_STRETCH, 2, 1, LV_GRID_ALIGN_STRETCH, 3, 1);
+  // Add shared event handler for all hex buttons
+  lv_obj_add_event_cb(numpad_container, pairing_hex_event_cb, LV_EVENT_CLICKED, NULL);
+  
+  // Create backspace button below the hex keypad
+  lv_obj_t* backspace_btn = lv_btn_create(tab);
+  lv_obj_set_size(backspace_btn, 100, 40);
+  lv_obj_align(backspace_btn, LV_ALIGN_TOP_MID, 0, 350);
   lv_obj_set_style_bg_color(backspace_btn, lv_color_hex(0x666666), LV_PART_MAIN);
   lv_obj_set_style_radius(backspace_btn, 14, LV_PART_MAIN);
   lv_obj_add_event_cb(backspace_btn, pairing_backspace_event_cb, LV_EVENT_CLICKED, NULL);
@@ -156,9 +166,6 @@ void create_tab_content_pairing(lv_obj_t* tab) {
   lv_label_set_text(backspace_label, LV_SYMBOL_BACKSPACE);
   lv_obj_set_style_text_font(backspace_label, &lv_font_montserrat_24, LV_PART_MAIN);
   lv_obj_center(backspace_label);
-  
-  // Add shared event handler for all number buttons
-  lv_obj_add_event_cb(numpad_container, pairing_number_event_cb, LV_EVENT_CLICKED, NULL);
   
   // Submit button
   pairing_submit_btn = lv_btn_create(tab);

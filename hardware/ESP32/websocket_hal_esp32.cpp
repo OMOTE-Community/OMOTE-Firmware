@@ -40,18 +40,26 @@ void set_announceWebSocketMessageProto_cb_HAL(tAnnounceWebSocketMessageProto_cb 
 }
 
 void init_websocket_HAL(const char* hub_url) {
-  Serial.printf("Initializing WebSocket connection to %s\n", hub_url);
+  Serial.printf("Initializing WebSocket Client connection to %s\n", hub_url);
   
   String urlStr(hub_url);
-  int portStart = urlStr.indexOf(':', 6);
-  int pathStart = urlStr.indexOf('/', 7);
+  // Find the start of the host (after "ws://" or "wss://")
+  int hostStart = urlStr.indexOf("://");
+  if (hostStart < 0) {
+    Serial.println("Error: Invalid WebSocket Server URL format");
+    return;
+  }
+  hostStart += 3; // Skip past "://"
+  
+  int portStart = urlStr.indexOf(':', hostStart);
+  int pathStart = urlStr.indexOf('/', hostStart);
   
   String host;
   uint16_t port = 80;
   String path = "/";
   
   if (portStart > 0) {
-    host = urlStr.substring(6, portStart);
+    host = urlStr.substring(hostStart, portStart);
     if (pathStart > 0) {
       port = urlStr.substring(portStart + 1, pathStart).toInt();
       path = urlStr.substring(pathStart);
@@ -59,10 +67,10 @@ void init_websocket_HAL(const char* hub_url) {
       port = urlStr.substring(portStart + 1).toInt();
     }
   } else if (pathStart > 0) {
-    host = urlStr.substring(6, pathStart);
+    host = urlStr.substring(hostStart, pathStart);
     path = urlStr.substring(pathStart);
   } else {
-    host = urlStr.substring(6);
+    host = urlStr.substring(hostStart);
   }
   
   Serial.printf("Connecting to host: %s, port: %d, path: %s\n", host.c_str(), port, path.c_str());
@@ -70,13 +78,12 @@ void init_websocket_HAL(const char* hub_url) {
   webSocket.begin(host, port, path);
   webSocket.onEvent(onWebSocketEvent);
   
-  // Try reconnection every 5000ms if connection fails (same as example)
-  webSocket.setReconnectInterval(5000);
+  webSocket.setReconnectInterval(250);
   
-  // Enable heartbeat: ping every 15s, expect pong within 3s, disconnect after 2 missed
-  webSocket.enableHeartbeat(15000, 3000, 2);
+  // Enable heartbeat: ping every 5s, expect pong within 1s, disconnect after 2 missed
+  webSocket.enableHeartbeat(5000, 1000, 2);
   
-  Serial.println("WebSocket initialized");
+  Serial.println("WebSocket Client initialized");
 }
 
 void websocket_loop_HAL() {
@@ -85,7 +92,7 @@ void websocket_loop_HAL() {
 
 bool publishWebSocketMessageProto_HAL(const uint8_t* data, size_t len) {
   if (!isConnected) {
-    Serial.println("WebSocket not connected, cannot send protobuf message");
+    Serial.println("WebSocket Client not connected, cannot send protobuf message");
     return false;
   }
   
@@ -97,14 +104,14 @@ bool publishWebSocketMessageProto_HAL(const uint8_t* data, size_t len) {
   bool result = webSocket.sendBIN(data, len);
   
   if (!result) {
-    Serial.println("WebSocket failed to send protobuf message");
+    Serial.println("WebSocket Client failed to send protobuf message");
   }
   
   return result;
 }
 
 void websocket_shutdown_HAL() {
-  Serial.println("Shutting down WebSocket");
+  Serial.println("Shutting down WebSocket Client");
   webSocket.disconnect();
   isConnected = false;
 }
@@ -116,4 +123,3 @@ bool websocket_is_connected_HAL() {
 const char* get_websocket_hub_url_HAL() {
   return WEBSOCKET_HUB_URL;
 }
-

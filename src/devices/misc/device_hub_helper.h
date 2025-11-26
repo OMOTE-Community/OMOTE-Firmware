@@ -4,7 +4,7 @@
 #include <list>
 #include "applicationInternal/commandHandler.h"
 
-#if (ENABLE_HUB_COMMUNICATION == 1)
+#if (ENABLE_HUB_COMMUNICATION > 0)
   inline void register_hub_command(uint16_t *command, const char *device, const char *cmd) {
     std::list<std::string> commandPayload = {device, cmd};
     register_command(command, makeCommandData(HUB, commandPayload));

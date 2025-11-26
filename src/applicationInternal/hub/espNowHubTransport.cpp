@@ -10,10 +10,6 @@ void hubMessageReceived_cb_proto(const uint8_t* data, size_t len);
 #if (ENABLE_HUB_COMMUNICATION == 1)
 EspNowHubTransport::EspNowHubTransport() = default;
 
-EspNowHubTransport::~EspNowHubTransport() {
-  shutdown();
-}
-
 bool EspNowHubTransport::init() {
   set_espnow_message_callback_proto(&hubMessageReceived_cb_proto);
   init_espnow();

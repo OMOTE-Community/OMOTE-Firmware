@@ -6,7 +6,6 @@
 class WebSocketHubTransport : public HubTransportBase {
 public:
   WebSocketHubTransport();
-  ~WebSocketHubTransport() override;
   
   bool init() override;
   void process() override;
@@ -15,4 +14,3 @@ public:
   void shutdown() override;
 };
 #endif
-

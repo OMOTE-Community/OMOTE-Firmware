@@ -6,7 +6,6 @@
 class MqttHubTransport : public HubTransportBase {
 public:
   MqttHubTransport();
-  ~MqttHubTransport() override;
   
   bool init() override;
   void process() override;

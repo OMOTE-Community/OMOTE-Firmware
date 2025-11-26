@@ -43,4 +43,10 @@
 // extern uint16_t DENON_MEDIA_PLAYPAUSE;
 // extern uint16_t DENON_MEDIA_NEXT;
 
+extern uint16_t DENONAVR_POWER_ON;
+extern uint16_t DENONAVR_POWER_OFF;
+extern uint16_t DENONAVR_VOL_MINUS;
+extern uint16_t DENONAVR_VOL_PLUS;
+extern uint16_t DENONAVR_VOL_MUTE;
+
 void register_device_denonAvr();

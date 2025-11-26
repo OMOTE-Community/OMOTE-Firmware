@@ -1,6 +1,8 @@
 #pragma once
 
 extern uint16_t SHIELD_POWER_TOGGLE;
+extern uint16_t SHIELD_POWER_ON;
+extern uint16_t SHIELD_POWER_OFF;
 extern uint16_t SHIELD_MENU;
 extern uint16_t SHIELD_EXIT;
 extern uint16_t SHIELD_STOP;

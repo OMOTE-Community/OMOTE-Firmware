@@ -14,8 +14,6 @@
 #include "mqtt_hal_esp32.h"
 // disconnect BLE keyboard
 #include "keyboard_ble_hal_esp32.h"
-// disconnect ESP-NOW
-#include "espnow_hal_esp32.h"
 // prepare keypad keys to wakeup
 #include "keypad_keys_hal_esp32.h"
 
@@ -157,9 +155,6 @@ void enterSleep(){
   keyboardBLE_shutdown_HAL();
   #endif
 
-  #if (ENABLE_HUB_COMMUNICATION == 1)
-  espnow_shutdown_HAL();
-  #endif
 
   // Prepare IO states
   digitalWrite(LCD_DC_GPIO, LOW); // LCD control signals off
@@ -225,7 +220,11 @@ void enterSleep(){
   esp_deep_sleep_start();
 }
 
-void init_sleep_HAL() {
+void enter_sleep_HAL() {  
+  enterSleep();
+}
+
+void init_from_sleep_HAL() {
   // will be called after boot or wakeup. Releases GPIO hold and sets wakeup_reason
   if (sleepTimeout == 0){
     sleepTimeout = DEFAULT_SLEEP_TIMEOUT;
@@ -275,12 +274,13 @@ void init_IMU_HAL(void) {
 
 }
 
-void check_activity_HAL() {
+bool check_activity_HAL() {
   activityDetection();
   if(millis() - lastActivityTimestamp > sleepTimeout){
     Serial.println("Entering Sleep Mode. Goodbye.");
-    enterSleep();
+    return true;
   }
+  return false;
 }
 
 uint32_t get_sleepTimeout_HAL() {

@@ -13,9 +13,10 @@ extern Wakeup_reasons wakeup_reason;
 uint32_t get_lastActivityTimestamp();
 
 // called from the HAL
-void init_sleep_HAL();
+void enter_sleep_HAL();
+void init_from_sleep_HAL();
 void init_IMU_HAL();
-void check_activity_HAL();
+bool check_activity_HAL();
 void setLastActivityTimestamp_HAL();
 
 uint32_t get_sleepTimeout_HAL();

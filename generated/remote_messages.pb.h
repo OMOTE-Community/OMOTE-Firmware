@@ -75,7 +75,7 @@ typedef enum _omote_ResponseKind {
 } omote_ResponseKind;
 
 /* Struct definitions */
-typedef PB_BYTES_ARRAY_T(32) omote_RemoteEvent_data_t;
+typedef PB_BYTES_ARRAY_T(64) omote_RemoteEvent_data_t;
 PB_PACKED_STRUCT_START
 /* Event sent from OMOTE remote to hub */
 typedef struct _omote_RemoteEvent {
@@ -106,8 +106,9 @@ PB_PACKED_STRUCT_END
 PB_PACKED_STRUCT_START
 /* Volume level response */
 typedef struct _omote_Volume {
-    /* Volume level (0-100, using fixed32 for consistent encoding) */
-    uint32_t level;
+    /* Volume level in dB (can be negative, using sfixed32 for signed values)
+ Examples: -23.0 dB, 0.0 dB, +12.0 dB */
+    int32_t level;
     /* Mute state */
     bool is_muted;
 } pb_packed omote_Volume;
@@ -181,7 +182,7 @@ typedef struct _omote_PairingStatus {
     /* Device identifier */
     char device_id[32];
     /* Pairing step: "started", "awaiting_pin", "success", "failed", "cancelled" */
-    char step[16];
+    char step[32];
     /* User-facing message (e.g., "Enter PIN shown on Apple TV") */
     char message[128];
     /* Whether a PIN is required for this step */
@@ -189,7 +190,7 @@ typedef struct _omote_PairingStatus {
     /* Expected PIN length (0 if unknown or not applicable) */
     uint32_t expected_pin_length;
     /* Optional context token to track pairing session */
-    char context_token[32];
+    char context_token[64];
 } pb_packed omote_PairingStatus;
 PB_PACKED_STRUCT_END
 
@@ -326,7 +327,7 @@ X(a, STATIC,   SINGULAR, BYTES,    data,             10)
 #define omote_Ack_DEFAULT NULL
 
 #define omote_Volume_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, FIXED32,  level,             1) \
+X(a, STATIC,   SINGULAR, SFIXED32, level,             1) \
 X(a, STATIC,   SINGULAR, BOOL,     is_muted,          2)
 #define omote_Volume_CALLBACK NULL
 #define omote_Volume_DEFAULT NULL
@@ -429,13 +430,13 @@ extern const pb_msgdesc_t omote_CommandResult_msg;
 /* Maximum encoded size of messages (where known) */
 #define OMOTE_REMOTE_MESSAGES_PB_H_MAX_SIZE      omote_CommandResult_size
 #define omote_Ack_size                           0
-#define omote_CommandResult_size                 256
+#define omote_CommandResult_size                 277
 #define omote_Error_size                         130
 #define omote_Metadata_size                      224
-#define omote_PairingStatus_size                 221
+#define omote_PairingStatus_size                 269
 #define omote_Power_size                         2
 #define omote_RawCommand_size                    133
-#define omote_RemoteEvent_size                   113
+#define omote_RemoteEvent_size                   145
 #define omote_StateSync_size                     249
 #define omote_Time_size                          20
 #define omote_Volume_size                        7

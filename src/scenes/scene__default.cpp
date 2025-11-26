@@ -5,8 +5,8 @@
 // devices
 // #include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
 // #include "devices/misc/device_smarthome/gui_smarthome.h"
-#include "devices/AVreceiver/device_sonyAvr/device_sonyAvr.h"
-#include "devices/mediaPlayer/device_appleTV/device_appleTV.h"
+// #include "devices/AVreceiver/device_sonyAvr/device_sonyAvr.h"
+// #include "devices/mediaPlayer/device_appleTV/device_appleTV.h"
 #include "devices/TV/device_lgTV/device_lgTV.h"
 // scenes
 #include "scene__default.h"
@@ -14,7 +14,7 @@
 #include "scenes/scene_TV.h"
 #include "scenes/scene_fireTV.h"
 #include "scenes/scene_chromecast.h"
-#include "scenes/scene_appleTV.h"
+// #include "scenes/scene_appleTV.h"
 
 uint16_t SCENE_SELECTION;
 std::string scene_name_selection = "sceneSelection";
@@ -51,8 +51,8 @@ void register_scene_defaultKeys(void) {
       {KEY_OFF, SCENE_ALLOFF_FORCE}, {KEY_LEFT, GUI_PREV},
       {KEY_RIGHT, GUI_NEXT},
 
-      {KEY_VOLUP, SONYAVR_VOL_PLUS},    {KEY_MUTE, SONYAVR_VOL_MUTE},
-      {KEY_VOLDO, SONYAVR_VOL_MINUS},
+      {KEY_VOLUP, COMMAND_UNKNOWN},    {KEY_MUTE, COMMAND_UNKNOWN},
+      {KEY_VOLDO, COMMAND_UNKNOWN},
 
       {KEY_BACK, COMMAND_UNKNOWN},   {KEY_REC, COMMAND_UNKNOWN},
       {KEY_RED, COMMAND_UNKNOWN},    {KEY_BLUE, COMMAND_UNKNOWN},

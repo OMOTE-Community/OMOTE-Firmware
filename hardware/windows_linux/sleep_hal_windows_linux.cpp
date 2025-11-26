@@ -8,9 +8,9 @@ uint32_t sleepTimeout;
 // threshold for motion detection
 uint8_t motionThreshold;
 
-void init_sleep_HAL() {}
+void init_from_sleep_HAL() {}
 void init_IMU_HAL(void) {}
-void check_activity_HAL() {}
+bool check_activity_HAL() { return false; }
 void setLastActivityTimestamp_HAL() {}
 
 uint32_t get_sleepTimeout_HAL() {
@@ -34,7 +34,9 @@ void set_motionThreshold_HAL(uint8_t aMotionThreshold) {
   motionThreshold = aMotionThreshold;
   printf("motion threshold set to %u\r\n", aMotionThreshold);
 }
-
+void enter_sleep_HAL() {
+  return;
+}
 int get_wakeupReason_HAL() {
   // In the simulator, we can simulate different wake-up reasons for testing
   // For now, return WAKEUP_BY_RESET (0) to indicate normal startup

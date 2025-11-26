@@ -52,7 +52,7 @@ void scene_setKeys_TV() {
 }
 
 void scene_start_sequence_TV(void) {
-  #if (ENABLE_HUB_COMMUNICATION == 1)
+  #if (ENABLE_HUB_COMMUNICATION > 0)
   execute_hub_command(LGTV_POWER_ON);
   #else
   // executeCommand(SAMSUNG_POWER_ON);
