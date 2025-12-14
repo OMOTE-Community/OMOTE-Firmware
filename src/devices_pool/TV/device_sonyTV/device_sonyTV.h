@@ -1,0 +1,68 @@
+#pragma once
+
+// Only activate the commands that are used. Every command takes 100 bytes, wether used or not.
+// extern uint16_t SONY_INPUT;
+extern uint16_t SONY_POWER_ON;
+extern uint16_t SONY_POWER_OFF;
+extern uint16_t SONY_POWER_TOGGLE;
+// extern uint16_t SONY_VOL_UP;
+// extern uint16_t SONY_VOL_DOWN;
+// extern uint16_t SONY_MUTE;
+extern uint16_t SONY_CHANNEL_UP;
+extern uint16_t SONY_CHANNEL_DOWN;
+// extern uint16_t SONY_THEATRE_MODE;
+extern uint16_t SONY_CONFIGURATION;
+extern uint16_t SONY_PLAY;
+extern uint16_t SONY_PAUSE;
+extern uint16_t SONY_STOP;
+extern uint16_t SONY_REWIND;
+extern uint16_t SONY_FASTFORWARD;
+extern uint16_t SONY_MENU;
+extern uint16_t SONY_PREV;
+extern uint16_t SONY_NEXT;
+// extern uint16_t SONY_I_MANUAL;
+// extern uint16_t SONY_SCENE;
+// extern uint16_t SONY_ASPECT;
+// extern uint16_t SONY_DIGITAL_ANALOG;
+// extern uint16_t SONY_PIP;
+extern uint16_t SONY_INTERNET_VIDEO;
+extern uint16_t SONY_FAVOURITE;
+extern uint16_t SONY_GUIDE;
+extern uint16_t SONY_INFO;
+extern uint16_t SONY_RETURN;
+extern uint16_t SONY_OPTIONS;
+extern uint16_t SONY_HOME;
+extern uint16_t SONY_UP;
+extern uint16_t SONY_DOWN;
+extern uint16_t SONY_LEFT;
+extern uint16_t SONY_RIGHT;
+extern uint16_t SONY_SELECT;
+extern uint16_t SONY_RED;
+extern uint16_t SONY_GREEN;
+extern uint16_t SONY_YELLOW;
+extern uint16_t SONY_BLUE;
+extern uint16_t SONY_NUM_1;
+extern uint16_t SONY_NUM_2;
+extern uint16_t SONY_NUM_3;
+extern uint16_t SONY_NUM_4;
+extern uint16_t SONY_NUM_5;
+extern uint16_t SONY_NUM_6;
+extern uint16_t SONY_NUM_7;
+extern uint16_t SONY_NUM_8;
+extern uint16_t SONY_NUM_9;
+extern uint16_t SONY_NUM_0;
+// extern uint16_t SONY_TEXT;
+// extern uint16_t SONY_SUBTITLES;
+// extern uint16_t SONY_AUDIO_TRACK;
+extern uint16_t SONY_INPUT_HDMI_1;
+extern uint16_t SONY_INPUT_HDMI_2;
+extern uint16_t SONY_INPUT_HDMI_3;
+extern uint16_t SONY_INPUT_HDMI_4;
+// extern uint16_t SONY_VIDEO_1;
+// extern uint16_t SONY_VIDEO_2;
+// extern uint16_t SONY_VIDEO_3;
+// extern uint16_t SONY_PC;
+extern uint16_t SONY_INPUT_TV;
+
+
+void register_device_sonyTV();
