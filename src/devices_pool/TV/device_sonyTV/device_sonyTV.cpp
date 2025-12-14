@@ -1,0 +1,135 @@
+#include <string>
+#include "applicationInternal/commandHandler.h"
+#include "applicationInternal/hardware/hardwarePresenter.h"
+#include "device_sonyTV.h"
+
+// Only activate the commands that are used. Every command takes 100 bytes, wether used or not.
+ // uint16_t SONY_INPUT;
+ uint16_t SONY_POWER_ON;
+ uint16_t SONY_POWER_OFF;
+ uint16_t SONY_POWER_TOGGLE;
+ // uint16_t SONY_VOL_UP;
+ // uint16_t SONY_VOL_DOWN;
+ // uint16_t SONY_MUTE;
+ uint16_t SONY_CHANNEL_UP;
+ uint16_t SONY_CHANNEL_DOWN;
+ // uint16_t SONY_THEATRE_MODE;
+ uint16_t SONY_CONFIGURATION;
+ uint16_t SONY_PLAY;
+ uint16_t SONY_PAUSE;
+ uint16_t SONY_STOP;
+ uint16_t SONY_REWIND;
+ uint16_t SONY_FASTFORWARD;
+ uint16_t SONY_MENU;
+ uint16_t SONY_PREV;
+ uint16_t SONY_NEXT;
+ // uint16_t SONY_I_MANUAL;
+ // uint16_t SONY_SCENE;
+ // uint16_t SONY_ASPECT;
+ // uint16_t SONY_DIGITAL_ANALOG;
+ // uint16_t SONY_PIP;
+ uint16_t SONY_INTERNET_VIDEO;
+ uint16_t SONY_FAVOURITE;
+ uint16_t SONY_GUIDE;
+ uint16_t SONY_INFO;
+ uint16_t SONY_RETURN;
+ uint16_t SONY_OPTIONS;
+ uint16_t SONY_HOME;
+ uint16_t SONY_UP;
+ uint16_t SONY_DOWN;
+ uint16_t SONY_LEFT;
+ uint16_t SONY_RIGHT;
+ uint16_t SONY_SELECT;
+ uint16_t SONY_RED;
+ uint16_t SONY_GREEN;
+ uint16_t SONY_YELLOW;
+ uint16_t SONY_BLUE;
+ uint16_t SONY_NUM_1;
+ uint16_t SONY_NUM_2;
+ uint16_t SONY_NUM_3;
+ uint16_t SONY_NUM_4;
+ uint16_t SONY_NUM_5;
+ uint16_t SONY_NUM_6;
+ uint16_t SONY_NUM_7;
+ uint16_t SONY_NUM_8;
+ uint16_t SONY_NUM_9;
+ uint16_t SONY_NUM_0;
+ // uint16_t SONY_TEXT;
+ // uint16_t SONY_SUBTITLES;
+ // uint16_t SONY_AUDIO_TRACK;
+ uint16_t SONY_INPUT_HDMI_1;
+ uint16_t SONY_INPUT_HDMI_2;
+ uint16_t SONY_INPUT_HDMI_3;
+ uint16_t SONY_INPUT_HDMI_4;
+ // uint16_t SONY_VIDEO_1;
+ // uint16_t SONY_VIDEO_2;
+ // uint16_t SONY_VIDEO_3;
+ // uint16_t SONY_PC;
+ uint16_t SONY_INPUT_TV;
+
+void register_device_sonyTV() {
+  // https://github.com/natcl/studioimaginaire/blob/master/arduino_remote/ircodes.py
+  // https://tasmota.github.io/docs/Codes-for-IR-Remotes/#sony-kdl-ex540-tv
+
+  register_command(&SONY_POWER_ON   , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x750", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_POWER_OFF   , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xF50", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_POWER_TOGGLE   , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xA90", kSony12Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_VOL_UP	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x490", kSony12Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_VOL_DOWN       , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xC90", kSony12Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_MUTE	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x290", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_CHANNEL_UP	    , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x90", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_CHANNEL_DOWN   , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x890", kSony12Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_THEATRE_MODE   , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x03EE", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_CONFIGURATION  , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x723", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_PLAY	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x2CE9", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_PAUSE	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x4CE9", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_STOP           , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x0CE9", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_REWIND     	, makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x6CE9", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_FASTFORWARD    , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x1CE9", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_MENU	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x5758", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_PREV	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x1EE9", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NEXT	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x5EE9", kSony15Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_I_MANUAL	    , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x6F58", kSony15Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_SCENE	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x0F58", kSony15Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_ASPECT	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x5E25", kSony15Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_DIGITAL_ANALOG , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x58EE", kSony15Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_PIP	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x7725", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_INTERNET_VIDEO , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x4F58", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_FAVOURITE      , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x37EE", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_GUIDE	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x6D25", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_INFO	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x5D0", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_RETURN	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x62E9", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_OPTIONS	    , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x36E9", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_HOME	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x70", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_UP	            , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x2F0", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_DOWN	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xAF0", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_LEFT	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x2D0", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_RIGHT	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xCD0", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_SELECT	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xA70", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_RED	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x52E9", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_GREEN	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x32E9", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_YELLOW	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x72E9", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_BLUE	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x12E9", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_1          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x010", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_2          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x810", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_3          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x410", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_4          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xC10", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_5          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x210", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_6          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xA10", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_7          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x610", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_8          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xE10", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_9          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x110", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_NUM_0          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x910", kSony12Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_TEXT	        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xFD0", kSony12Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_SUBTITLES	    , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x0AE9", kSony15Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_AUDIO_TRACK    , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xE90", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_INPUT_HDMI_1	, makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x2D58", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_INPUT_HDMI_2	, makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x6D58", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_INPUT_HDMI_3	, makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x1D58", kSony15Bits, kSonyMinRepeat)}));
+  register_command(&SONY_INPUT_HDMI_4	, makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x5D58", kSony15Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_VIDEO_1	    , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x030", kSony12Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_VIDEO_2	    , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x830", kSony12Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_VIDEO_3        , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x430", kSony12Bits, kSonyMinRepeat)}));
+  // register_command(&SONY_PC	            , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0xC30", kSony12Bits, kSonyMinRepeat)}));
+  register_command(&SONY_INPUT_TV	    , makeCommandData(IR, {std::to_string(IR_PROTOCOL_SONY), concatenateIRsendParams("0x250", kSony15Bits, kSonyMinRepeat)}));
+}
