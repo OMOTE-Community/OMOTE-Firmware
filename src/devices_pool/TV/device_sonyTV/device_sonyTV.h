@@ -1,7 +1,6 @@
 #pragma once
 
 // Only activate the commands that are used. Every command takes 100 bytes, wether used or not.
-// extern uint16_t SONY_INPUT;
 extern uint16_t SONY_POWER_ON;
 extern uint16_t SONY_POWER_OFF;
 extern uint16_t SONY_POWER_TOGGLE;
@@ -63,6 +62,5 @@ extern uint16_t SONY_INPUT_HDMI_4;
 // extern uint16_t SONY_VIDEO_3;
 // extern uint16_t SONY_PC;
 extern uint16_t SONY_INPUT_TV;
-
 
 void register_device_sonyTV();
