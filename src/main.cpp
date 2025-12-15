@@ -54,6 +54,10 @@
 #include "scenes/scene_chromecast.h"
 #include "scenes/scene_appleTV.h"
 #include "applicationInternal/scenes/sceneHandler.h"
+#if (ENABLE_HUB_COMMUNICATION > 0)
+#include "applicationInternal/hub/hubManager.h"
+#endif
+#include "secrets.h"
 
 #if defined(ARDUINO)
 // in case of Arduino we have a setup() and a loop()
@@ -170,6 +174,20 @@ int main(int argc, char *argv[]) {
   init_mqtt();
   #endif
 
+  // Initialize hub communication with preferred transport from settings
+  #if (ENABLE_HUB_COMMUNICATION > 0)
+    HubTransport preferredTransport;
+
+    #if (ENABLE_HUB_COMMUNICATION == 1)
+      preferredTransport = HubTransport::ESPNOW;  // ESP-NOW transport
+    #elif (ENABLE_HUB_COMMUNICATION == 2)
+      preferredTransport = HubTransport::MQTT;    // MQTT transport
+    #endif
+
+    // Initialize the hub manager with the preferred transport
+    HubManager::getInstance().init(preferredTransport);
+  #endif
+
   omote_log_i("Setup finished in %lu ms.\r\n", millis());
 
   #if defined(WIN32) || defined(__linux__) || defined(__APPLE__)
@@ -229,5 +247,10 @@ void loop(unsigned long *pIMUTaskTimer, unsigned long *pUpdateStatusTimer) {
     // update user_led, battery, BLE, memoryUsage on GUI
     updateHardwareStatusAndShowOnGUI();
   }
+
+  // Process hub communication
+  #if (ENABLE_HUB_COMMUNICATION > 0)
+  HubManager::getInstance().process();
+  #endif
 
 }

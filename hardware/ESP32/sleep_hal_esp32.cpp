@@ -14,6 +14,8 @@
 #include "mqtt_hal_esp32.h"
 // disconnect BLE keyboard
 #include "keyboard_ble_hal_esp32.h"
+// disconnect ESP-NOW
+#include "espnow_hal_esp32.h"
 // prepare keypad keys to wakeup
 #include "keypad_keys_hal_esp32.h"
 
@@ -153,6 +155,10 @@ void enterSleep(){
 
   #if (ENABLE_KEYBOARD_BLE == 1)
   keyboardBLE_shutdown_HAL();
+  #endif
+
+  #if (ENABLE_HUB_COMMUNICATION == 1)
+  espnow_shutdown_HAL();
   #endif
 
   // Prepare IO states

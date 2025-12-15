@@ -275,3 +275,24 @@ void wifi_shutdown() {
 void get_heapUsage(unsigned long *heapSize, unsigned long *freeHeap, unsigned long *maxAllocHeap, unsigned long *minFreeHeap) {
   get_heapUsage_HAL(heapSize, freeHeap, maxAllocHeap, minFreeHeap);
 }
+
+// --- ESP-NOW ----------------------------------------------------------------
+#if (ENABLE_HUB_COMMUNICATION == 1)
+// ESP-NOW hardware presenter functions
+void init_espnow() {
+  set_announceEspNowMessage_cb_HAL(&receiveEspNowMessage_cb);
+  init_espnow_HAL();
+}
+
+void espnow_loop() {
+  espnow_loop_HAL();
+}
+
+bool publishEspNowMessage(json payload) {
+  return publishEspNowMessage_HAL(payload);
+}
+
+void espnow_shutdown() {
+  espnow_shutdown_HAL();
+}
+#endif
