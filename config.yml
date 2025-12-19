@@ -55,10 +55,15 @@ scenes:
       MUTE:
         device: denon_x4700h
         command: Mute
+    shortcuts:
+      - device: panasonic_dvd
+        command: Eject
+        
     start:
+      - device: panasonic_dvd
+        command: Power
       - device: sony_bravia
         command: Power        
-      - delay: 500
       - device: denon_x4700h
         command: Power Toggle
       - delay: 1000       
@@ -434,6 +439,7 @@ devices:
       nbits: 48
       repeats: 0
       category: on,off
+      map_short: OFF      
     - name: Eject
       data: '0x40040D00808D'
       nbits: 48
@@ -446,30 +452,37 @@ devices:
       data: '0x40040D40400D'
       nbits: 48
       repeats: 0
+      map_short: OK      
     - name: Up
       data: '0x40040D40A0ED'
       nbits: 48
       repeats: 0
+      map_short: UP
     - name: Down
       data: '0x40040D40602D'
       nbits: 48
       repeats: 0
+      map_short: DOWN      
     - name: Left
       data: '0x40040D40E0AD'
       nbits: 48
       repeats: 0
+      map_short: LEFT      
     - name: Right
       data: '0x40040D40105D'
       nbits: 48
       repeats: 0
+      map_short: RIGHT      
     - name: Fast Frw
       data: '0x40040D00A0AD'
       nbits: 48
       repeats: 0
+      map_short: FORW      
     - name: Fast Bkw
       data: '0x40040D00202D'
       nbits: 48
       repeats: 0
+      map_short: REWI      
     - name: Pause
       data: '0x40040D00606D'
       nbits: 48
@@ -478,10 +491,12 @@ devices:
       data: '0x40040D00505D'
       nbits: 48
       repeats: 0
+      map_short: PLAY      
     - name: Stop
       data: '0x40040D00000D'
       nbits: 48
       repeats: 0
+      map_short: STOP      
     - name: Subtitle
       data: '0x40040D40C885'
       nbits: 48
@@ -518,6 +533,7 @@ devices:
       data: '0x40040D80A429'
       nbits: 48
       repeats: 0
+      map_short: INFO      
     - name: Internet
       data: '0x40040D809A17'
       nbits: 48
@@ -526,10 +542,12 @@ devices:
       data: '0x40040D00818C'
       nbits: 48
       repeats: 0
+      map_short: BACK      
     - name: Option
       data: '0x40040D00010C'
       nbits: 48
       repeats: 0
+      map_short: CONF      
     - name: Cancel
       data: '0x40040D00C1CC'
       nbits: 48
@@ -538,18 +556,22 @@ devices:
       data: '0x40040D80820F'
       nbits: 48
       repeats: 0
+      map_short: RED      
     - name: Green
       data: '0x40040D8042CF'
       nbits: 48
       repeats: 0
+      map_short: GREEN      
     - name: Yellow
       data: '0x40040D80C24F'
       nbits: 48
       repeats: 0
+      map_short: YELLO      
     - name: Blue
       data: '0x40040D80028F'
       nbits: 48
       repeats: 0
+      map_short: BLUE      
     - name: 1
       data: '0x40040D000805'
       nbits: 48
