@@ -445,31 +445,31 @@ devices:
       nbits: 48
       repeats: 0
     - name: Prev
-      data: '0x40040D4080CD'
+      data: '0x40040D00929F'
       nbits: 48
       repeats: 0
     - name: Ok
-      data: '0x40040D40400D'
+      data: '0x40040D00414C'
       nbits: 48
       repeats: 0
       map_short: OK      
     - name: Up
-      data: '0x40040D40A0ED'
+      data: '0x40040D00A1AC'
       nbits: 48
       repeats: 0
       map_short: UP
     - name: Down
-      data: '0x40040D40602D'
+      data: '0x40040D00616C'
       nbits: 48
       repeats: 0
       map_short: DOWN      
     - name: Left
-      data: '0x40040D40E0AD'
+      data: '0x40040D00E1EC'
       nbits: 48
       repeats: 0
       map_short: LEFT      
     - name: Right
-      data: '0x40040D40105D'
+      data: '0x40040D00111C'
       nbits: 48
       repeats: 0
       map_short: RIGHT      
@@ -502,7 +502,7 @@ devices:
       nbits: 48
       repeats: 0
     - name: Netflix
-      data: '0x40040D801499'
+      data: '0x40040D80169B'
       nbits: 48
       repeats: 0
     - name: Audio
@@ -510,15 +510,15 @@ devices:
       nbits: 48
       repeats: 0
     - name: Top Menu
-      data: '0x40040D40D895'
+      data: '0x40040D00D9D4'
       nbits: 48
       repeats: 0
     - name: PopUp
-      data: '0x40040D800885'
+      data: '0x40040D800A87'
       nbits: 48
       repeats: 0
     - name: Home
-      data: '0x40040D80E865'
+      data: '0x40040D00EAE7'
       nbits: 48
       repeats: 0
     - name: HDR Setting
