@@ -40,6 +40,8 @@ void register_scene(
   uint16_t a_activate_scene_command = 0);
 
 bool sceneExists(std::string sceneName);
+const std::string& get_scene_being_handled();
+void set_scene_being_handled(const std::string& sceneName);
 void scene_start_sequence_from_registry(std::string sceneName);
 void scene_end_sequence_from_registry(std::string sceneName);
 repeatModes get_key_repeatMode(std::string sceneName, char keyChar);

@@ -1,7 +1,10 @@
 // OMOTE firmware for ESP32
 // 2023-2025 Maximilian Kern, Klaus Musch
-
 #include "applicationInternal/omote_log.h"
+#ifdef YAML_CONFIG
+#include "applicationInternal/config/registry.h"
+#include "applicationInternal/config/parser.h"
+#endif // YAML_CONFIG
 // init hardware and hardware loop
 #include "applicationInternal/hardware/hardwarePresenter.h"
 // register devices and their commands
@@ -15,6 +18,8 @@
 #if (ENABLE_KEYBOARD_BLE == 1)
 #include "devices/keyboard/device_keyboard_ble/device_keyboard_ble.h"
 #endif // ENABLE_KEYBOARD_BLE
+
+#ifndef YAML_CONFIG
 //   TV
 #include "devices/TV/device_samsungTV/device_samsungTV.h"
 //#include "devices/TV/device_lgTV/device_lgTV.h"
@@ -32,6 +37,12 @@
 //   misc
 #include "devices/misc/device_smarthome/device_smarthome.h"
 //#include "devices/misc/device_airconditioner/device_airconditioner.h"
+#include "devices/AVreceiver/device_yamahaAmp/gui_yamahaAmp.h"
+#include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
+#include "devices/misc/device_smarthome/gui_smarthome.h"
+//#include "devices/misc/device_airconditioner/gui_airconditioner.h"
+#endif // !YAML_CONFIG
+
 // register gui and keys
 #include "applicationInternal/gui/guiBase.h"
 #include "applicationInternal/gui/guiRegistry.h"
@@ -40,23 +51,35 @@
 #include "guis/gui_settings.h"
 #include "guis/gui_numpad.h"
 #include "guis/gui_BLEpairing.h"
-#include "devices/AVreceiver/device_yamahaAmp/gui_yamahaAmp.h"
-#include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
-#include "devices/misc/device_smarthome/gui_smarthome.h"
-//#include "devices/misc/device_airconditioner/gui_airconditioner.h"
+
+#ifdef YAML_CONFIG
+#include "applicationinternal/config/gui_devices.h"
+#include "applicationinternal/config/gui_scene.h"
+#endif
+
 #include "applicationInternal/keys.h"
 #include "applicationInternal/gui/guiStatusUpdate.h"
-// register scenes
 #include "scenes/scene__default.h"
+
+#ifndef YAML_CONFIG
+// register scenes
 #include "scenes/scene_allOff.h"
 #include "scenes/scene_TV.h"
 #include "scenes/scene_fireTV.h"
 #include "scenes/scene_chromecast.h"
 #include "scenes/scene_appleTV.h"
+#endif // !YAML_CONFIG
+
 #include "applicationInternal/scenes/sceneHandler.h"
 
 #if defined(ARDUINO)
 // in case of Arduino we have a setup() and a loop()
+
+#ifdef REMOTE_DEBUG
+#include <RemoteDebug.h>
+RemoteDebug Debug;
+#endif
+
 void setup() {
 
 #elif defined(WIN32) || defined(__linux__) || defined(__APPLE__)
@@ -88,6 +111,8 @@ int main(int argc, char *argv[]) {
 
   // register commands for the devices
   register_specialCommands();
+
+  #ifndef YAML_CONFIG
   //   TV
   register_device_samsungTV();
   //register_device_lgTV();
@@ -105,7 +130,9 @@ int main(int argc, char *argv[]) {
   //   misc
   register_device_smarthome();
   //register_device_airconditioner();
-
+  #endif // !YAML_CONFIG
+  
+  
   #if (ENABLE_KEYBOARD_MQTT == 1)
   register_device_keyboard_mqtt();
   #endif
@@ -115,28 +142,50 @@ int main(int argc, char *argv[]) {
   register_keyboardCommands();
 
   // Register the GUIs. They will be displayed in the order they have been registered.
+
   register_gui_sceneSelection();
   register_gui_irReceiver();
   register_gui_settings();
+
+  #ifdef YAML_CONFIG
+  register_gui_devices();
+  register_gui_scene();
+  #else 
   register_gui_appleTV();
   register_gui_numpad();
-  #if (ENABLE_KEYBOARD_BLE == 1)
-  register_gui_blepairing();
-  #endif
   register_gui_smarthome();
   //register_gui_airconditioner();
   register_gui_yamahaAmp();
+  #endif
+  
+  #if (ENABLE_KEYBOARD_BLE == 1)
+  register_gui_blepairing();
+  #endif
+
+  #ifdef YAML_CONFIG
   // Only show these GUIs in the main gui list. If you don't set this explicitely, by default all registered guis are shown.
   #if (USE_SCENE_SPECIFIC_GUI_LIST != 0)
   main_gui_list =
-    {tabName_yamahaAmp, tabName_sceneSelection, tabName_smarthome, tabName_settings, tabName_irReceiver
+    {tabName_devices, tabName_sceneSelection, tabName_settings, tabName_irReceiver
     #if (ENABLE_KEYBOARD_BLE == 1)
     , tabName_blepairing
     #endif
     };
   #endif
-
+  #else
+  // Only show these GUIs in the main gui list. If you don't set this explicitely, by default all registered guis are shown.  
+  #if (USE_SCENE_SPECIFIC_GUI_LIST != 0)
+  main_gui_list =
+    {tabName_sceneSelection, tabName_smarthome, tabName_settings, tabName_irReceiver
+    #if (ENABLE_KEYBOARD_BLE == 1)
+    , tabName_blepairing
+    #endif
+    };
+  #endif
+  #endif // YAML_CONFIG
+  
   // register the scenes and their key_commands_*
+  #ifndef YAML_CONFIG
   register_scene_defaultKeys();
   register_scene_TV();
   register_scene_fireTV();
@@ -145,7 +194,10 @@ int main(int argc, char *argv[]) {
   register_scene_allOff();
   // Only show these scenes on the sceneSelection gui. If you don't set this explicitely, by default all registered scenes are shown.
   set_scenes_on_sceneSelectionGUI({scene_name_TV, scene_name_fireTV, scene_name_chromecast, scene_name_appleTV});
-
+  #else 
+  config::init();
+  #endif
+  
   // init GUI - will initialize tft, touch and lvgl
   init_gui(); // This has to come before any other i2c devices are initialized, otherwise the i2c bus will not be powered
   setLabelActiveScene();
@@ -189,6 +241,9 @@ unsigned long updateStatusTimer = 0;
 unsigned long *pIMUTaskTimer = &IMUTaskTimer;
 unsigned long *pUpdateStatusTimer = &updateStatusTimer;
 void loop() {
+#ifdef REMOTE_DEBUG
+    Debug.handle();
+#endif
 #elif defined(WIN32) || defined(__linux__) || defined(__APPLE__)
 void loop(unsigned long *pIMUTaskTimer, unsigned long *pUpdateStatusTimer) {
 #endif

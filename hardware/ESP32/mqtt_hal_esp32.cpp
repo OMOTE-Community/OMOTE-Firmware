@@ -1,6 +1,9 @@
 #include <sstream>
 #include "WiFi.h"
 #include <PubSubClient.h>
+#ifdef REMOTE_DEBUG
+#include <RemoteDebug.h>
+#endif
 #include "mqtt_hal_esp32.h"
 #if (ENABLE_KEYBOARD_BLE == 1)
 #include "keyboard_ble_hal_esp32.h"
@@ -11,6 +14,10 @@
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 bool isWifiConnected = false;
+
+#ifdef REMOTE_DEBUG
+extern RemoteDebug Debug;
+#endif
 
 tAnnounceWiFiconnected_cb thisAnnounceWiFiconnected_cb = NULL;
 void set_announceWiFiconnected_cb_HAL(tAnnounceWiFiconnected_cb pAnnounceWiFiconnected_cb) {
@@ -42,6 +49,12 @@ void WiFiEvent(WiFiEvent_t event){
     thisAnnounceWiFiconnected_cb(true);
     Serial.printf("WiFi connected, IP address: %s\r\n", WiFi.localIP().toString().c_str());
 
+#ifdef REMOTE_DEBUG
+    Debug.begin("omote");
+    Debug.setResetCmdEnabled(true);
+    Debug.setSerialEnabled(true);
+    Debug.println("Remote log ready!");
+#endif
   } else if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
     isWifiConnected = false;
     thisAnnounceWiFiconnected_cb(false);

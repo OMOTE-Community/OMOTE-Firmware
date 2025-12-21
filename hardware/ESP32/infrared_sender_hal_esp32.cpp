@@ -4,6 +4,7 @@
 #include <sstream>
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
+#include <applicationInternal/omote_log.h>
 
 #if(OMOTE_HARDWARE_REV >= 5)
 const uint8_t IR_LED_GPIO = 5;  // IR LED output
@@ -45,7 +46,7 @@ void getProtocolDefaultBitsAndRepeat(int protocol, uint16_t *defaultParams) {
     case YORK:                 {defaultParams[0] = kYorkStateLength;       defaultParams[1] = kNoRepeat;               return;}
 
     default: {
-      Serial.printf("sendIRcode_HAL: WARNING: no defaults for nbits and repeat available for protocol %d\r\n", protocol);
+      omote_log_d("sendIRcode_HAL: WARNING: no defaults for nbits and repeat available for protocol %d\r\n", protocol);
       defaultParams[0] = 0; defaultParams[1] = kNoRepeat; return;
     }
   }
@@ -57,11 +58,11 @@ void sendIRcode_HAL(int protocol, std::list<std::string> commandPayloads, std::s
   std::string dataStr;
   uint64_t data;
   if (commandPayloads.empty() && (additionalPayload == "")) {
-    Serial.printf("sendIRcode_HAL: cannot send IR command, because both data and payload are empty\r\n");
+    omote_log_d("sendIRcode_HAL: cannot send IR command, because both data and payload are empty\r\n");
     return;
   } else {
     if (additionalPayload != "") {
-      Serial.printf("sendIRcode_HAL: Setting data stream to additional payload.\r\n");
+      omote_log_d("sendIRcode_HAL: Setting data stream to additional payload.\r\n");
       dataStr = additionalPayload;
     } else {
       auto current = commandPayloads.begin();
@@ -83,21 +84,21 @@ void sendIRcode_HAL(int protocol, std::list<std::string> commandPayloads, std::s
       std::getline(ss, valueStr, ',');
       // https://cplusplus.com/reference/string/stoull/
       data = std::stoull(valueStr, &sz, 0);
-      // Serial.printf("  next string value %s (%" PRIu64 ")\r\n", valueStr.c_str(), data);
+      // omote_log_d("  next string value %s (%" PRIu64 ")\r\n", valueStr.c_str(), data);
       buf[pos] = data;
       pos += 1;
     }
-    Serial.printf("sendIRcode_HAL: will send IR GC, array size %d\r\n", size);
+    omote_log_d("sendIRcode_HAL: will send IR GC, array size %d\r\n", size);
     IrSender.sendGC(buf, size);
     delete [] buf;
 
   } else if (protocol == PRONTO) {
     // not a protocol, but an encoding
-    Serial.printf("sendIRcode_HAL: protocol IR_PROTOCOL_PRONTO not yet implemented\r\n");
+    omote_log_d("sendIRcode_HAL: protocol IR_PROTOCOL_PRONTO not yet implemented\r\n");
 
   } else if (protocol == RAW) {
     // not a protocol, but an encoding
-    Serial.printf("sendIRcode_HAL: protocol IR_PROTOCOL_RAW not yet implemented\r\n");
+    omote_log_d("sendIRcode_HAL: protocol IR_PROTOCOL_RAW not yet implemented\r\n");
 
   } else {
     // generic implementation for all other protocols
@@ -109,7 +110,7 @@ void sendIRcode_HAL(int protocol, std::list<std::string> commandPayloads, std::s
       uint16_t defaultBitsAndRepeat[2];
       getProtocolDefaultBitsAndRepeat(protocol, defaultBitsAndRepeat);
       if ((defaultBitsAndRepeat[0] == 0) && (defaultBitsAndRepeat[1] == kNoRepeat)) {
-        Serial.printf("sendIRcode_HAL: either payload is expected as 'data:nbits:repeat', or defaults for nbits and repeat have to be defined. Will abort and not send IR code\r\n");
+        omote_log_d("sendIRcode_HAL: either payload is expected as 'data:nbits:repeat', or defaults for nbits and repeat have to be defined. Will abort and not send IR code\r\n");
         return;
       } else {
         dataStr.append(":").append(std::to_string(defaultBitsAndRepeat[0])).append(":").append(std::to_string(defaultBitsAndRepeat[1]));
@@ -118,7 +119,7 @@ void sendIRcode_HAL(int protocol, std::list<std::string> commandPayloads, std::s
     // check if we now have the expected format 'data:nbits:repeat'
     elementCount = std::count(dataStr.begin(), dataStr.end(), ':');
     if (elementCount != 2) {
-      Serial.printf("sendIRcode_HAL: payload is expected as 'data:nbits:repeat'. Will abort and not send IR code\r\n");
+      omote_log_d("sendIRcode_HAL: payload is expected as 'data:nbits:repeat'. Will abort and not send IR code\r\n");
       return;
     }
   
@@ -132,7 +133,7 @@ void sendIRcode_HAL(int protocol, std::list<std::string> commandPayloads, std::s
     std::getline(dataStrAsStream, valueAsStr, ':');
     repeat = std::stoul(valueAsStr, nullptr, 0);
 
-    Serial.printf("sendIRcode_HAL: will send data %s with protocol %d, data 0x%llx, nbits %u, repeat %u\r\n", dataStr.c_str(), protocol, data, nbits, repeat);
+    omote_log_d("sendIRcode_HAL: will send data %s with protocol %d, data 0x%llx, nbits %u, repeat %u\r\n", dataStr.c_str(), protocol, data, nbits, repeat);
     IrSender.send((decode_type_t)protocol, data, nbits, repeat);
   }
 }
