@@ -18,7 +18,8 @@ namespace {
 }
 
 std::map<IRProtocolType, uint16_t> BITS = {
-    {IR_PROTOCOL_NEC, kNECBits}
+    {IR_PROTOCOL_NEC, kNECBits},
+    {IR_PROTOCOL_RC6, kRC6_36Bits}
 };
 
 static IRProtocolType toProtoType(const char* proto)
@@ -29,6 +30,7 @@ static IRProtocolType toProtoType(const char* proto)
     if (strcmp(proto, "SIRC") == 0)  return IR_PROTOCOL_SONY;
     if (strcmp(proto, "NEC")  == 0)  return IR_PROTOCOL_NEC;
     if (strcmp(proto, "RC5")  == 0)  return IR_PROTOCOL_RC5;
+    if (strcmp(proto, "RC6")  == 0)  return IR_PROTOCOL_RC6;    
     if (strcmp(proto, "DENON")  == 0)  return IR_PROTOCOL_DENON;
     if (strcmp(proto, "KASEIKYO")  == 0)  return IR_PROTOCOL_PANASONIC;
     return IR_PROTOCOL_UNKNOWN;
