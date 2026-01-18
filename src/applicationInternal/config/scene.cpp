@@ -47,6 +47,9 @@ void Scene::start() {
                 const DeviceCommand* cmd = dev->getCommandByCategory("off");
                 if(cmd != NULL) {
                     cmd->execute();
+                    //introduce delaay before the next potential
+                    //command to avoid interference
+                    delay(200);
                 }
             }
         }
