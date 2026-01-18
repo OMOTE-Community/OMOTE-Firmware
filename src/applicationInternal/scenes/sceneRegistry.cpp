@@ -11,6 +11,17 @@
 
 std::map<std::string, scene_definition> registered_scenes;
 t_scene_list scenes_on_sceneSelectionGUI;
+std::string scene_being_handled;
+
+
+const std::string& get_scene_being_handled()
+{
+    return scene_being_handled;
+}
+
+void set_scene_being_handled(const std::string& sceneName) {
+    scene_being_handled = sceneName;
+}
 
 void register_scene(
   std::string a_scene_name,
@@ -50,7 +61,8 @@ bool sceneExists(std::string sceneName) {
 
 void scene_start_sequence_from_registry(std::string sceneName) {
   try {
-    registered_scenes.at(sceneName).this_scene_start_sequence();
+      set_scene_being_handled(sceneName);  
+      registered_scenes.at(sceneName).this_scene_start_sequence();
   }
   catch (const std::out_of_range& oor) {
     omote_log_e("scene_start_sequence_from_registry: internal error, sceneName not registered\r\n");
@@ -59,7 +71,8 @@ void scene_start_sequence_from_registry(std::string sceneName) {
 
 void scene_end_sequence_from_registry(std::string sceneName) {
   try {
-    registered_scenes.at(sceneName).this_scene_end_sequence();
+      set_scene_being_handled(sceneName);        
+      registered_scenes.at(sceneName).this_scene_end_sequence();
   }
   catch (const std::out_of_range& oor) {
     omote_log_e("scene_end_sequence_from_registry: internal error, sceneName not registered\r\n");
