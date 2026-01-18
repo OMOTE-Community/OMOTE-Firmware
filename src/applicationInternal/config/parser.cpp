@@ -84,7 +84,7 @@ void parseDevice(JsonPair device)
 
         dev->addCommand(obj, idRef);
 
-        omote_log_i("registered %-12s  %s / %s (%u bit) -> %u",
+        omote_log_d("registered %-12s  %s / %s (%u bit) -> %u",
                     name, protoStr, dataStr, nbits, idRef);
     }        
     registerDevice(dev);
@@ -113,7 +113,7 @@ const RegisteredCommand* parseCommandReference(JsonObject cmdRef,
             omote_log_w("Unknown command reference: %s/%s", (const char*)cmdRef["device"], (const char*)cmdRef["command"]);
             return NULL;
         }
-        omote_log_i("Parsed command reference: %s/%s\n", (const char*)cmdRef["device"], (const char*)cmdRef["command"]);
+        omote_log_d("Parsed command reference: %s/%s\n", (const char*)cmdRef["device"], (const char*)cmdRef["command"]);
     }
     else if ((allowed & AllowedReferences::Scene) && cmdRef["scene"]) {
         Scene* scene = getScene((const char*)cmdRef["scene"]);

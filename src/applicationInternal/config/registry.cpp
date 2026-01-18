@@ -101,9 +101,9 @@ std::vector<config::Device*>& config::getDevices() {
 }
 
 Device* config::getDevice(const std::string& id) {
-    omote_log_i("Get device: %s", id.c_str());
+    omote_log_d("Get device: %s", id.c_str());
     for(auto& dev : g_devices) {
-        omote_log_i("Comparing: %s", dev->ID());
+        omote_log_d("Comparing: %s", dev->ID());
         if(dev->ID() == id) {
             return dev;
         }
