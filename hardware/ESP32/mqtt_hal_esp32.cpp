@@ -19,7 +19,12 @@ void set_announceWiFiconnected_cb_HAL(tAnnounceWiFiconnected_cb pAnnounceWiFicon
 
 tAnnounceSubscribedTopics_cb thisAnnounceSubscribedTopics_cb = NULL;
 void set_announceSubscribedTopics_cb_HAL(tAnnounceSubscribedTopics_cb pAnnounceSubscribedTopics_cb) {
-  thisAnnounceSubscribedTopics_cb = pAnnounceSubscribedTopics_cb;  
+  thisAnnounceSubscribedTopics_cb = pAnnounceSubscribedTopics_cb;
+}
+
+tAnnounceMQTTMessageProto_cb thisAnnounceMQTTMessageProto_cb = NULL;
+void set_announceMQTTMessageProto_cb_HAL(tAnnounceMQTTMessageProto_cb pAnnounceMQTTMessageProto_cb) {
+  thisAnnounceMQTTMessageProto_cb = pAnnounceMQTTMessageProto_cb;
 }
 
 bool getIsWifiConnected_HAL() {
@@ -80,6 +85,13 @@ std::string subscribeTopicOMOTE_BLEdeleteBonds                   = "OMOTE/BLE/de
 void callback(char* topic, byte* payload, unsigned int length) {
   // handle message arrived
   std::string topicReceived(topic);
+
+  // Forward binary data to proto callback if registered
+  if (thisAnnounceMQTTMessageProto_cb != NULL) {
+    thisAnnounceMQTTMessageProto_cb(payload, length);
+    return;
+  }
+
   std::string strPayload(reinterpret_cast<const char *>(payload), length);
   Serial.printf("MQTT: received topic %s with payload %s\r\n", topicReceived.c_str(), strPayload.c_str());
 
@@ -143,6 +155,9 @@ void mqtt_subscribeTopics() {
   mqttClient.subscribe(subscribeTopicOMOTE_BLEdisconnectAllClients.c_str());
   mqttClient.subscribe(subscribeTopicOMOTE_BLEprintBonds.c_str());
   mqttClient.subscribe(subscribeTopicOMOTE_BLEdeleteBonds.c_str());
+  #if (ENABLE_HUB_COMMUNICATION == 2)
+  mqttClient.subscribe("remote_responses");
+  #endif
   Serial.printf("  Successfully subscribed to MQTT topics\r\n");
 
 }
@@ -199,7 +214,7 @@ bool publishMQTTMessage_HAL(const char *topic, const char *payload){
 
   if (checkMQTTconnection()) {
     // Serial.printf("Sending mqtt payload to topic \"%s\": %s\r\n", topic, payload);
-      
+
     if (mqttClient.publish(topic, payload)) {
       // Serial.printf("Publish ok\r\n");
       return true;
@@ -209,6 +224,26 @@ bool publishMQTTMessage_HAL(const char *topic, const char *payload){
     }
   } else {
     Serial.printf("  Cannot publish mqtt message, because checkMQTTconnection failed (WiFi or mqtt is not connected)\r\n");
+  }
+  return false;
+}
+
+bool publishMQTTMessageProto_HAL(const char *topic, const uint8_t* payload, size_t length){
+
+  if (length > 512) {
+    Serial.printf("Error: Protobuf message exceeds MQTT buffer size\r\n");
+    return false;
+  }
+
+  if (checkMQTTconnection()) {
+    if (mqttClient.publish(topic, payload, length)) {
+      return true;
+    }
+    else {
+      Serial.printf("MQTT: Protobuf publish failed\r\n");
+    }
+  } else {
+    Serial.printf("  Cannot publish mqtt proto message, MQTT not connected\r\n");
   }
   return false;
 }

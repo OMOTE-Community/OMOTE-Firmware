@@ -1,0 +1,3 @@
+[submodule "protos/shared"]
+	path = protos/shared
+	url = git@github.com:Stuckya/remote-control-proto.git

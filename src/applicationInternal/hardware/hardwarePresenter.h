@@ -144,8 +144,10 @@ void init_mqtt(void);
 bool getIsWifiConnected();
 void mqtt_loop();
 bool publishMQTTMessage(const char *topic, const char *payload);
+bool publishMQTTMessageProto(const char *topic, const uint8_t* payload, size_t length);
 void wifi_shutdown();
 void set_mqtt_message_callback(void (*callback)(std::string topic, std::string payload));
+void set_mqtt_message_callback_proto(void (*callback)(const uint8_t* data, size_t len));
 #endif
 
 // --- memory usage -----------------------------------------------------------

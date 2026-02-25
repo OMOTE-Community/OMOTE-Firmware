@@ -4,15 +4,19 @@
 #include "applicationInternal/hardware/hardwarePresenter.h"
 #include "applicationInternal/omote_log.h"
 
-// Forward declaration for the internal callback
-void mqttMessageReceived_cb(std::string topic, std::string payload);
+// Forward declaration for the internal proto callback
+void mqttMessageReceived_cb_proto(const uint8_t* data, size_t len);
 
 #if (ENABLE_WIFI_AND_MQTT == 1)
+
+static const char* COMMAND_TOPIC = "remote_commands";
+static const char* RESPONSE_TOPIC = "remote_responses";
+
 MqttHubTransport::MqttHubTransport() : baseTopic("omote/") {
 }
 
 bool MqttHubTransport::init() {
-  set_mqtt_message_callback(&mqttMessageReceived_cb);
+  set_mqtt_message_callback_proto(&mqttMessageReceived_cb_proto);
   init_mqtt();
   return true;
 }
@@ -23,20 +27,16 @@ void MqttHubTransport::process() {
 
 bool MqttHubTransport::sendRemoteEvent(const omote_RemoteEvent& event) {
   omote_log_d("MQTT: Sending protobuf message for device %s, command %d\n", event.device, event.command);
-  
-  // Encode protobuf to bytes
-  uint8_t buffer[512];  // MQTT can handle larger messages
+
+  uint8_t buffer[512];
   size_t encoded_size = Hub::ProtoCodec::encodeRemoteEvent(event, buffer, sizeof(buffer));
-  
+
   if (encoded_size == 0) {
     omote_log_e("MQTT: Failed to encode protobuf message\n");
     return false;
   }
-  
-  // Note: MQTT HAL needs to be updated to support binary payloads
-  // For now, this will not work correctly as MQTT HAL expects string payloads
-  omote_log_w("MQTT: Protobuf transport not fully implemented - MQTT HAL needs binary payload support\n");
-  return false;
+
+  return publishMQTTMessageProto(COMMAND_TOPIC, buffer, encoded_size);
 }
 
 bool MqttHubTransport::isReady() {
@@ -47,10 +47,15 @@ void MqttHubTransport::shutdown() {
   wifi_shutdown();
 }
 
-// Internal callback that routes messages through HubManager
-// Note: This still expects JSON - MQTT protobuf support is incomplete
-void mqttMessageReceived_cb(std::string topic, std::string payload) {
-  omote_log_w("MQTT: Received message but protobuf decoding not implemented\n");
-  omote_log_d("MQTT: Topic=%s, Payload=%s\n", topic.c_str(), payload.c_str());
+// Proto callback that decodes binary protobuf and routes through HubManager
+void mqttMessageReceived_cb_proto(const uint8_t* data, size_t len) {
+  omote_CommandResult result = Hub::ProtoCodec::decodeCommandResult(data, len);
+
+  if (result.kind == omote_ResponseKind_ERROR && result.which_data == omote_CommandResult_error_tag) {
+    // Check if this is a decode failure (ProtoCodec returns error on decode failure)
+    omote_log_w("MQTT: Received CommandResult with error: %s\n", result.data.error.message);
+  }
+
+  HubManager::getInstance().handleIncomingCommandResult(result);
 }
-#endif 
+#endif

@@ -48,7 +48,12 @@ void set_announceWiFiconnected_cb_HAL(tAnnounceWiFiconnected_cb pAnnounceWiFicon
 
 tAnnounceSubscribedTopics_cb thisAnnounceSubscribedTopics_cb = NULL;
 void set_announceSubscribedTopics_cb_HAL(tAnnounceSubscribedTopics_cb pAnnounceSubscribedTopics_cb) {
-  thisAnnounceSubscribedTopics_cb = pAnnounceSubscribedTopics_cb;  
+  thisAnnounceSubscribedTopics_cb = pAnnounceSubscribedTopics_cb;
+}
+
+tAnnounceMQTTMessageProto_cb thisAnnounceMQTTMessageProto_cb = NULL;
+void set_announceMQTTMessageProto_cb_HAL(tAnnounceMQTTMessageProto_cb pAnnounceMQTTMessageProto_cb) {
+  thisAnnounceMQTTMessageProto_cb = pAnnounceMQTTMessageProto_cb;
 }
 
 bool getIsWifiConnected_HAL() {
@@ -68,25 +73,28 @@ std::string subscribeTopicOMOTE_BLEdeleteBonds                   = "OMOTE/BLE/de
 
 void publish_callback(void** state, struct mqtt_response_publish *publish) {
     **(int**)state += 1;
-    printf("message nr %d received\r\n", **(int**)state);
 
     std::string topic((const char*) (publish->topic_name), publish->topic_name_size);
+
+    // Forward binary data to proto callback if registered
+    if (thisAnnounceMQTTMessageProto_cb != NULL) {
+      thisAnnounceMQTTMessageProto_cb(
+        (const uint8_t*) publish->application_message,
+        publish->application_message_size
+      );
+      return;
+    }
+
     std::string payload((const char*) (publish->application_message), publish->application_message_size);
 
-    printf("Received a PUBLISH(topic=%s, DUP=%d, QOS=%d, RETAIN=%d, pid=%d) from the broker. Data='%s'\r\n", 
+    printf("Received a PUBLISH(topic=%s, DUP=%d, QOS=%d, RETAIN=%d, pid=%d) from the broker. Data='%s'\r\n",
            topic.c_str(), publish->dup_flag, publish->qos_level, publish->retain_flag, publish->packet_id,
            payload.c_str()
     );
-    
+
     if (topic == subscribeTopicOMOTEtest) {
-      // Do whatever you want here, if it is Windows/Linux hardware related.
-      // ...
-
-      // Or forward the topic to "void receiveMQTTmessage_cb" in the "commandHandler.cpp", if it is not Windows/Linux hardware related
       thisAnnounceSubscribedTopics_cb(topic, payload);
-
     } else {
-      // forward all other topics to the commandHandler
       thisAnnounceSubscribedTopics_cb(topic, payload);
     }
 }
@@ -101,6 +109,9 @@ void mqtt_subscribeTopics() {
   mqtt_subscribe(&mqttClient, subscribeTopicOMOTE_BLEdisconnectAllClients.c_str(), 2);
   mqtt_subscribe(&mqttClient, subscribeTopicOMOTE_BLEprintBonds.c_str(), 2);
   mqtt_subscribe(&mqttClient, subscribeTopicOMOTE_BLEdeleteBonds.c_str(), 2);
+  #if (ENABLE_HUB_COMMUNICATION == 2)
+  mqtt_subscribe(&mqttClient, "remote_responses", 0);
+  #endif
 
 }
 
@@ -177,10 +188,26 @@ bool publishMQTTMessage_HAL(const char *topic, const char *payload) {
     if (sockfd == -1) {
       init_mqtt_HAL();
     }
-  
+
     mqtt_publish(&mqttClient, topic, payload, strlen(payload), MQTT_PUBLISH_QOS_0);
     if (mqttClient.error != MQTT_OK) {
       printf("MQTT: publish error %s\r\n", mqtt_error_str(mqttClient.error));
+      sockfd = -1;
+      return false;
+    }
+
+  return true;
+}
+
+bool publishMQTTMessageProto_HAL(const char *topic, const uint8_t* payload, size_t length) {
+
+    if (sockfd == -1) {
+      init_mqtt_HAL();
+    }
+
+    mqtt_publish(&mqttClient, topic, (const void*)payload, length, MQTT_PUBLISH_QOS_0);
+    if (mqttClient.error != MQTT_OK) {
+      printf("MQTT: protobuf publish error %s\r\n", mqtt_error_str(mqttClient.error));
       sockfd = -1;
       return false;
     }

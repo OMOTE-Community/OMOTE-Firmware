@@ -310,12 +310,18 @@ void mqtt_loop() {
 bool publishMQTTMessage(const char *topic, const char *payload) {
   return publishMQTTMessage_HAL(topic, payload);
 }
+bool publishMQTTMessageProto(const char *topic, const uint8_t* payload, size_t length) {
+  return publishMQTTMessageProto_HAL(topic, payload, length);
+}
 void wifi_shutdown() {
   wifi_shutdown_HAL();
 }
 
 void set_mqtt_message_callback(void (*callback)(std::string topic, std::string payload)) {
   set_announceSubscribedTopics_cb_HAL(callback);
+}
+void set_mqtt_message_callback_proto(void (*callback)(const uint8_t* data, size_t len)) {
+  set_announceMQTTMessageProto_cb_HAL(callback);
 }
 #endif
 
