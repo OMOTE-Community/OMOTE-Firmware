@@ -403,31 +403,19 @@ void handleHubCommandResult(const omote_CommandResult& result) {
     }
     
     case omote_ResponseKind_STATE_SYNC: {
-      if (result.which_data == omote_CommandResult_state_sync_tag) {
-        const auto& state_sync = result.data.state_sync;
-        omote_log_d("State sync received: has_metadata=%s, has_time=%s\r\n", 
-                   state_sync.has_metadata ? "true" : "false",
-                   state_sync.has_time ? "true" : "false");
-        
-        // Handle metadata if present
-        if (state_sync.has_metadata) {
-          const auto& metadata = state_sync.metadata;
-          omote_log_d("Metadata update: %s by %s (%s)\r\n", 
-                     metadata.title, metadata.artist, metadata.state);
-          // TODO: Make metadata compatible with multiple devices.
-          // update_appleTV_metadata(metadata.title, metadata.artist, metadata.album, metadata.state, 
-          //                         metadata.duration, metadata.position);
-        }
-        
-        // Handle time if present
-        if (state_sync.has_time) {
-          const auto& time_data = state_sync.time;
-          omote_log_d("Time sync: timestamp=%lu, timezone_offset=%d\r\n", 
-                     time_data.timestamp, time_data.timezone_offset);
-          
-          setTime(time_data.timestamp, time_data.timezone_offset);
-        }
+      if (result.which_data != omote_CommandResult_state_sync_tag) break;
+
+      const auto& state_sync = result.data.state_sync;
+
+      if (state_sync.has_time) {
+        setTime(state_sync.time.timestamp, state_sync.time.timezone_offset);
+        omote_log_d("Time sync: timestamp=%lu, tz=%d\r\n",
+                   state_sync.time.timestamp, state_sync.time.timezone_offset);
       }
+
+      omote_log_d("State sync: has_time=%s, devices=%d\r\n",
+                 state_sync.has_time ? "true" : "false",
+                 state_sync.devices_count);
       break;
     }
     
