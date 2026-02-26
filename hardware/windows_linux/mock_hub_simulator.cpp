@@ -37,35 +37,32 @@ static json createMockResponse(const std::string& device, const std::string& com
             if (command == "VOL_PLUS") volume += 1.0;
             if (command == "VOL_MINUS") volume -= 1.0;
             volume = std::max(-80.0, std::min(23.0, volume)); // Sony range
-            
+
             response = {
                 {"kind", "VOLUME"},
                 {"data", {
                     {"level", volume},
                     {"is_muted", false}
-                }},
-                {"supports_response", true}
+                }}
             };
         } else if (command == "VOL_MUTE") {
             // Simulate mute toggle
             static bool is_muted = false;
             is_muted = !is_muted;
-            
+
             response = {
                 {"kind", "VOLUME"},
                 {"data", {
                     {"level", -30.0},
                     {"is_muted", is_muted}
-                }},
-                {"supports_response", true}
+                }}
             };
         } else if (command == "POWER_ON" || command == "POWER_OFF") {
             response = {
                 {"kind", "POWER"},
                 {"data", {
                     {"is_on", command == "POWER_ON"}
-                }},
-                {"supports_response", true}
+                }}
             };
         }
     } else if (device == "APPLE_TV") {
@@ -74,71 +71,80 @@ static json createMockResponse(const std::string& device, const std::string& com
                 {"kind", "POWER"},
                 {"data", {
                     {"is_on", command == "POWER_ON"}
-                }},
-                {"supports_response", true}
+                }}
             };
         } else if (command == "SYNC_STATE") {
             auto time_data = getCurrentTimeAndOffset();
             long timestamp = time_data.first;
             int timezone_offset = time_data.second;
-            
+
             response = {
                 {"kind", "STATE_SYNC"},
                 {"data", {
-                    {"metadata", {
-                        {"title", "S4 · E1: Cakey's Cupcake Cousins"},
-                        {"artist", "Cakey's Cupcake Cousins"},
-                        {"album", "Album 1 • Collection"},
-                        {"duration", 200},
-                        {"position", 75},
-                        {"state", "playing"}
-                    }},
                     {"time", {
                         {"timestamp", timestamp},
                         {"timezone_offset", timezone_offset}
                     }},
-                    {"has_metadata", true},
-                    {"has_time", true}
-                }},
-                {"supports_response", true}
+                    {"devices", {
+                        {
+                            {"device_id", "APPLE_TV"},
+                            {"is_on", true},
+                            {"media_player", {
+                                {"playback", {
+                                    {"title", "S4 · E1: Cakey's Cupcake Cousins"},
+                                    {"artist", "Cakey's Cupcake Cousins"},
+                                    {"album", "Album 1 • Collection"},
+                                    {"duration", 200},
+                                    {"position", 75},
+                                    {"state", "playing"}
+                                }}
+                            }}
+                        }
+                    }}
+                }}
             };
         } else if (command == "PLAY_PAUSE") {
             static bool playing = true;
             static int position = 45;
             playing = !playing;
-            
+
             if (playing) {
                 position += 5;
                 if (position > 240) position = 10;
             }
-            
+
             auto time_data = getCurrentTimeAndOffset();
             long timestamp = time_data.first;
             int timezone_offset = time_data.second;
-            
+
             response = {
                 {"kind", "STATE_SYNC"},
                 {"data", {
-                    {"metadata", {
-                        {"title", "Song 2 • Test"},
-                        {"artist", "Artist's Music"},
-                        {"album", "Album 2 · Collection"},
-                        {"duration", 240},
-                        {"position", position},
-                        {"state", playing ? "playing" : "paused"}
-                    }},
                     {"time", {
                         {"timestamp", timestamp},
                         {"timezone_offset", timezone_offset}
                     }},
-                    {"has_metadata", true},
-                    {"has_time", true}
-                }},
-                {"supports_response", true}
+                    {"devices", {
+                        {
+                            {"device_id", "APPLE_TV"},
+                            {"is_on", true},
+                            {"media_player", {
+                                {"playback", {
+                                    {"title", "Song 2 • Test"},
+                                    {"artist", "Artist's Music"},
+                                    {"album", "Album 2 · Collection"},
+                                    {"duration", 240},
+                                    {"position", position},
+                                    {"state", playing ? "playing" : "paused"}
+                                }}
+                            }}
+                        }
+                    }}
+                }}
             };
         }
     }
-    
+
     return response;
 }
 
@@ -195,22 +201,27 @@ static void simulatePeriodicUpdates() {
             json state_sync = {
                 {"kind", "STATE_SYNC"},
                 {"data", {
-                    {"metadata", {
-                        {"title", title},
-                        {"artist", artist},
-                        {"album", album},
-                        {"duration", song_duration},
-                        {"position", song_position},
-                        {"state", (counter % 2) ? "playing" : "paused"}
-                    }},
                     {"time", {
                         {"timestamp", timestamp},
                         {"timezone_offset", timezone_offset}
                     }},
-                    {"has_metadata", true},
-                    {"has_time", true}
-                }},
-                {"supports_response", true}
+                    {"devices", {
+                        {
+                            {"device_id", "APPLE_TV"},
+                            {"is_on", true},
+                            {"media_player", {
+                                {"playback", {
+                                    {"title", title},
+                                    {"artist", artist},
+                                    {"album", album},
+                                    {"duration", song_duration},
+                                    {"position", song_position},
+                                    {"state", (counter % 2) ? "playing" : "paused"}
+                                }}
+                            }}
+                        }
+                    }}
+                }}
             };
             
             std::cout << "Mock Hub: Sending periodic state sync update..." << std::endl;
