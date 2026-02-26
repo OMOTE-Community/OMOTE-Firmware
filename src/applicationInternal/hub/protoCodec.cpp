@@ -105,7 +105,6 @@ omote_CommandResult ProtoCodec::decodeCommandResult(const uint8_t* buffer, size_
         // Return error result on decode failure
         omote_CommandResult error = omote_CommandResult_init_zero;
         error.kind = omote_ResponseKind_ERROR;
-        error.supports_response = false;
         error.which_data = omote_CommandResult_error_tag;
         strncpy(error.data.error.message, "Failed to decode protobuf message", sizeof(error.data.error.message) - 1);
         return error;

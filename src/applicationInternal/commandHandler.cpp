@@ -363,8 +363,7 @@ void receiveMQTTmessage_cb(std::string topic, std::string payload) {
 // #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
 
 void handleHubCommandResult(const omote_CommandResult& result) {
-  omote_log_d("Received CommandResult: kind=%d, supports_response=%s\r\n", 
-             result.kind, result.supports_response ? "true" : "false");
+  omote_log_d("Received CommandResult: kind=%d\r\n", result.kind);
   
   switch (result.kind) {
     case omote_ResponseKind_VOLUME: {
@@ -384,22 +383,6 @@ void handleHubCommandResult(const omote_CommandResult& result) {
         omote_log_d("Power update: is_on=%s\r\n", power.is_on ? "true" : "false");
         
         GuiNotification::showPowerNotification(power.is_on);
-      }
-      break;
-    }
-    
-    case omote_ResponseKind_RAW_COMMAND: {
-      if (result.which_data == omote_CommandResult_raw_command_tag) {
-        const auto& raw_cmd = result.data.raw_command;
-        const std::string raw_response(reinterpret_cast<const char*>(raw_cmd.raw_response.bytes), raw_cmd.raw_response.size);
-        omote_log_d("Raw command result: success=%s, message=%s\r\n", 
-                   raw_cmd.success ? "true" : "false", raw_response.c_str());
-        
-        if (raw_cmd.success) {
-          GuiNotification::showMessageNotification(raw_response);
-        } else {
-          GuiNotification::showErrorNotification(raw_response);
-        }
       }
       break;
     }
