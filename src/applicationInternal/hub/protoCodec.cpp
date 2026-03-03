@@ -95,7 +95,8 @@ size_t ProtoCodec::encodeRemoteEvent(const omote_RemoteEvent& event, uint8_t* bu
 }
 
 omote_CommandResult ProtoCodec::decodeCommandResult(const uint8_t* buffer, size_t buffer_size) {
-    omote_CommandResult proto_result = omote_CommandResult_init_zero;
+    static omote_CommandResult proto_result;
+    memset(&proto_result, 0, sizeof(proto_result));
     
     // Decode from protobuf
     pb_istream_t stream = pb_istream_from_buffer(buffer, buffer_size);
