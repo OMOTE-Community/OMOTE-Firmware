@@ -9,7 +9,8 @@
 
 #if (ENABLE_HUB_COMMUNICATION > 0)
 // Hub sends positive seconds WEST of UTC (EDT = +14400)
-static int32_t g_seconds_west_of_utc = 0;
+// RTC_DATA_ATTR preserves this across deep sleep (RTC time keeps running)
+RTC_DATA_ATTR static int32_t g_seconds_west_of_utc = 0;
 #endif
 
 // --- regularly update hardware values and update GUI, used by "main.cpp" ----
