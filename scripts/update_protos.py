@@ -10,7 +10,7 @@ submodule_path = os.path.join(project_dir, "protos", "shared")
 if os.path.isdir(submodule_path):
     print("Updating protos/shared submodule...")
     result = subprocess.run(
-        ["git", "submodule", "update", "--remote", "protos/shared"],
+        ["git", "submodule", "update", "--init", "--remote", "protos/shared"],
         cwd=project_dir,
         capture_output=True,
         text=True,
