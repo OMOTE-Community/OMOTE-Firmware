@@ -109,9 +109,8 @@ void init_from_sleep() {
   omote_log_i("init_from_sleep: wakeup_reason=%d, device_was_woken_up=%s\r\n", 
              reason, device_was_woken_up ? "true" : "false");
   
-  if (device_was_woken_up) {
-    metadata_poll_requested = true;
-  }
+  // Always sync state — needed on both cold boot and wake from sleep
+  metadata_poll_requested = true;
 };
 void init_IMU() {
   init_IMU_HAL();
