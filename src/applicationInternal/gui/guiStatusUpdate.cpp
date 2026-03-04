@@ -1,7 +1,23 @@
 #include <lvgl.h>
 #include <time.h>
 #include <sys/time.h>
+#include <string.h>
 #include "applicationInternal/hardware/hardwarePresenter.h"
+
+// MinGW lacks gmtime_r and settimeofday
+#if defined(WIN32) && !defined(gmtime_r)
+static struct tm* gmtime_r(const time_t* timep, struct tm* result) {
+  struct tm* p = gmtime(timep);
+  if (p) { *result = *p; return result; }
+  return nullptr;
+}
+#endif
+#if defined(WIN32) && !defined(settimeofday)
+static int settimeofday(const struct timeval* tv, void*) {
+  (void)tv;
+  return -1; // not supported on Windows simulator
+}
+#endif
 #include "applicationInternal/memoryUsage.h"
 #include "guis/gui_settings.h"
 #include "applicationInternal/gui/guiBase.h"
