@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <string>
+
 #if (ENABLE_WIFI_AND_MQTT == 1)
 
 void init_mqtt_HAL(void);
