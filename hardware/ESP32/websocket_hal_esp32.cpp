@@ -78,7 +78,7 @@ void init_websocket_HAL(const char* hub_url) {
   webSocket.begin(host, port, path);
   webSocket.onEvent(onWebSocketEvent);
   
-  webSocket.setReconnectInterval(250);
+  webSocket.setReconnectInterval(5000);
   
   // Enable heartbeat: ping every 5s, expect pong within 1s, disconnect after 2 missed
   webSocket.enableHeartbeat(5000, 1000, 2);
@@ -113,6 +113,7 @@ bool publishWebSocketMessageProto_HAL(const uint8_t* data, size_t len) {
 void websocket_shutdown_HAL() {
   Serial.println("Shutting down WebSocket Client");
   webSocket.disconnect();
+  delay(50);  // Allow TCP stack to flush close frame before WiFi teardown
   isConnected = false;
 }
 

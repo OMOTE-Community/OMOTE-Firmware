@@ -77,7 +77,7 @@ void doShortPress(char keyChar, int keyCode){
   }
   
   omote_log_d("key: key '%c', will use command '%u'\r\n", keyChar, command);
-  
+
   // Use CommandExecutionParams for proper HUB command handling
   CommandExecutionParams params;
   params.commandId = command;
