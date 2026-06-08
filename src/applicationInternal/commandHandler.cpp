@@ -369,7 +369,7 @@ void handleHubCommandResult(const omote_CommandResult& result) {
     case omote_ResponseKind_VOLUME: {
       if (result.which_data == omote_CommandResult_volume_tag) {
         const auto& volume = result.data.volume;
-        omote_log_d("Volume update: level=%u, muted=%s\r\n", 
+        omote_log_d("Volume update: level=%.1f, muted=%s\r\n",
                    volume.level, volume.is_muted ? "true" : "false");
         
         GuiNotification::showVolumeNotification(volume.level, volume.is_muted);

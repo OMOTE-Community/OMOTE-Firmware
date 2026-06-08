@@ -239,7 +239,7 @@ void showVolumeNotification(double level, bool is_muted) {
     if (is_muted) {
         snprintf(level_text, sizeof(level_text), "MUTED");
     } else {
-        snprintf(level_text, sizeof(level_text), "%.0f dB", level);
+        snprintf(level_text, sizeof(level_text), "%.1f dB", level);
     }
     
     lv_label_set_text(volume_level_label, level_text);
