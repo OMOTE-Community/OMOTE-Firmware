@@ -6,12 +6,12 @@
 #include "keyboard_ble_hal_esp32.h"
 #endif
 #include "secrets.h"
-#include "shared/hubTopics.h"
 
 #if (ENABLE_WIFI_AND_MQTT == 1)
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 bool isWifiConnected = false;
+std::string mqttProtoResponseTopic;
 
 tAnnounceWiFiconnected_cb thisAnnounceWiFiconnected_cb = NULL;
 void set_announceWiFiconnected_cb_HAL(tAnnounceWiFiconnected_cb pAnnounceWiFiconnected_cb) {
@@ -26,6 +26,10 @@ void set_announceSubscribedTopics_cb_HAL(tAnnounceSubscribedTopics_cb pAnnounceS
 tAnnounceMQTTMessageProto_cb thisAnnounceMQTTMessageProto_cb = NULL;
 void set_announceMQTTMessageProto_cb_HAL(tAnnounceMQTTMessageProto_cb pAnnounceMQTTMessageProto_cb) {
   thisAnnounceMQTTMessageProto_cb = pAnnounceMQTTMessageProto_cb;
+}
+
+void set_mqtt_proto_response_topic_HAL(const char* topic) {
+  mqttProtoResponseTopic = topic == nullptr ? "" : topic;
 }
 
 bool getIsWifiConnected_HAL() {
@@ -87,8 +91,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   // handle message arrived
   std::string topicReceived(topic);
 
-  // Only the hub response topic carries protobuf; other topics fall through to text handling.
-  if (thisAnnounceMQTTMessageProto_cb != NULL && Hub::isHubResponseTopic(topicReceived)) {
+  if (thisAnnounceMQTTMessageProto_cb != NULL && topicReceived == mqttProtoResponseTopic) {
     thisAnnounceMQTTMessageProto_cb(payload, length);
     return;
   }
@@ -161,7 +164,9 @@ void mqtt_subscribeTopics() {
   mqttClient.subscribe(subscribeTopicOMOTE_BLEprintBonds.c_str());
   mqttClient.subscribe(subscribeTopicOMOTE_BLEdeleteBonds.c_str());
   #if (ENABLE_HUB_COMMUNICATION == 2)
-  mqttClient.subscribe(Hub::RESPONSE_TOPIC);
+  if (!mqttProtoResponseTopic.empty()) {
+    mqttClient.subscribe(mqttProtoResponseTopic.c_str());
+  }
   #endif
   Serial.printf("  Successfully subscribed to MQTT topics\r\n");
 

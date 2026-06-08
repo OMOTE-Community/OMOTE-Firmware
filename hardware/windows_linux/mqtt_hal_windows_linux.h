@@ -18,5 +18,6 @@ typedef void (*tAnnounceSubscribedTopics_cb)(std::string topic, std::string payl
 void set_announceSubscribedTopics_cb_HAL(tAnnounceSubscribedTopics_cb pAnnounceSubscribedTopics_cb);
 typedef void (*tAnnounceMQTTMessageProto_cb)(const uint8_t* data, size_t len);
 void set_announceMQTTMessageProto_cb_HAL(tAnnounceMQTTMessageProto_cb pAnnounceMQTTMessageProto_cb);
+void set_mqtt_proto_response_topic_HAL(const char* topic);
 
 #endif

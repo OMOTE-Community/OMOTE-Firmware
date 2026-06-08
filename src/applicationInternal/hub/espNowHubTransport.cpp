@@ -56,5 +56,4 @@ void hubMessageReceived_cb_proto(const uint8_t* data, size_t len) {
   hubManager.handleIncomingCommandResult(result);
 }
 
-// Legacy JSON callback removed - now using protobuf only
 #endif

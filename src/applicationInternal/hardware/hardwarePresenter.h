@@ -148,6 +148,7 @@ bool publishMQTTMessageProto(const char *topic, const uint8_t* payload, size_t l
 void wifi_shutdown();
 void set_mqtt_message_callback(void (*callback)(std::string topic, std::string payload));
 void set_mqtt_message_callback_proto(void (*callback)(const uint8_t* data, size_t len));
+void set_mqtt_proto_response_topic(const char* topic);
 #endif
 
 // --- memory usage -----------------------------------------------------------

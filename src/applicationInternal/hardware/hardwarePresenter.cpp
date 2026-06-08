@@ -322,6 +322,9 @@ void set_mqtt_message_callback(void (*callback)(std::string topic, std::string p
 void set_mqtt_message_callback_proto(void (*callback)(const uint8_t* data, size_t len)) {
   set_announceMQTTMessageProto_cb_HAL(callback);
 }
+void set_mqtt_proto_response_topic(const char* topic) {
+  set_mqtt_proto_response_topic_HAL(topic);
+}
 #endif
 
 // --- memory usage -----------------------------------------------------------

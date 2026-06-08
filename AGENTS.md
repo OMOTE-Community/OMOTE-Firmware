@@ -12,9 +12,12 @@
 ### Architecture Boundaries
 
 - Treat `hardware/ESP32` and `hardware/windows_linux` as HAL/platform code. HAL files must not include `applicationInternal/...` headers or depend on application-layer internals.
-- Put cross-layer constants or tiny pure helpers needed by HAL code in `src/shared`, or introduce an explicit lower-level interface. Do not pull application headers downward to share one value.
+- Application code should consume HAL functionality through `src/applicationInternal/hardware/hardwarePresenter.h`. The matching `.cpp` is the application-side bridge to `hardware/hardwareLayer.h`; do not include HAL headers or call `_HAL` functions directly from other application modules.
+- Keep ownership with the layer that understands the behavior. When HAL needs app-owned configuration, pass it down through `hardwarePresenter` and explicit HAL setters instead of introducing generic buckets such as `src/shared` or `src/utilities`.
 - Keep protobuf encode/decode and hub command semantics in the hub/application layer. ESP-NOW and WebSocket HAL APIs should describe generic byte/message transport unless the HAL behavior is truly protocol-specific.
 - Keep MQTT, ESP-NOW, and WebSocket as valid first-class hub transports. Avoid fixes that only preserve one transport path unless the branch explicitly narrows scope.
+- Keep ESP32 and `windows_linux` HAL interfaces in parity. When a HAL signature changes, update both implementations and the simulator/mock path together.
+- HAL callbacks should be registered as function pointers and null-guarded before invocation. HAL code should not reach upward into app-specific objects directly.
 
 ### Control Flow
 

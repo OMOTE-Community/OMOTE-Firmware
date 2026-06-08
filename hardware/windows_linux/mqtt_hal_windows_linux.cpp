@@ -1,7 +1,6 @@
 #include <string>
 #include "mqtt_hal_windows_linux.h"
 #include "secrets.h"
-#include "shared/hubTopics.h"
 
 #if (ENABLE_WIFI_AND_MQTT == 1)
 #include <stdarg.h>
@@ -40,6 +39,7 @@ uint8_t sendmem1[4096];
 uint8_t recvmem1[4096];
 struct mqtt_client mqttClient;
 std::string uniqueClientSuffix = "";
+std::string mqttProtoResponseTopic;
 int state = 0;
 
 tAnnounceWiFiconnected_cb thisAnnounceWiFiconnected_cb = NULL;
@@ -55,6 +55,10 @@ void set_announceSubscribedTopics_cb_HAL(tAnnounceSubscribedTopics_cb pAnnounceS
 tAnnounceMQTTMessageProto_cb thisAnnounceMQTTMessageProto_cb = NULL;
 void set_announceMQTTMessageProto_cb_HAL(tAnnounceMQTTMessageProto_cb pAnnounceMQTTMessageProto_cb) {
   thisAnnounceMQTTMessageProto_cb = pAnnounceMQTTMessageProto_cb;
+}
+
+void set_mqtt_proto_response_topic_HAL(const char* topic) {
+  mqttProtoResponseTopic = topic == nullptr ? "" : topic;
 }
 
 bool getIsWifiConnected_HAL() {
@@ -77,8 +81,7 @@ void publish_callback(void** state, struct mqtt_response_publish *publish) {
 
     std::string topic((const char*) (publish->topic_name), publish->topic_name_size);
 
-    // Only the hub response topic carries protobuf; other topics fall through to text handling.
-    if (thisAnnounceMQTTMessageProto_cb != NULL && Hub::isHubResponseTopic(topic)) {
+    if (thisAnnounceMQTTMessageProto_cb != NULL && topic == mqttProtoResponseTopic) {
       thisAnnounceMQTTMessageProto_cb(
         (const uint8_t*) publish->application_message,
         publish->application_message_size
@@ -109,7 +112,9 @@ void mqtt_subscribeTopics() {
   mqtt_subscribe(&mqttClient, subscribeTopicOMOTE_BLEprintBonds.c_str(), 2);
   mqtt_subscribe(&mqttClient, subscribeTopicOMOTE_BLEdeleteBonds.c_str(), 2);
   #if (ENABLE_HUB_COMMUNICATION == 2)
-  mqtt_subscribe(&mqttClient, Hub::RESPONSE_TOPIC, 0);
+  if (!mqttProtoResponseTopic.empty()) {
+    mqtt_subscribe(&mqttClient, mqttProtoResponseTopic.c_str(), 0);
+  }
   #endif
 
 }
