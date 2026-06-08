@@ -41,6 +41,12 @@ static void fillWakeWindow(HubOutboundQueue& queue) {
   }
 }
 
+void setUp() {
+}
+
+void tearDown() {
+}
+
 void test_enqueue_preserves_fifo_order_and_ttl() {
   HubOutboundQueue queue;
 
