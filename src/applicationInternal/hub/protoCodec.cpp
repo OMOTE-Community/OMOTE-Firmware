@@ -5,6 +5,29 @@
 
 namespace Hub {
 
+namespace {
+
+void copyStringField(char* field, size_t fieldSize, const std::string& value) {
+    if (fieldSize == 0) {
+        return;
+    }
+
+    strncpy(field, value.c_str(), fieldSize - 1);
+    field[fieldSize - 1] = '\0';
+}
+
+void copyRemoteEventData(omote_RemoteEvent& event, const uint8_t* data, size_t dataLen) {
+    if (data == nullptr || dataLen == 0) {
+        return;
+    }
+
+    const size_t bytesToCopy = (dataLen < sizeof(event.data.bytes)) ? dataLen : sizeof(event.data.bytes);
+    memcpy(event.data.bytes, data, bytesToCopy);
+    event.data.size = bytesToCopy;
+}
+
+}
+
 omote_OmoteCommand ProtoCodec::stringToCommand(const std::string& cmd) {
     struct CommandMapping {
         const char* name;
@@ -83,28 +106,13 @@ omote_RemoteEvent ProtoCodec::createRemoteEvent(
     size_t data_len
 ) {
     omote_RemoteEvent event = omote_RemoteEvent_init_zero;
-    
-    // Set device
-    strncpy(event.device, device.c_str(), sizeof(event.device) - 1);
-    event.device[sizeof(event.device) - 1] = '\0';
-    
-    // Set command and type
+
+    copyStringField(event.device, sizeof(event.device), device);
     event.command = command;
     event.type = type;
-    
-    // Set remote_id if provided
-    if (!remote_id.empty()) {
-        strncpy(event.remote_id, remote_id.c_str(), sizeof(event.remote_id) - 1);
-        event.remote_id[sizeof(event.remote_id) - 1] = '\0';
-    }
-    
-    // Set data if provided
-    if (data && data_len > 0) {
-        size_t copy_len = (data_len < sizeof(event.data.bytes)) ? data_len : sizeof(event.data.bytes);
-        memcpy(event.data.bytes, data, copy_len);
-        event.data.size = copy_len;
-    }
-    
+    copyStringField(event.remote_id, sizeof(event.remote_id), remote_id);
+    copyRemoteEventData(event, data, data_len);
+
     return event;
 }
 
