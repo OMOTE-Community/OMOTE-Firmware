@@ -71,6 +71,8 @@ bool HubManager::init(HubTransport transport) {
   }
 
   activeTransport = std::move(newTransport);
+  clearQueue();
+  linkPhase = LinkPhase::WAKE_WINDOW;
   return true;
 }
 
@@ -80,11 +82,15 @@ void HubManager::process() {
   }
   
   activeTransport->process();
-  
+
+  if (isReady()) {
+    flushQueue();
+  }
+
   if (!isStateSyncRequested()) {
     return;
   }
-  
+
   syncState();
 }
 
@@ -93,12 +99,11 @@ bool HubManager::sendRemoteEvent(const omote_RemoteEvent& event) {
     omote_log_w("Cannot send message: no hub transport initialized\n");
     return false;
   }
-  
+
   if (!activeTransport->isReady()) {
-    omote_log_w("Cannot send message: hub transport not ready\n");
-    return false;
+    return enqueueEvent(event);
   }
-  
+
   return activeTransport->sendRemoteEvent(event);
 }
 
@@ -115,6 +120,7 @@ void HubManager::shutdown() {
     activeTransport->shutdown();
     activeTransport.reset();
   }
+  clearQueue();
 }
 
 HubTransport HubManager::getCurrentTransport() const {
@@ -170,6 +176,74 @@ void HubManager::syncState() {
   
   stateSyncRequested = false;
   omote_log_i("State sync request sent successfully\n");
+}
+
+bool HubManager::enqueueEvent(const omote_RemoteEvent& event) {
+  unsigned long ttl = (linkPhase == LinkPhase::WAKE_WINDOW) ? WAKE_TTL_MS : RUNTIME_TTL_MS;
+
+  if (queueCount == QUEUE_MAX) {
+    if (linkPhase == LinkPhase::WAKE_WINDOW) {
+      // Preserve the oldest entry (the wake press) by refusing the newest.
+      omote_log_w("Outbound queue full in wake window, dropping newest event\n");
+      return false;
+    }
+    // Favor recent intent: make room by dropping the oldest.
+    omote_log_w("Outbound queue full, dropping oldest event\n");
+    popQueueHead();
+  }
+
+  eventQueue[queueTail].event = event;
+  eventQueue[queueTail].enqueuedTime = millis();
+  eventQueue[queueTail].ttlMs = ttl;
+  queueTail = (queueTail + 1) % QUEUE_MAX;
+  queueCount++;
+
+  omote_log_i("Queued event, ttl=%lu\n", ttl);
+  return true;
+}
+
+void HubManager::flushQueue() {
+  // The link is ready, so the wake window is over. Advance once even on an
+  // empty queue, so a later runtime reconnect flap uses the short runtime TTL.
+  if (linkPhase == LinkPhase::WAKE_WINDOW) {
+    linkPhase = LinkPhase::STEADY;
+  }
+
+  uint8_t flushed = 0;
+  while (queueCount > 0) {
+    QueuedEvent& head = eventQueue[queueHead];
+
+    // Unsigned subtraction is rollover-safe across millis() wraparound.
+    if ((millis() - head.enqueuedTime) >= head.ttlMs) {
+      omote_log_w("Dropped expired queued event\n");
+      popQueueHead();
+      continue;
+    }
+
+    if (!activeTransport->sendRemoteEvent(head.event)) {
+      // Flaky send: leave the event at the head and retry on the next tick.
+      omote_log_w("Queued event send failed, will retry next tick\n");
+      break;
+    }
+
+    popQueueHead();
+    flushed++;
+  }
+
+  if (flushed > 0) {
+    omote_log_i("Flushed %u queued events\n", (unsigned)flushed);
+  }
+}
+
+void HubManager::popQueueHead() {
+  queueHead = (queueHead + 1) % QUEUE_MAX;
+  queueCount--;
+}
+
+void HubManager::clearQueue() {
+  queueHead = 0;
+  queueTail = 0;
+  queueCount = 0;
 }
 
 void HubManager::setMessageHandler(std::function<void(const omote_CommandResult&)> handler) {
