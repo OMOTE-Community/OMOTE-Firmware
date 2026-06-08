@@ -147,7 +147,9 @@ bool websocket_is_connected_HAL() {
 }
 
 const char* get_websocket_hub_url_HAL() {
-    return hubUrl.c_str();
+    // Return the configured URL (like the ESP32 HAL); hubUrl is empty until init runs,
+    // and the transport reads this getter before init_websocket_HAL() populates it.
+    return WEBSOCKET_HUB_URL;
 }
 
 unsigned long get_websocket_reconnect_interval_ms_HAL() {

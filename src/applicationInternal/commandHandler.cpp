@@ -268,29 +268,26 @@ void executeCommandWithData(uint16_t command, commandData commandData, std::stri
 
 void executeCommandWithData(const CommandExecutionParams& params, commandData commandData) {
 #if (ENABLE_HUB_COMMUNICATION > 0)
-  if (commandData.commandHandler != HUB) {
-    // For non-HUB commands, pass through to the original function
-    omote_log_d("command: will execute command '%u'%s%s\r\n", 
-               params.commandId, 
-               params.additionalPayload.empty() ? "" : " with additionalPayload '",
-               params.additionalPayload.empty() ? "" : (params.additionalPayload + "'").c_str());
-    
-    executeCommandWithData(params.commandId, commandData, params.additionalPayload);
+  if (commandData.commandHandler == HUB) {
+    auto current = commandData.commandPayloads.begin();
+
+    const std::string deviceName = *current;
+    current = std::next(current, 1);
+
+    const std::string commandName = *current;
+    current = std::next(current, 1);
+
+    sendHubMessage(deviceName, commandName, params.commandType);
     return;
   }
-
-  auto current = commandData.commandPayloads.begin();
-  
-  // Extract device and command
-  const std::string deviceName = *current;
-  current = std::next(current, 1);
-
-  const std::string commandName = *current;
-  current = std::next(current, 1);
-  
-  // Send using the helper function
-  sendHubMessage(deviceName, commandName, params.commandType);
 #endif
+
+  omote_log_d("command: will execute command '%u'%s%s\r\n",
+             params.commandId,
+             params.additionalPayload.empty() ? "" : " with additionalPayload '",
+             params.additionalPayload.empty() ? "" : (params.additionalPayload + "'").c_str());
+
+  executeCommandWithData(params.commandId, commandData, params.additionalPayload);
 }
 
 void executeCommand(uint16_t command, std::string additionalPayload) {

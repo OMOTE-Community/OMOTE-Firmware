@@ -10,7 +10,6 @@ void mqttMessageReceived_cb_proto(const uint8_t* data, size_t len);
 #if (ENABLE_WIFI_AND_MQTT == 1)
 
 static const char* COMMAND_TOPIC = "remote_commands";
-static const char* RESPONSE_TOPIC = "remote_responses";
 
 MqttHubTransport::MqttHubTransport() : baseTopic("omote/") {
 }

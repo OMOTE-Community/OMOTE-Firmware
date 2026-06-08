@@ -6,6 +6,7 @@
 #include "keyboard_ble_hal_esp32.h"
 #endif
 #include "secrets.h"
+#include "applicationInternal/hub/hubTopics.h"
 
 #if (ENABLE_WIFI_AND_MQTT == 1)
 WiFiClient espClient;
@@ -86,8 +87,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
   // handle message arrived
   std::string topicReceived(topic);
 
-  // Forward binary data to proto callback if registered
-  if (thisAnnounceMQTTMessageProto_cb != NULL) {
+  // Only the hub response topic carries protobuf; other topics fall through to text handling.
+  if (thisAnnounceMQTTMessageProto_cb != NULL && Hub::isHubResponseTopic(topicReceived)) {
     thisAnnounceMQTTMessageProto_cb(payload, length);
     return;
   }
@@ -100,7 +101,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
     // ...
 
     // Or forward the topic to "void receiveMQTTmessage_cb" in the "commandHandler.cpp", if it is not ESP32 hardware related
-    thisAnnounceSubscribedTopics_cb(topicReceived, strPayload);
+    if (thisAnnounceSubscribedTopics_cb != NULL) {
+      thisAnnounceSubscribedTopics_cb(topicReceived, strPayload);
+    }
 
   #if (ENABLE_KEYBOARD_BLE == 1)
   } else if (topicReceived == subscribeTopicOMOTE_BLEstartAdvertisingForAll) {
@@ -138,7 +141,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   } else {
     // forward all other topics to the commandHandler
-    thisAnnounceSubscribedTopics_cb(topicReceived, strPayload);
+    if (thisAnnounceSubscribedTopics_cb != NULL) {
+      thisAnnounceSubscribedTopics_cb(topicReceived, strPayload);
+    }
 
   }
 }
@@ -156,7 +161,7 @@ void mqtt_subscribeTopics() {
   mqttClient.subscribe(subscribeTopicOMOTE_BLEprintBonds.c_str());
   mqttClient.subscribe(subscribeTopicOMOTE_BLEdeleteBonds.c_str());
   #if (ENABLE_HUB_COMMUNICATION == 2)
-  mqttClient.subscribe("remote_responses");
+  mqttClient.subscribe(Hub::RESPONSE_TOPIC);
   #endif
   Serial.printf("  Successfully subscribed to MQTT topics\r\n");
 

@@ -30,7 +30,7 @@ void register_device_shield() {
     register_hub_command(&SHIELD_POWER_ON, "ANDROID_TV", "POWER_ON");
     register_hub_command(&SHIELD_POWER_OFF, "ANDROID_TV", "POWER_OFF");
     register_hub_command(&SHIELD_MENU, "ANDROID_TV", "MENU");
-    register_hub_command(&SHIELD_EXIT, "ANDROID_TV", "HOME");
+    register_hub_command(&SHIELD_EXIT, "ANDROID_TV", "BACK");
     register_hub_command(&SHIELD_STOP, "ANDROID_TV", "STOP");
     register_hub_command(&SHIELD_PLAY, "ANDROID_TV", "PLAY_PAUSE");
     register_hub_command(&SHIELD_FORWARD, "ANDROID_TV", "SKIP_FORWARD");
@@ -40,6 +40,7 @@ void register_device_shield() {
     register_hub_command(&SHIELD_LEFT, "ANDROID_TV", "LEFT");
     register_hub_command(&SHIELD_RIGHT, "ANDROID_TV", "RIGHT");
     register_hub_command(&SHIELD_OK, "ANDROID_TV", "SELECT");
+    register_hub_command(&SHIELD_SHIELD, "ANDROID_TV", "HOME");
   #else
     // http://www.hifi-remote.com/wiki/index.php/Infrared_Protocol_Primer
     // https://www.avsforum.com/threads/discrete-ir-code-list-for-nvidia-shield-tv.2126570/

@@ -16,21 +16,27 @@ To run this firmware, you have two options
 ## Development Setup
 
 ```bash
+# Fetch the protobuf submodule (definitions + pre-generated nanopb C files)
+git submodule update --init protos/shared
+
 # Create and activate virtualenv
 python3 -m venv .venv
 source .venv/bin/activate
-
-# Install protobuf dependencies
-pip install protobuf grpcio-tools
-
-# Generate protobuf code (after PlatformIO installs libraries)
-make protos
 
 # Build firmware
 pio run -e esp32-Rev1toRev4
 
 # Upload to device
 pio run -e esp32-Rev1toRev4 --target upload
+```
+
+**Protobuf code is pre-generated** in the `protos/shared` submodule (its CI regenerates the
+nanopb output on push to `main`), so a normal build needs no codegen step. Regenerate locally
+only when editing the `.proto`/`.options` files:
+
+```bash
+pip install protobuf grpcio-tools
+make protos
 ```
 
 **Note:** Open the project in VS Code/Cursor to let PlatformIO install libraries automatically. Alternatively, install PlatformIO CLI: `pip install platformio` and run `pio lib install`.

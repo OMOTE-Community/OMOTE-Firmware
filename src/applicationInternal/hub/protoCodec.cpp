@@ -1,5 +1,7 @@
 #include "protoCodec.h"
 #include <cstring>
+#include "applicationInternal/omote_log.h"
+#include "applicationInternal/hardware/arduinoLayer.h"
 
 namespace Hub {
 
@@ -39,7 +41,18 @@ omote_OmoteCommand ProtoCodec::stringToCommand(const std::string& cmd) {
     if (cmd == "YELLOW") return omote_OmoteCommand_YELLOW;
     if (cmd == "BLUE") return omote_OmoteCommand_BLUE;
     if (cmd == "GUI_EVENT") return omote_OmoteCommand_GUI_EVENT;
-    
+
+    // Synonyms for registered hub command strings that have no dedicated proto enum.
+    if (cmd == "SOURCE") return omote_OmoteCommand_SRC;
+    if (cmd == "MUTE_TOGGLE") return omote_OmoteCommand_VOL_MUTE;
+    if (cmd == "RETURN") return omote_OmoteCommand_BACK;
+    if (cmd == "EXIT") return omote_OmoteCommand_BACK;
+    if (cmd == "KEY_A") return omote_OmoteCommand_RED;
+    if (cmd == "KEY_B") return omote_OmoteCommand_GREEN;
+    if (cmd == "KEY_C") return omote_OmoteCommand_YELLOW;
+    if (cmd == "KEY_D") return omote_OmoteCommand_BLUE;
+
+    if (!cmd.empty()) omote_log_w("ProtoCodec: unmapped hub command '%s' -> UNSPECIFIED\n", cmd.c_str());
     return omote_OmoteCommand_OMOTE_COMMAND_UNSPECIFIED;
 }
 
@@ -95,9 +108,8 @@ size_t ProtoCodec::encodeRemoteEvent(const omote_RemoteEvent& event, uint8_t* bu
 }
 
 omote_CommandResult ProtoCodec::decodeCommandResult(const uint8_t* buffer, size_t buffer_size) {
-    static omote_CommandResult proto_result;
-    memset(&proto_result, 0, sizeof(proto_result));
-    
+    omote_CommandResult proto_result = omote_CommandResult_init_zero;
+
     // Decode from protobuf
     pb_istream_t stream = pb_istream_from_buffer(buffer, buffer_size);
     bool status = pb_decode(&stream, omote_CommandResult_fields, &proto_result);

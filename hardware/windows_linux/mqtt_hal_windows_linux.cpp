@@ -1,6 +1,7 @@
 #include <string>
 #include "mqtt_hal_windows_linux.h"
 #include "secrets.h"
+#include "applicationInternal/hub/hubTopics.h"
 
 #if (ENABLE_WIFI_AND_MQTT == 1)
 #include <stdarg.h>
@@ -76,8 +77,8 @@ void publish_callback(void** state, struct mqtt_response_publish *publish) {
 
     std::string topic((const char*) (publish->topic_name), publish->topic_name_size);
 
-    // Forward binary data to proto callback if registered
-    if (thisAnnounceMQTTMessageProto_cb != NULL) {
+    // Only the hub response topic carries protobuf; other topics fall through to text handling.
+    if (thisAnnounceMQTTMessageProto_cb != NULL && Hub::isHubResponseTopic(topic)) {
       thisAnnounceMQTTMessageProto_cb(
         (const uint8_t*) publish->application_message,
         publish->application_message_size
@@ -92,9 +93,7 @@ void publish_callback(void** state, struct mqtt_response_publish *publish) {
            payload.c_str()
     );
 
-    if (topic == subscribeTopicOMOTEtest) {
-      thisAnnounceSubscribedTopics_cb(topic, payload);
-    } else {
+    if (thisAnnounceSubscribedTopics_cb != NULL) {
       thisAnnounceSubscribedTopics_cb(topic, payload);
     }
 }
@@ -110,7 +109,7 @@ void mqtt_subscribeTopics() {
   mqtt_subscribe(&mqttClient, subscribeTopicOMOTE_BLEprintBonds.c_str(), 2);
   mqtt_subscribe(&mqttClient, subscribeTopicOMOTE_BLEdeleteBonds.c_str(), 2);
   #if (ENABLE_HUB_COMMUNICATION == 2)
-  mqtt_subscribe(&mqttClient, "remote_responses", 0);
+  mqtt_subscribe(&mqttClient, Hub::RESPONSE_TOPIC, 0);
   #endif
 
 }

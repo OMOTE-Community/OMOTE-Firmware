@@ -33,9 +33,13 @@ bool WebSocketHubTransport::init() {
 }
 
 void WebSocketHubTransport::process() {
+#if defined(ARDUINO)
+  // ESP32: wait for WiFi association. On the simulator getIsWifiConnected() tracks the
+  // MQTT socket, which is irrelevant to WebSocket; the WS HAL self-guards on its ws state.
   if (!getIsWifiConnected()) {
     return;
   }
+#endif
 
   websocket_loop();
 }
