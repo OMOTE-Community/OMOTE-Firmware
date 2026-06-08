@@ -5,7 +5,7 @@
 #include "secrets.h"
 
 WebSocketsClient webSocket;
-tAnnounceWebSocketMessageProto_cb thisAnnounceWebSocketMessageProto_cb = NULL;
+tAnnounceWebSocketMessage_cb thisAnnounceWebSocketMessage_cb = NULL;
 bool isConnected = false;
 const unsigned long WEBSOCKET_RECONNECT_INTERVAL_MS = 5000;
 
@@ -22,8 +22,8 @@ void onWebSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
       break;
       
     case WStype_BIN:
-      if (thisAnnounceWebSocketMessageProto_cb != NULL) {
-        thisAnnounceWebSocketMessageProto_cb(payload, length);
+      if (thisAnnounceWebSocketMessage_cb != NULL) {
+        thisAnnounceWebSocketMessage_cb(payload, length);
       }
       break;
       
@@ -36,8 +36,8 @@ void onWebSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
   }
 }
 
-void set_announceWebSocketMessageProto_cb_HAL(tAnnounceWebSocketMessageProto_cb pAnnounceWebSocketMessageProto_cb) {
-  thisAnnounceWebSocketMessageProto_cb = pAnnounceWebSocketMessageProto_cb;
+void set_announceWebSocketMessage_cb_HAL(tAnnounceWebSocketMessage_cb pAnnounceWebSocketMessage_cb) {
+  thisAnnounceWebSocketMessage_cb = pAnnounceWebSocketMessage_cb;
 }
 
 void init_websocket_HAL(const char* hub_url) {
@@ -91,21 +91,21 @@ void websocket_loop_HAL() {
   webSocket.loop();
 }
 
-bool publishWebSocketMessageProto_HAL(const uint8_t* data, size_t len) {
+bool publishWebSocketMessage_HAL(const uint8_t* data, size_t len) {
   if (!isConnected) {
-    Serial.println("WebSocket Client not connected, cannot send protobuf message");
+    Serial.println("WebSocket Client not connected, cannot send message");
     return false;
   }
   
   if (len > 1024) {
-    Serial.println("Error: Protobuf message exceeds reasonable WebSocket size");
+    Serial.println("Error: WebSocket message exceeds reasonable size");
     return false;
   }
   
   bool result = webSocket.sendBIN(data, len);
   
   if (!result) {
-    Serial.println("WebSocket Client failed to send protobuf message");
+    Serial.println("WebSocket Client failed to send message");
   }
   
   return result;

@@ -13,7 +13,7 @@ static const unsigned long WEBSOCKET_WAKE_QUEUE_GRACE_MS = 1000;
 
 extern void init_websocket(const char* hub_url);
 extern void websocket_loop();
-extern bool publishWebSocketMessageProto(const uint8_t* data, size_t len);
+extern bool publishWebSocketMessage(const uint8_t* data, size_t len);
 extern void websocket_shutdown();
 extern bool websocket_is_connected();
 
@@ -27,7 +27,7 @@ bool WebSocketHubTransport::init() {
   }
 
   omote_log_i("Initializing WebSocket transport to %s\n", hub_url);
-  set_websocket_message_callback_proto(&websocketMessageReceived_cb_proto);
+  set_websocket_message_callback(&websocketMessageReceived_cb_proto);
   init_websocket(hub_url);
   return true;
 }
@@ -57,7 +57,7 @@ bool WebSocketHubTransport::sendRemoteEvent(const omote_RemoteEvent& event) {
   }
   
   omote_log_d("WebSocket: Encoded %d bytes\n", encoded_size);
-  return publishWebSocketMessageProto(buffer, encoded_size);
+  return publishWebSocketMessage(buffer, encoded_size);
 }
 
 bool WebSocketHubTransport::isReady() {

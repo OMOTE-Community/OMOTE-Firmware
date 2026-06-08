@@ -11,7 +11,7 @@ void hubMessageReceived_cb_proto(const uint8_t* data, size_t len);
 EspNowHubTransport::EspNowHubTransport() = default;
 
 bool EspNowHubTransport::init() {
-  set_espnow_message_callback_proto(&hubMessageReceived_cb_proto);
+  set_espnow_message_callback(&hubMessageReceived_cb_proto);
   init_espnow();
   return true;
 }
@@ -33,7 +33,7 @@ bool EspNowHubTransport::sendRemoteEvent(const omote_RemoteEvent& event) {
   }
   
   omote_log_d("ESP-NOW: Encoded %d bytes\n", encoded_size);
-  return publishEspNowMessageProto(buffer, encoded_size);
+  return publishEspNowMessage(buffer, encoded_size);
 }
 
 bool EspNowHubTransport::isReady() {
@@ -57,4 +57,4 @@ void hubMessageReceived_cb_proto(const uint8_t* data, size_t len) {
 }
 
 // Legacy JSON callback removed - now using protobuf only
-#endif 
+#endif

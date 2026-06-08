@@ -6,7 +6,7 @@
 #include "keyboard_ble_hal_esp32.h"
 #endif
 #include "secrets.h"
-#include "applicationInternal/hub/hubTopics.h"
+#include "shared/hubTopics.h"
 
 #if (ENABLE_WIFI_AND_MQTT == 1)
 WiFiClient espClient;

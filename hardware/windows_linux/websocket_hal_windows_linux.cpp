@@ -10,7 +10,7 @@
 
 using easywsclient::WebSocket;
 
-tAnnounceWebSocketMessageProto_cb thisAnnounceWebSocketMessageProto_cb = nullptr;
+tAnnounceWebSocketMessage_cb thisAnnounceWebSocketMessage_cb = nullptr;
 WebSocket::pointer ws = nullptr;
 std::string hubUrl;
 std::mutex wsMutex;
@@ -18,8 +18,8 @@ std::thread reconnectThread;
 bool shouldReconnect = true;
 const int RECONNECT_DELAY_MS = 5000;
 
-void set_announceWebSocketMessageProto_cb_HAL(tAnnounceWebSocketMessageProto_cb pAnnounceWebSocketMessageProto_cb) {
-    thisAnnounceWebSocketMessageProto_cb = pAnnounceWebSocketMessageProto_cb;
+void set_announceWebSocketMessage_cb_HAL(tAnnounceWebSocketMessage_cb pAnnounceWebSocketMessage_cb) {
+    thisAnnounceWebSocketMessage_cb = pAnnounceWebSocketMessage_cb;
 }
 
 void attempt_connection() {
@@ -86,17 +86,17 @@ void websocket_loop_HAL() {
     
     ws->poll(0);
     
-    if (!thisAnnounceWebSocketMessageProto_cb) {
+    if (!thisAnnounceWebSocketMessage_cb) {
         return;
     }
     
-    auto callback = thisAnnounceWebSocketMessageProto_cb;
+    auto callback = thisAnnounceWebSocketMessage_cb;
     ws->dispatchBinary([callback](const std::vector<uint8_t>& message) {
         callback(message.data(), message.size());
     });
 }
 
-bool publishWebSocketMessageProto_HAL(const uint8_t* data, size_t len) {
+bool publishWebSocketMessage_HAL(const uint8_t* data, size_t len) {
     std::lock_guard<std::mutex> lock(wsMutex);
     
     if (!ws) {
@@ -112,7 +112,7 @@ bool publishWebSocketMessageProto_HAL(const uint8_t* data, size_t len) {
     try {
         std::vector<uint8_t> message(data, data + len);
         ws->sendBinary(message);
-        std::cout << "[WebSocket HAL] Sent protobuf message (" << len << " bytes)" << std::endl;
+        std::cout << "[WebSocket HAL] Sent binary message (" << len << " bytes)" << std::endl;
         return true;
     } catch (const std::exception& e) {
         std::cout << "[WebSocket HAL] Error sending message: " << e.what() << std::endl;

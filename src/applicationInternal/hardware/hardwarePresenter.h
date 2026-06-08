@@ -160,20 +160,19 @@ std::string getMACaddress();
 #if (ENABLE_HUB_COMMUNICATION == 1)
 void init_espnow();
 void espnow_loop();
-bool publishEspNowMessageProto(const uint8_t* data, size_t len);
+bool publishEspNowMessage(const uint8_t* data, size_t len);
 void espnow_shutdown();
-void set_espnow_message_callback_proto(void (*callback)(const uint8_t* data, size_t len));
+void set_espnow_message_callback(void (*callback)(const uint8_t* data, size_t len));
 #endif
 
 // --- WebSocket --------------------------------------------------------------
 #if (ENABLE_HUB_COMMUNICATION == 3)
-// WebSocket hardware presenter functions
 void init_websocket(const char* hub_url);
 void websocket_loop();
-bool publishWebSocketMessageProto(const uint8_t* data, size_t len);
+bool publishWebSocketMessage(const uint8_t* data, size_t len);
 void websocket_shutdown();
 bool websocket_is_connected();
-void set_websocket_message_callback_proto(void (*callback)(const uint8_t* data, size_t len));
+void set_websocket_message_callback(void (*callback)(const uint8_t* data, size_t len));
 const char* get_websocketHubURL();
 unsigned long get_websocketReconnectIntervalMs();
 #endif

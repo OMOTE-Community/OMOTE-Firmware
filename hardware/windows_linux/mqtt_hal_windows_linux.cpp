@@ -1,7 +1,7 @@
 #include <string>
 #include "mqtt_hal_windows_linux.h"
 #include "secrets.h"
-#include "applicationInternal/hub/hubTopics.h"
+#include "shared/hubTopics.h"
 
 #if (ENABLE_WIFI_AND_MQTT == 1)
 #include <stdarg.h>

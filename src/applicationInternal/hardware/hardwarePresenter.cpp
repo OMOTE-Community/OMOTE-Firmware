@@ -339,16 +339,16 @@ void espnow_loop() {
   espnow_loop_HAL();
 }
 
-bool publishEspNowMessageProto(const uint8_t* data, size_t len) {
-  return publishEspNowMessageProto_HAL(data, len);
+bool publishEspNowMessage(const uint8_t* data, size_t len) {
+  return publishEspNowMessage_HAL(data, len);
 }
 
 void espnow_shutdown() {
   espnow_shutdown_HAL();
 }
 
-void set_espnow_message_callback_proto(void (*callback)(const uint8_t* data, size_t len)) {
-  set_announceEspNowMessageProto_cb_HAL(callback);
+void set_espnow_message_callback(void (*callback)(const uint8_t* data, size_t len)) {
+  set_announceEspNowMessage_cb_HAL(callback);
 }
 #endif
 
@@ -362,8 +362,8 @@ void websocket_loop() {
   websocket_loop_HAL();
 }
 
-bool publishWebSocketMessageProto(const uint8_t* data, size_t len) {
-  return publishWebSocketMessageProto_HAL(data, len);
+bool publishWebSocketMessage(const uint8_t* data, size_t len) {
+  return publishWebSocketMessage_HAL(data, len);
 }
 
 void websocket_shutdown() {
@@ -374,8 +374,8 @@ bool websocket_is_connected() {
   return websocket_is_connected_HAL();
 }
 
-void set_websocket_message_callback_proto(void (*callback)(const uint8_t* data, size_t len)) {
-  set_announceWebSocketMessageProto_cb_HAL(callback);
+void set_websocket_message_callback(void (*callback)(const uint8_t* data, size_t len)) {
+  set_announceWebSocketMessage_cb_HAL(callback);
 }
 
 const char* get_websocketHubURL() {

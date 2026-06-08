@@ -18,7 +18,7 @@ uint8_t hub_mac[6] = ESPNOW_HUB_MAC;
 esp_now_peer_info_t hub_peer;
 
 // Callbacks for ESP-NOW received data
-tAnnounceEspNowMessageProto_cb thisAnnounceEspNowMessageProto_cb = NULL;
+tAnnounceEspNowMessage_cb thisAnnounceEspNowMessage_cb = NULL;
 
 void onDataReceived(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   // Convert MAC to string for logging
@@ -26,13 +26,13 @@ void onDataReceived(const uint8_t *mac_addr, const uint8_t *data, int data_len) 
   snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
   
-  if (thisAnnounceEspNowMessageProto_cb != NULL) {
-    thisAnnounceEspNowMessageProto_cb(data, data_len);
+  if (thisAnnounceEspNowMessage_cb != NULL) {
+    thisAnnounceEspNowMessage_cb(data, data_len);
   }
 }
 
-void set_announceEspNowMessageProto_cb_HAL(tAnnounceEspNowMessageProto_cb pAnnounceEspNowMessageProto_cb) {
-  thisAnnounceEspNowMessageProto_cb = pAnnounceEspNowMessageProto_cb;
+void set_announceEspNowMessage_cb_HAL(tAnnounceEspNowMessage_cb pAnnounceEspNowMessage_cb) {
+  thisAnnounceEspNowMessage_cb = pAnnounceEspNowMessage_cb;
 }
 
 void init_espnow_HAL(void) {
@@ -70,29 +70,29 @@ void espnow_loop_HAL() {
   // ESP-NOW callbacks are handled by the ESP32 in the background
 }
 
-bool publishEspNowMessageProto_HAL(const uint8_t* data, size_t len) {
+bool publishEspNowMessage_HAL(const uint8_t* data, size_t len) {
   if (len > 250) {
-    Serial.println("Error: Protobuf message exceeds ESP-NOW maximum size");
+    Serial.println("Error: ESP-NOW message exceeds maximum size");
     return false;
   }
   
-  // Send the protobuf message directly
+  // Send the binary message directly.
   esp_err_t result = esp_now_send(hub_peer.peer_addr, data, len);
   
   if (result == ESP_OK) {
     return true;
   }
   
-  Serial.println("ESP-NOW failed to send protobuf message");
+  Serial.println("ESP-NOW failed to send message");
   return false;
 }
 
 void espnow_shutdown_HAL() {
   // Unregister peer
   esp_now_del_peer(hub_peer.peer_addr);
-  
+
   // Deinitialize ESP-NOW
   esp_now_deinit();
-  
+
   Serial.println("ESP-NOW shutdown complete");
-} 
+}

@@ -1,6 +1,6 @@
 #include <unity.h>
 
-#include "applicationInternal/hub/hubTopics.h"
+#include "shared/hubTopics.h"
 
 void setUp() {}
 void tearDown() {}
