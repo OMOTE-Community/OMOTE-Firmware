@@ -57,20 +57,22 @@ std::unique_ptr<HubTransportBase> HubManager::createTransport(HubTransport trans
 
 bool HubManager::init(HubTransport transport) {
   currentTransport = transport;
+  return init(createTransport(transport));
+}
 
-  auto newTransport = createTransport(transport);
-  if (!newTransport) {
+bool HubManager::init(std::unique_ptr<HubTransportBase> transport) {
+  if (!transport) {
     return false;
   }
 
-  if (!newTransport->init()) {
+  if (!transport->init()) {
     omote_log_e("Failed to initialize hub transport\n");
     return false;
   }
 
-  activeTransport = std::move(newTransport);
+  activeTransport = std::move(transport);
   clearQueue();
-  linkPhase = LinkPhase::WAKE_WINDOW;
+  outboundQueue.startWakeWindow();
   return true;
 }
 
@@ -182,30 +184,23 @@ void HubManager::syncState() {
 
 bool HubManager::enqueueEvent(const omote_RemoteEvent& event) {
   const unsigned long ttl = currentQueueTtlMs();
-  const bool queueFull = queueCount == QUEUE_MAX;
+  const HubOutboundQueue::EnqueueResult result = outboundQueue.enqueue(event, millis(), ttl);
 
-  if (queueFull && linkPhase == LinkPhase::WAKE_WINDOW) {
+  if (result == HubOutboundQueue::EnqueueResult::DROPPED_NEWEST) {
     omote_log_w("Outbound queue full in wake window, dropping newest event\n");
     return false;
   }
 
-  if (queueFull) {
+  if (result == HubOutboundQueue::EnqueueResult::DROPPED_OLDEST_THEN_QUEUED) {
     omote_log_w("Outbound queue full, dropping oldest event\n");
-    popQueueHead();
   }
-
-  eventQueue[queueTail].event = event;
-  eventQueue[queueTail].enqueuedTime = millis();
-  eventQueue[queueTail].ttlMs = ttl;
-  queueTail = (queueTail + 1) % QUEUE_MAX;
-  queueCount++;
 
   omote_log_i("Queued event, ttl=%lu\n", ttl);
   return true;
 }
 
 bool HubManager::hasPendingOutboundEvents() const {
-  return queueCount > 0;
+  return outboundQueue.hasPendingEvents();
 }
 
 bool HubManager::shouldQueueRemoteEvent() const {
@@ -220,31 +215,31 @@ bool HubManager::sendImmediatelyOrQueueForRetry(const omote_RemoteEvent& event) 
 }
 
 unsigned long HubManager::currentQueueTtlMs() const {
-  if (linkPhase == LinkPhase::WAKE_WINDOW) {
+  if (outboundQueue.isWakeWindow()) {
     return activeTransport->wakeQueueTtlMs();
   }
   return RUNTIME_TTL_MS;
 }
 
 void HubManager::flushQueue() {
-  finishWakeWindow();
+  outboundQueue.finishWakeWindow();
 
   uint8_t flushed = 0;
-  while (queueCount > 0) {
-    QueuedEvent& head = eventQueue[queueHead];
+  while (outboundQueue.hasPendingEvents()) {
+    const HubOutboundQueue::QueuedEvent* head = outboundQueue.peek();
 
-    if (isQueuedEventExpired(head)) {
+    if (outboundQueue.isExpired(*head, millis())) {
       omote_log_w("Dropped expired queued event\n");
-      popQueueHead();
+      outboundQueue.pop();
       continue;
     }
 
-    if (!activeTransport->sendRemoteEvent(head.event)) {
+    if (!activeTransport->sendRemoteEvent(head->event)) {
       omote_log_w("Queued event send failed, will retry next tick\n");
       break;
     }
 
-    popQueueHead();
+    outboundQueue.pop();
     flushed++;
   }
 
@@ -253,25 +248,8 @@ void HubManager::flushQueue() {
   }
 }
 
-void HubManager::finishWakeWindow() {
-  if (linkPhase == LinkPhase::WAKE_WINDOW) {
-    linkPhase = LinkPhase::STEADY;
-  }
-}
-
-bool HubManager::isQueuedEventExpired(const QueuedEvent& event) const {
-  return (millis() - event.enqueuedTime) >= event.ttlMs;
-}
-
-void HubManager::popQueueHead() {
-  queueHead = (queueHead + 1) % QUEUE_MAX;
-  queueCount--;
-}
-
 void HubManager::clearQueue() {
-  queueHead = 0;
-  queueTail = 0;
-  queueCount = 0;
+  outboundQueue.clearEvents();
 }
 
 void HubManager::setMessageHandler(std::function<void(const omote_CommandResult&)> handler) {

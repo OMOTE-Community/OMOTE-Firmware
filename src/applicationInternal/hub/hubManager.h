@@ -1,10 +1,10 @@
 #pragma once
 
 #include "hubTransportBase.h"
+#include "hubOutboundQueue.h"
 #include "remote_messages.pb.h"
 #include <memory>
 #include <functional>
-#include <cstdint>
 
 class HubManager {
 private:
@@ -14,21 +14,8 @@ private:
   bool stateSyncRequested = false;
   unsigned long stateSyncStartTime = 0;
   static const unsigned long STATE_SYNC_DELAY = 100; // ms
-
-  struct QueuedEvent {
-    omote_RemoteEvent event;
-    unsigned long enqueuedTime;
-    unsigned long ttlMs;
-  };
-
-  enum class LinkPhase { WAKE_WINDOW, STEADY };
-  static const uint8_t QUEUE_MAX = 12;
-  static const unsigned long RUNTIME_TTL_MS = HubTransportBase::DEFAULT_WAKE_QUEUE_TTL_MS;
-  QueuedEvent eventQueue[QUEUE_MAX];
-  uint8_t queueHead = 0;
-  uint8_t queueTail = 0;
-  uint8_t queueCount = 0;
-  LinkPhase linkPhase = LinkPhase::WAKE_WINDOW;
+  static const unsigned long RUNTIME_TTL_MS = 1500;
+  HubOutboundQueue outboundQueue;
 
   std::function<void(const omote_CommandResult&)> messageHandler;
 
@@ -46,9 +33,6 @@ private:
   unsigned long currentQueueTtlMs() const;
   bool enqueueEvent(const omote_RemoteEvent& event);
   void flushQueue();
-  void finishWakeWindow();
-  bool isQueuedEventExpired(const QueuedEvent& event) const;
-  void popQueueHead();
   void clearQueue();
 
 public:
@@ -60,6 +44,7 @@ public:
   ~HubManager() = default;
   
   bool init(HubTransport transport);
+  bool init(std::unique_ptr<HubTransportBase> transport);
   
   void process();
   
