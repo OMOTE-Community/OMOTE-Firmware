@@ -21,9 +21,7 @@ HubManager& HubManager::getInstance() {
   return instance;
 }
 
-HubManager::HubManager() : currentTransport(HubTransport::ESPNOW) {
-  // Initialize with default transport type only
-}
+HubManager::HubManager() : currentTransport(HubTransport::ESPNOW) {}
 
 std::unique_ptr<HubTransportBase> HubManager::createTransport(HubTransport transport) {
   switch (transport) {
@@ -59,18 +57,22 @@ std::unique_ptr<HubTransportBase> HubManager::createTransport(HubTransport trans
 
 bool HubManager::init(HubTransport transport) {
   currentTransport = transport;
+  return init(createTransport(transport));
+}
 
-  auto newTransport = createTransport(transport);
-  if (!newTransport) {
+bool HubManager::init(std::unique_ptr<HubTransportBase> transport) {
+  if (!transport) {
     return false;
   }
 
-  if (!newTransport->init()) {
+  if (!transport->init()) {
     omote_log_e("Failed to initialize hub transport\n");
     return false;
   }
 
-  activeTransport = std::move(newTransport);
+  activeTransport = std::move(transport);
+  clearQueue();
+  outboundQueue.startWakeWindow();
   return true;
 }
 
@@ -80,11 +82,19 @@ void HubManager::process() {
   }
   
   activeTransport->process();
-  
+
+  if (isReady()) {
+    flushQueue();
+  }
+
+  if (hasPendingOutboundEvents()) {
+    return;
+  }
+
   if (!isStateSyncRequested()) {
     return;
   }
-  
+
   syncState();
 }
 
@@ -93,13 +103,12 @@ bool HubManager::sendRemoteEvent(const omote_RemoteEvent& event) {
     omote_log_w("Cannot send message: no hub transport initialized\n");
     return false;
   }
-  
-  if (!activeTransport->isReady()) {
-    omote_log_w("Cannot send message: hub transport not ready\n");
-    return false;
+
+  if (shouldQueueRemoteEvent()) {
+    return enqueueEvent(event);
   }
-  
-  return activeTransport->sendRemoteEvent(event);
+
+  return sendImmediatelyOrQueueForRetry(event);
 }
 
 bool HubManager::isInitialized() const {
@@ -115,6 +124,7 @@ void HubManager::shutdown() {
     activeTransport->shutdown();
     activeTransport.reset();
   }
+  clearQueue();
 }
 
 HubTransport HubManager::getCurrentTransport() const {
@@ -170,6 +180,76 @@ void HubManager::syncState() {
   
   stateSyncRequested = false;
   omote_log_i("State sync request sent successfully\n");
+}
+
+bool HubManager::enqueueEvent(const omote_RemoteEvent& event) {
+  const unsigned long ttl = currentQueueTtlMs();
+  const HubOutboundQueue::EnqueueResult result = outboundQueue.enqueue(event, millis(), ttl);
+
+  if (result == HubOutboundQueue::EnqueueResult::DROPPED_NEWEST) {
+    omote_log_w("Outbound queue full in wake window, dropping newest event\n");
+    return false;
+  }
+
+  if (result == HubOutboundQueue::EnqueueResult::DROPPED_OLDEST_THEN_QUEUED) {
+    omote_log_w("Outbound queue full, dropping oldest event\n");
+  }
+
+  omote_log_i("Queued event, ttl=%lu\n", ttl);
+  return true;
+}
+
+bool HubManager::hasPendingOutboundEvents() const {
+  return outboundQueue.hasPendingEvents();
+}
+
+bool HubManager::shouldQueueRemoteEvent() const {
+  return !activeTransport->isReady() || hasPendingOutboundEvents();
+}
+
+bool HubManager::sendImmediatelyOrQueueForRetry(const omote_RemoteEvent& event) {
+  if (activeTransport->sendRemoteEvent(event)) {
+    return true;
+  }
+  return enqueueEvent(event);
+}
+
+unsigned long HubManager::currentQueueTtlMs() const {
+  if (outboundQueue.isWakeWindow()) {
+    return activeTransport->wakeQueueTtlMs();
+  }
+  return RUNTIME_TTL_MS;
+}
+
+void HubManager::flushQueue() {
+  outboundQueue.finishWakeWindow();
+
+  uint8_t flushed = 0;
+  while (outboundQueue.hasPendingEvents()) {
+    const HubOutboundQueue::QueuedEvent* head = outboundQueue.peek();
+
+    if (outboundQueue.isExpired(*head, millis())) {
+      omote_log_w("Dropped expired queued event\n");
+      outboundQueue.pop();
+      continue;
+    }
+
+    if (!activeTransport->sendRemoteEvent(head->event)) {
+      omote_log_w("Queued event send failed, will retry next tick\n");
+      break;
+    }
+
+    outboundQueue.pop();
+    flushed++;
+  }
+
+  if (flushed > 0) {
+    omote_log_i("Flushed %u queued events\n", (unsigned)flushed);
+  }
+}
+
+void HubManager::clearQueue() {
+  outboundQueue.clearEvents();
 }
 
 void HubManager::setMessageHandler(std::function<void(const omote_CommandResult&)> handler) {

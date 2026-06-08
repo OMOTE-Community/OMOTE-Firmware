@@ -149,3 +149,7 @@ bool websocket_is_connected_HAL() {
 const char* get_websocket_hub_url_HAL() {
     return hubUrl.c_str();
 }
+
+unsigned long get_websocket_reconnect_interval_ms_HAL() {
+    return RECONNECT_DELAY_MS;
+}

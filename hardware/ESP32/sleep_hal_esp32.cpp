@@ -38,6 +38,12 @@ uint32_t lastActivityTimestamp;
 LIS3DH IMU(I2C_MODE, 0x19);
 Wakeup_reasons wakeup_reason;
 
+#if(OMOTE_HARDWARE_REV >= 5)
+static void discardPreSleepKeypadEvents() {
+  keypad_flush_HAL();
+}
+#endif
+
 void setLastActivityTimestamp_HAL() {
   // There was motion, touchpad or key hit.
   // Set the time where this happens.
@@ -216,6 +222,11 @@ void enterSleep(){
   #endif
 
   delay(100);
+
+  #if(OMOTE_HARDWARE_REV >= 5)
+  discardPreSleepKeypadEvents();
+  #endif
+
   // Sleep
   esp_deep_sleep_start();
 }
