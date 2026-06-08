@@ -10,6 +10,29 @@
 
 namespace Hub {
 
+namespace {
+
+const char* pairingStepToString(omote_PairingStep step) {
+    switch (step) {
+        case omote_PairingStep_PAIRING_STEP_IDLE:
+            return "idle";
+        case omote_PairingStep_PAIRING_STEP_AWAITING_PIN:
+            return "awaiting_pin";
+        case omote_PairingStep_PAIRING_STEP_SUCCESS:
+            return "success";
+        case omote_PairingStep_PAIRING_STEP_FAILED:
+            return "failed";
+        case omote_PairingStep_PAIRING_STEP_CANCELLED:
+            return "cancelled";
+        case omote_PairingStep_PAIRING_STEP_UNSPECIFIED:
+            return "unspecified";
+    }
+
+    return "unknown";
+}
+
+}
+
 PairingManager& PairingManager::getInstance() {
     static PairingManager instance;
     return instance;
@@ -17,45 +40,55 @@ PairingManager& PairingManager::getInstance() {
 
 void PairingManager::handlePairingStatus(const omote_PairingStatus& status) {
     deviceId = std::string(status.device_id);
-    step = std::string(status.step);
+    step = status.step;
     message = std::string(status.message);
     requiresPin_ = status.requires_pin;
     expectedPinLength = status.expected_pin_length;
     contextToken = std::string(status.context_token);
     
     omote_log_i("Pairing status: device=%s, step=%s, message=%s, requires_pin=%d\r\n",
-               deviceId.c_str(), step.c_str(), message.c_str(), requiresPin_);
+               deviceId.c_str(), pairingStepToString(step), message.c_str(), requiresPin_);
     
-    if (step == "awaiting_pin") {
-        active = true;
-        // Show notification and switch to pairing GUI
-        GuiNotification::showMessageNotification(message.c_str());
-        
-        // Switch to the pairing GUI tab
-        gui_memoryOptimizer_setActiveGUIname(std::string(tabName_pairing));
-        gui_pairing_update_status(message.c_str());
-        gui_pairing_clear_pin();
-        
-    } else if (step == "success") {
-        active = false;
-        GuiNotification::showMessageNotification("Pairing successful!");
-        gui_pairing_clear_pin();
-        
-    } else if (step == "failed" || step == "cancelled") {
-        active = false;
-        if (step == "failed") {
+    switch (step) {
+        case omote_PairingStep_PAIRING_STEP_AWAITING_PIN:
+            active = true;
+            GuiNotification::showMessageNotification(message.c_str());
+            gui_memoryOptimizer_setActiveGUIname(std::string(tabName_pairing));
+            gui_pairing_update_status(message.c_str());
+            gui_pairing_clear_pin();
+            return;
+
+        case omote_PairingStep_PAIRING_STEP_SUCCESS:
+            active = false;
+            GuiNotification::showMessageNotification("Pairing successful!");
+            gui_pairing_clear_pin();
+            return;
+
+        case omote_PairingStep_PAIRING_STEP_FAILED:
+            active = false;
             GuiNotification::showErrorNotification(message.c_str());
-        } else {
+            gui_pairing_clear_pin();
+            return;
+
+        case omote_PairingStep_PAIRING_STEP_CANCELLED:
+            active = false;
             GuiNotification::showMessageNotification("Pairing cancelled");
-        }
-        gui_pairing_clear_pin();
+            gui_pairing_clear_pin();
+            return;
+
+        case omote_PairingStep_PAIRING_STEP_IDLE:
+        case omote_PairingStep_PAIRING_STEP_UNSPECIFIED:
+            active = false;
+            return;
     }
+
+    active = false;
 }
 
 void PairingManager::reset() {
     active = false;
     deviceId.clear();
-    step.clear();
+    step = omote_PairingStep_PAIRING_STEP_UNSPECIFIED;
     message.clear();
     requiresPin_ = false;
     expectedPinLength = 0;

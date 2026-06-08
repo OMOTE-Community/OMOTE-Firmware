@@ -419,8 +419,8 @@ void handleHubCommandResult(const omote_CommandResult& result) {
     case omote_ResponseKind_PAIRING: {
       if (result.which_data == omote_CommandResult_pairing_tag) {
         const auto& pairing = result.data.pairing;
-        omote_log_d("Pairing status: device=%s, step=%s, message=%s\r\n",
-                   pairing.device_id, pairing.step, pairing.message);
+        omote_log_d("Pairing status: device=%s, step=%d, message=%s\r\n",
+                   pairing.device_id, static_cast<int>(pairing.step), pairing.message);
         
         Hub::PairingManager::getInstance().handlePairingStatus(pairing);
       }

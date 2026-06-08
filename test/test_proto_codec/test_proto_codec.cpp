@@ -54,6 +54,33 @@ void test_valid_command_result_round_trips() {
   TEST_ASSERT_TRUE(decoded.data.volume.is_muted);
 }
 
+void test_pairing_command_result_round_trips_enum_step() {
+  omote_CommandResult source = omote_CommandResult_init_zero;
+  source.kind = omote_ResponseKind_PAIRING;
+  source.which_data = omote_CommandResult_pairing_tag;
+  strncpy(source.data.pairing.device_id, "AppleTV", sizeof(source.data.pairing.device_id) - 1);
+  source.data.pairing.step = omote_PairingStep_PAIRING_STEP_AWAITING_PIN;
+  strncpy(source.data.pairing.message, "Enter PIN", sizeof(source.data.pairing.message) - 1);
+  source.data.pairing.requires_pin = true;
+  source.data.pairing.expected_pin_length = 4;
+  strncpy(source.data.pairing.context_token, "ctx", sizeof(source.data.pairing.context_token) - 1);
+
+  uint8_t buffer[omote_CommandResult_size];
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+  TEST_ASSERT_TRUE(pb_encode(&stream, omote_CommandResult_fields, &source));
+
+  omote_CommandResult decoded = ProtoCodec::decodeCommandResult(buffer, stream.bytes_written);
+
+  TEST_ASSERT_EQUAL(omote_ResponseKind_PAIRING, decoded.kind);
+  TEST_ASSERT_EQUAL(omote_CommandResult_pairing_tag, decoded.which_data);
+  TEST_ASSERT_EQUAL_STRING("AppleTV", decoded.data.pairing.device_id);
+  TEST_ASSERT_EQUAL(omote_PairingStep_PAIRING_STEP_AWAITING_PIN, decoded.data.pairing.step);
+  TEST_ASSERT_EQUAL_STRING("Enter PIN", decoded.data.pairing.message);
+  TEST_ASSERT_TRUE(decoded.data.pairing.requires_pin);
+  TEST_ASSERT_EQUAL_UINT32(4, decoded.data.pairing.expected_pin_length);
+  TEST_ASSERT_EQUAL_STRING("ctx", decoded.data.pairing.context_token);
+}
+
 void test_garbage_bytes_decode_to_error() {
   const uint8_t garbage[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   omote_CommandResult decoded = ProtoCodec::decodeCommandResult(garbage, sizeof(garbage));
@@ -68,6 +95,7 @@ int main() {
   RUN_TEST(test_existing_mappings_still_hold);
   RUN_TEST(test_unknown_command_is_unspecified);
   RUN_TEST(test_valid_command_result_round_trips);
+  RUN_TEST(test_pairing_command_result_round_trips_enum_step);
   RUN_TEST(test_garbage_bytes_decode_to_error);
   return UNITY_END();
 }
