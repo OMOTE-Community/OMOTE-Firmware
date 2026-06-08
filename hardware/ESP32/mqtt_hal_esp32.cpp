@@ -240,17 +240,17 @@ bool publishMQTTMessageProto_HAL(const char *topic, const uint8_t* payload, size
     return false;
   }
 
-  if (checkMQTTconnection()) {
-    if (mqttClient.publish(topic, payload, length)) {
-      return true;
-    }
-    else {
-      Serial.printf("MQTT: Protobuf publish failed\r\n");
-    }
-  } else {
+  if (!checkMQTTconnection()) {
     Serial.printf("  Cannot publish mqtt proto message, MQTT not connected\r\n");
+    return false;
   }
-  return false;
+
+  if (!mqttClient.publish(topic, payload, length)) {
+    Serial.printf("MQTT: Protobuf publish failed\r\n");
+    return false;
+  }
+
+  return true;
 }
 
 void wifi_shutdown_HAL() {

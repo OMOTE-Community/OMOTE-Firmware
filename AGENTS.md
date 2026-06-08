@@ -9,6 +9,18 @@
 - If a comment wants to become a paragraph, first try to extract or rename code so the comment becomes unnecessary. Keep the paragraph only when the historical context is essential.
 - When touching existing code, remove stale, redundant, or "what" comments in the edited area instead of preserving comment noise.
 
+### Architecture Boundaries
+
+- Treat `hardware/ESP32` and `hardware/windows_linux` as HAL/platform code. HAL files must not include `applicationInternal/...` headers or depend on application-layer internals.
+- Put cross-layer constants or tiny pure helpers needed by HAL code in `src/shared`, or introduce an explicit lower-level interface. Do not pull application headers downward to share one value.
+- Keep protobuf encode/decode and hub command semantics in the hub/application layer. ESP-NOW and WebSocket HAL APIs should describe generic byte/message transport unless the HAL behavior is truly protocol-specific.
+- Keep MQTT, ESP-NOW, and WebSocket as valid first-class hub transports. Avoid fixes that only preserve one transport path unless the branch explicitly narrows scope.
+
+### Control Flow
+
+- Prefer guard clauses and early returns over nested conditionals. Keep the happy path flat and visible.
+- When an error branch logs and exits, return immediately from that branch instead of wrapping the remaining work in an `else`.
+
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
