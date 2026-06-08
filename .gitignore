@@ -7,3 +7,4 @@
 .vscode/ipch
 src/secrets_override.h
 **/.DS_Store
+.gitnexus
