@@ -38,6 +38,12 @@ uint32_t lastActivityTimestamp;
 LIS3DH IMU(I2C_MODE, 0x19);
 Wakeup_reasons wakeup_reason;
 
+#if(OMOTE_HARDWARE_REV >= 5)
+static void discardPreSleepKeypadEvents() {
+  keypad_flush_HAL();
+}
+#endif
+
 void setLastActivityTimestamp_HAL() {
   // There was motion, touchpad or key hit.
   // Set the time where this happens.
@@ -218,10 +224,7 @@ void enterSleep(){
   delay(100);
 
   #if(OMOTE_HARDWARE_REV >= 5)
-  // Flush as late as possible so a stray event landing during sleep entry has
-  // the smallest window to go stale. The wake press itself lands after this,
-  // once the chip is asleep, and is preserved into the next boot.
-  keypad_flush_HAL();
+  discardPreSleepKeypadEvents();
   #endif
 
   // Sleep

@@ -21,9 +21,7 @@ HubManager& HubManager::getInstance() {
   return instance;
 }
 
-HubManager::HubManager() : currentTransport(HubTransport::ESPNOW) {
-  // Initialize with default transport type only
-}
+HubManager::HubManager() : currentTransport(HubTransport::ESPNOW) {}
 
 std::unique_ptr<HubTransportBase> HubManager::createTransport(HubTransport transport) {
   switch (transport) {
@@ -87,11 +85,7 @@ void HubManager::process() {
     flushQueue();
   }
 
-  // Don't start a state sync while a backlog is still draining: it must not
-  // jump ahead of queued presses, and piling onto a stalled transport is
-  // pointless. stateSyncRequested stays set, so sync fires once the queue
-  // clears. Expired entries are dropped during flush, so this cannot starve.
-  if (queueCount > 0) {
+  if (hasPendingOutboundEvents()) {
     return;
   }
 
@@ -108,20 +102,11 @@ bool HubManager::sendRemoteEvent(const omote_RemoteEvent& event) {
     return false;
   }
 
-  // Preserve FIFO order: if events are already queued (transport not ready, or
-  // a prior flush stalled on a failed send), queue behind them rather than
-  // sending ahead. The queue drains in order on the next ready tick.
-  if (!activeTransport->isReady() || queueCount > 0) {
+  if (shouldQueueRemoteEvent()) {
     return enqueueEvent(event);
   }
 
-  // Ready with an empty queue: take the fast path, but if the transport rejects
-  // the send (e.g. the MQTT broker is mid-reconnect while isReady() only tracks
-  // WiFi), fall back to the queue so the event retries instead of being lost.
-  if (activeTransport->sendRemoteEvent(event)) {
-    return true;
-  }
-  return enqueueEvent(event);
+  return sendImmediatelyOrQueueForRetry(event);
 }
 
 bool HubManager::isInitialized() const {
@@ -200,11 +185,9 @@ bool HubManager::enqueueEvent(const omote_RemoteEvent& event) {
 
   if (queueCount == QUEUE_MAX) {
     if (linkPhase == LinkPhase::WAKE_WINDOW) {
-      // Preserve the oldest entry (the wake press) by refusing the newest.
       omote_log_w("Outbound queue full in wake window, dropping newest event\n");
       return false;
     }
-    // Favor recent intent: make room by dropping the oldest.
     omote_log_w("Outbound queue full, dropping oldest event\n");
     popQueueHead();
   }
@@ -219,26 +202,35 @@ bool HubManager::enqueueEvent(const omote_RemoteEvent& event) {
   return true;
 }
 
-void HubManager::flushQueue() {
-  // The link is ready, so the wake window is over. Advance once even on an
-  // empty queue, so a later runtime reconnect flap uses the short runtime TTL.
-  if (linkPhase == LinkPhase::WAKE_WINDOW) {
-    linkPhase = LinkPhase::STEADY;
+bool HubManager::hasPendingOutboundEvents() const {
+  return queueCount > 0;
+}
+
+bool HubManager::shouldQueueRemoteEvent() const {
+  return !activeTransport->isReady() || hasPendingOutboundEvents();
+}
+
+bool HubManager::sendImmediatelyOrQueueForRetry(const omote_RemoteEvent& event) {
+  if (activeTransport->sendRemoteEvent(event)) {
+    return true;
   }
+  return enqueueEvent(event);
+}
+
+void HubManager::flushQueue() {
+  finishWakeWindow();
 
   uint8_t flushed = 0;
   while (queueCount > 0) {
     QueuedEvent& head = eventQueue[queueHead];
 
-    // Unsigned subtraction is rollover-safe across millis() wraparound.
-    if ((millis() - head.enqueuedTime) >= head.ttlMs) {
+    if (isQueuedEventExpired(head)) {
       omote_log_w("Dropped expired queued event\n");
       popQueueHead();
       continue;
     }
 
     if (!activeTransport->sendRemoteEvent(head.event)) {
-      // Flaky send: leave the event at the head and retry on the next tick.
       omote_log_w("Queued event send failed, will retry next tick\n");
       break;
     }
@@ -250,6 +242,16 @@ void HubManager::flushQueue() {
   if (flushed > 0) {
     omote_log_i("Flushed %u queued events\n", (unsigned)flushed);
   }
+}
+
+void HubManager::finishWakeWindow() {
+  if (linkPhase == LinkPhase::WAKE_WINDOW) {
+    linkPhase = LinkPhase::STEADY;
+  }
+}
+
+bool HubManager::isQueuedEventExpired(const QueuedEvent& event) const {
+  return (millis() - event.enqueuedTime) >= event.ttlMs;
 }
 
 void HubManager::popQueueHead() {
