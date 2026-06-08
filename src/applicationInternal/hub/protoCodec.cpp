@@ -6,51 +6,63 @@
 namespace Hub {
 
 omote_OmoteCommand ProtoCodec::stringToCommand(const std::string& cmd) {
-    if (cmd == "POWER_ON") return omote_OmoteCommand_POWER_ON;
-    if (cmd == "POWER_OFF") return omote_OmoteCommand_POWER_OFF;
-    if (cmd == "DOWN") return omote_OmoteCommand_DOWN;
-    if (cmd == "UP") return omote_OmoteCommand_UP;
-    if (cmd == "RIGHT") return omote_OmoteCommand_RIGHT;
-    if (cmd == "LEFT") return omote_OmoteCommand_LEFT;
-    if (cmd == "SELECT") return omote_OmoteCommand_SELECT;
-    if (cmd == "HOME") return omote_OmoteCommand_HOME;
-    if (cmd == "MENU") return omote_OmoteCommand_MENU;
-    if (cmd == "PLAY_PAUSE") return omote_OmoteCommand_PLAY_PAUSE;
-    if (cmd == "VOL_PLUS") return omote_OmoteCommand_VOL_PLUS;
-    if (cmd == "VOL_MINUS") return omote_OmoteCommand_VOL_MINUS;
-    if (cmd == "VOL_MUTE") return omote_OmoteCommand_VOL_MUTE;
-    if (cmd == "SKIP_BACKWARD") return omote_OmoteCommand_SKIP_BACKWARD;
-    if (cmd == "SKIP_FORWARD") return omote_OmoteCommand_SKIP_FORWARD;
-    if (cmd == "PAIRING_START") return omote_OmoteCommand_PAIRING_START;
-    if (cmd == "PAIRING_SUBMIT_PIN") return omote_OmoteCommand_PAIRING_SUBMIT_PIN;
-    if (cmd == "PAIRING_CANCEL") return omote_OmoteCommand_PAIRING_CANCEL;
-    if (cmd == "SYNC_STATE") return omote_OmoteCommand_SYNC_STATE;
-    if (cmd == "STOP") return omote_OmoteCommand_STOP;
-    if (cmd == "REWIND") return omote_OmoteCommand_REWIND;
-    if (cmd == "FORWARD") return omote_OmoteCommand_FORWARD;
-    if (cmd == "CONF") return omote_OmoteCommand_CONF;
-    if (cmd == "INFO") return omote_OmoteCommand_INFO;
-    if (cmd == "OK") return omote_OmoteCommand_OK;
-    if (cmd == "BACK") return omote_OmoteCommand_BACK;
-    if (cmd == "SRC") return omote_OmoteCommand_SRC;
-    if (cmd == "CHANNEL_UP") return omote_OmoteCommand_CHANNEL_UP;
-    if (cmd == "REC") return omote_OmoteCommand_REC;
-    if (cmd == "CHANNEL_DOWN") return omote_OmoteCommand_CHANNEL_DOWN;
-    if (cmd == "RED") return omote_OmoteCommand_RED;
-    if (cmd == "GREEN") return omote_OmoteCommand_GREEN;
-    if (cmd == "YELLOW") return omote_OmoteCommand_YELLOW;
-    if (cmd == "BLUE") return omote_OmoteCommand_BLUE;
-    if (cmd == "GUI_EVENT") return omote_OmoteCommand_GUI_EVENT;
+    struct CommandMapping {
+        const char* name;
+        omote_OmoteCommand command;
+    };
 
-    // Synonyms for registered hub command strings that have no dedicated proto enum.
-    if (cmd == "SOURCE") return omote_OmoteCommand_SRC;
-    if (cmd == "MUTE_TOGGLE") return omote_OmoteCommand_VOL_MUTE;
-    if (cmd == "RETURN") return omote_OmoteCommand_BACK;
-    if (cmd == "EXIT") return omote_OmoteCommand_BACK;
-    if (cmd == "KEY_A") return omote_OmoteCommand_RED;
-    if (cmd == "KEY_B") return omote_OmoteCommand_GREEN;
-    if (cmd == "KEY_C") return omote_OmoteCommand_YELLOW;
-    if (cmd == "KEY_D") return omote_OmoteCommand_BLUE;
+    static const CommandMapping commandMappings[] = {
+        {"POWER_ON", omote_OmoteCommand_POWER_ON},
+        {"POWER_OFF", omote_OmoteCommand_POWER_OFF},
+        {"DOWN", omote_OmoteCommand_DOWN},
+        {"UP", omote_OmoteCommand_UP},
+        {"RIGHT", omote_OmoteCommand_RIGHT},
+        {"LEFT", omote_OmoteCommand_LEFT},
+        {"SELECT", omote_OmoteCommand_SELECT},
+        {"HOME", omote_OmoteCommand_HOME},
+        {"MENU", omote_OmoteCommand_MENU},
+        {"PLAY_PAUSE", omote_OmoteCommand_PLAY_PAUSE},
+        {"VOL_PLUS", omote_OmoteCommand_VOL_PLUS},
+        {"VOL_MINUS", omote_OmoteCommand_VOL_MINUS},
+        {"VOL_MUTE", omote_OmoteCommand_VOL_MUTE},
+        {"SKIP_BACKWARD", omote_OmoteCommand_SKIP_BACKWARD},
+        {"SKIP_FORWARD", omote_OmoteCommand_SKIP_FORWARD},
+        {"PAIRING_START", omote_OmoteCommand_PAIRING_START},
+        {"PAIRING_SUBMIT_PIN", omote_OmoteCommand_PAIRING_SUBMIT_PIN},
+        {"PAIRING_CANCEL", omote_OmoteCommand_PAIRING_CANCEL},
+        {"SYNC_STATE", omote_OmoteCommand_SYNC_STATE},
+        {"STOP", omote_OmoteCommand_STOP},
+        {"REWIND", omote_OmoteCommand_REWIND},
+        {"FORWARD", omote_OmoteCommand_FORWARD},
+        {"CONF", omote_OmoteCommand_CONF},
+        {"INFO", omote_OmoteCommand_INFO},
+        {"OK", omote_OmoteCommand_OK},
+        {"BACK", omote_OmoteCommand_BACK},
+        {"SRC", omote_OmoteCommand_SRC},
+        {"CHANNEL_UP", omote_OmoteCommand_CHANNEL_UP},
+        {"REC", omote_OmoteCommand_REC},
+        {"CHANNEL_DOWN", omote_OmoteCommand_CHANNEL_DOWN},
+        {"RED", omote_OmoteCommand_RED},
+        {"GREEN", omote_OmoteCommand_GREEN},
+        {"YELLOW", omote_OmoteCommand_YELLOW},
+        {"BLUE", omote_OmoteCommand_BLUE},
+        {"GUI_EVENT", omote_OmoteCommand_GUI_EVENT},
+
+        {"SOURCE", omote_OmoteCommand_SRC},
+        {"MUTE_TOGGLE", omote_OmoteCommand_VOL_MUTE},
+        {"RETURN", omote_OmoteCommand_BACK},
+        {"EXIT", omote_OmoteCommand_BACK},
+        {"KEY_A", omote_OmoteCommand_RED},
+        {"KEY_B", omote_OmoteCommand_GREEN},
+        {"KEY_C", omote_OmoteCommand_YELLOW},
+        {"KEY_D", omote_OmoteCommand_BLUE},
+    };
+
+    for (const auto& mapping : commandMappings) {
+        if (cmd == mapping.name) {
+            return mapping.command;
+        }
+    }
 
     if (!cmd.empty()) omote_log_w("ProtoCodec: unmapped hub command '%s' -> UNSPECIFIED\n", cmd.c_str());
     return omote_OmoteCommand_OMOTE_COMMAND_UNSPECIFIED;
