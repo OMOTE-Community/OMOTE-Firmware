@@ -381,4 +381,8 @@ void set_websocket_message_callback_proto(void (*callback)(const uint8_t* data, 
 const char* get_websocketHubURL() {
   return get_websocket_hub_url_HAL();
 }
+
+unsigned long get_websocketReconnectIntervalMs() {
+  return get_websocket_reconnect_interval_ms_HAL();
+}
 #endif

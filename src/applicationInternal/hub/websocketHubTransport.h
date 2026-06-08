@@ -11,6 +11,7 @@ public:
   void process() override;
   bool sendRemoteEvent(const omote_RemoteEvent& event) override;
   bool isReady() override;
+  unsigned long wakeQueueTtlMs() const override;
   void shutdown() override;
 };
 #endif

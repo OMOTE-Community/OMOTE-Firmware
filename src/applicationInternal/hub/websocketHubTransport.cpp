@@ -9,6 +9,8 @@ void websocketMessageReceived_cb_proto(const uint8_t* data, size_t len);
 
 #if (ENABLE_HUB_COMMUNICATION == 3)
 
+static const unsigned long WEBSOCKET_WAKE_QUEUE_GRACE_MS = 1000;
+
 extern void init_websocket(const char* hub_url);
 extern void websocket_loop();
 extern bool publishWebSocketMessageProto(const uint8_t* data, size_t len);
@@ -56,6 +58,10 @@ bool WebSocketHubTransport::sendRemoteEvent(const omote_RemoteEvent& event) {
 
 bool WebSocketHubTransport::isReady() {
   return websocket_is_connected();
+}
+
+unsigned long WebSocketHubTransport::wakeQueueTtlMs() const {
+  return get_websocketReconnectIntervalMs() + WEBSOCKET_WAKE_QUEUE_GRACE_MS;
 }
 
 void WebSocketHubTransport::shutdown() {

@@ -181,13 +181,15 @@ void HubManager::syncState() {
 }
 
 bool HubManager::enqueueEvent(const omote_RemoteEvent& event) {
-  unsigned long ttl = (linkPhase == LinkPhase::WAKE_WINDOW) ? WAKE_TTL_MS : RUNTIME_TTL_MS;
+  const unsigned long ttl = currentQueueTtlMs();
+  const bool queueFull = queueCount == QUEUE_MAX;
 
-  if (queueCount == QUEUE_MAX) {
-    if (linkPhase == LinkPhase::WAKE_WINDOW) {
-      omote_log_w("Outbound queue full in wake window, dropping newest event\n");
-      return false;
-    }
+  if (queueFull && linkPhase == LinkPhase::WAKE_WINDOW) {
+    omote_log_w("Outbound queue full in wake window, dropping newest event\n");
+    return false;
+  }
+
+  if (queueFull) {
     omote_log_w("Outbound queue full, dropping oldest event\n");
     popQueueHead();
   }
@@ -215,6 +217,13 @@ bool HubManager::sendImmediatelyOrQueueForRetry(const omote_RemoteEvent& event) 
     return true;
   }
   return enqueueEvent(event);
+}
+
+unsigned long HubManager::currentQueueTtlMs() const {
+  if (linkPhase == LinkPhase::WAKE_WINDOW) {
+    return activeTransport->wakeQueueTtlMs();
+  }
+  return RUNTIME_TTL_MS;
 }
 
 void HubManager::flushQueue() {

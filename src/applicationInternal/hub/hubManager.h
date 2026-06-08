@@ -23,9 +23,7 @@ private:
 
   enum class LinkPhase { WAKE_WINDOW, STEADY };
   static const uint8_t QUEUE_MAX = 12;
-  // Must exceed the WebSocket reconnect interval.
-  static const unsigned long WAKE_TTL_MS = 6000;
-  static const unsigned long RUNTIME_TTL_MS = 1500;
+  static const unsigned long RUNTIME_TTL_MS = HubTransportBase::DEFAULT_WAKE_QUEUE_TTL_MS;
   QueuedEvent eventQueue[QUEUE_MAX];
   uint8_t queueHead = 0;
   uint8_t queueTail = 0;
@@ -45,6 +43,7 @@ private:
   bool hasPendingOutboundEvents() const;
   bool shouldQueueRemoteEvent() const;
   bool sendImmediatelyOrQueueForRetry(const omote_RemoteEvent& event);
+  unsigned long currentQueueTtlMs() const;
   bool enqueueEvent(const omote_RemoteEvent& event);
   void flushQueue();
   void finishWakeWindow();

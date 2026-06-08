@@ -7,6 +7,7 @@
 WebSocketsClient webSocket;
 tAnnounceWebSocketMessageProto_cb thisAnnounceWebSocketMessageProto_cb = NULL;
 bool isConnected = false;
+const unsigned long WEBSOCKET_RECONNECT_INTERVAL_MS = 5000;
 
 void onWebSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
   switch(type) {
@@ -78,7 +79,7 @@ void init_websocket_HAL(const char* hub_url) {
   webSocket.begin(host, port, path);
   webSocket.onEvent(onWebSocketEvent);
   
-  webSocket.setReconnectInterval(5000);
+  webSocket.setReconnectInterval(WEBSOCKET_RECONNECT_INTERVAL_MS);
   
   // Enable heartbeat: ping every 5s, expect pong within 1s, disconnect after 2 missed
   webSocket.enableHeartbeat(5000, 1000, 2);
@@ -123,4 +124,8 @@ bool websocket_is_connected_HAL() {
 
 const char* get_websocket_hub_url_HAL() {
   return WEBSOCKET_HUB_URL;
+}
+
+unsigned long get_websocket_reconnect_interval_ms_HAL() {
+  return WEBSOCKET_RECONNECT_INTERVAL_MS;
 }
