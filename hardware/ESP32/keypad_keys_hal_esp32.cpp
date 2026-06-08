@@ -91,7 +91,11 @@ void init_keys_HAL(void) {
   keypad.pinMode(13, INPUT); // USB_3V3
 
   pinMode(TCA_INT_GPIO, INPUT);
-  keypad.flush();
+  // On a keypad/IMU wake the FIFO holds the press that woke us, so preserve it.
+  // Only a cold start has stale FIFO contents worth discarding.
+  if (get_wakeupReason_HAL() == WAKEUP_BY_RESET) {
+    keypad.flush();
+  }
   keypad.writeRegister(TCA8418_REG_CFG, 0b00000001);
   keypad.writeRegister(TCA8418_REG_GPI_EM_1, 0b00111111);
   keypad.writeRegister(TCA8418_REG_GPI_EM_2, 0b00011111); // disable interrupt for COL5 (USB_3V3)
@@ -250,4 +254,8 @@ uint8_t get_keyboardBrightness_HAL() {
 void set_keyboardBrightness_HAL(uint8_t aKeyboardBrightness) {
   keyboardBrightness = aKeyboardBrightness;
 };
+
+void keypad_flush_HAL(void) {
+  keypad.flush();
+}
 #endif

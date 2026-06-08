@@ -216,6 +216,14 @@ void enterSleep(){
   #endif
 
   delay(100);
+
+  #if(OMOTE_HARDWARE_REV >= 5)
+  // Flush as late as possible so a stray event landing during sleep entry has
+  // the smallest window to go stale. The wake press itself lands after this,
+  // once the chip is asleep, and is preserved into the next boot.
+  keypad_flush_HAL();
+  #endif
+
   // Sleep
   esp_deep_sleep_start();
 }

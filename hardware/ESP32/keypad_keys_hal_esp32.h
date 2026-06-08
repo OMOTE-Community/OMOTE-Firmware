@@ -24,4 +24,8 @@ void keys_getKeys_HAL(void* ptr, unsigned long currentMillis);
     void update_keyboardBrightness_HAL(void);
     uint8_t get_keyboardBrightness_HAL();
     void set_keyboardBrightness_HAL(uint8_t aKeyboardBrightness);
+
+    // empties the TCA8418 key FIFO; called from the sleep path so only the
+    // wake press survives into the next boot
+    void keypad_flush_HAL(void);
 #endif
