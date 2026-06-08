@@ -87,6 +87,14 @@ void HubManager::process() {
     flushQueue();
   }
 
+  // Don't start a state sync while a backlog is still draining: it must not
+  // jump ahead of queued presses, and piling onto a stalled transport is
+  // pointless. stateSyncRequested stays set, so sync fires once the queue
+  // clears. Expired entries are dropped during flush, so this cannot starve.
+  if (queueCount > 0) {
+    return;
+  }
+
   if (!isStateSyncRequested()) {
     return;
   }
@@ -100,11 +108,20 @@ bool HubManager::sendRemoteEvent(const omote_RemoteEvent& event) {
     return false;
   }
 
-  if (!activeTransport->isReady()) {
+  // Preserve FIFO order: if events are already queued (transport not ready, or
+  // a prior flush stalled on a failed send), queue behind them rather than
+  // sending ahead. The queue drains in order on the next ready tick.
+  if (!activeTransport->isReady() || queueCount > 0) {
     return enqueueEvent(event);
   }
 
-  return activeTransport->sendRemoteEvent(event);
+  // Ready with an empty queue: take the fast path, but if the transport rejects
+  // the send (e.g. the MQTT broker is mid-reconnect while isReady() only tracks
+  // WiFi), fall back to the queue so the event retries instead of being lost.
+  if (activeTransport->sendRemoteEvent(event)) {
+    return true;
+  }
+  return enqueueEvent(event);
 }
 
 bool HubManager::isInitialized() const {
