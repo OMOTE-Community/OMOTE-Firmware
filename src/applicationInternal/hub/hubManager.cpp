@@ -1,6 +1,7 @@
 #include "hubManager.h"
 #include "hubTransportBase.h"
 #include "protoCodec.h"
+#include "syncRequest.h"
 #include "applicationInternal/omote_log.h"
 #include "applicationInternal/hardware/arduinoLayer.h"
 
@@ -144,6 +145,10 @@ bool HubManager::isStateSyncRequested() const {
   return stateSyncRequested;
 }
 
+void HubManager::setSyncTargetDevices(const std::vector<std::string>& orderedDevices) {
+  syncTargetDevices = orderedDevices;
+}
+
 void HubManager::resetStateSyncTimer() {
   stateSyncStartTime = millis();
 }
@@ -164,12 +169,20 @@ void HubManager::syncState() {
     return;
   }
   
+  const size_t budget = activeTransport->maxInboundCommandResultBytes();
+  const std::string primaryDevice = syncTargetDevices.empty() ? std::string() : syncTargetDevices.front();
+  const std::string data = Hub::pickSyncRequestData(budget, primaryDevice);
+
+  // Pack the freeform request string by length (strlen), not as a NUL-terminated string.
   omote_RemoteEvent event = Hub::ProtoCodec::createRemoteEvent(
     "HUB",
     omote_OmoteCommand_SYNC_STATE,
-    omote_OmoteCommandType_SHORT
+    omote_OmoteCommandType_SHORT,
+    "",
+    reinterpret_cast<const uint8_t*>(data.c_str()),
+    data.size()
   );
-  
+
   bool sendSuccess = sendRemoteEvent(event);
   
   if (!sendSuccess) {

@@ -5,6 +5,8 @@
 #include "remote_messages.pb.h"
 #include <memory>
 #include <functional>
+#include <vector>
+#include <string>
 
 class HubManager {
 private:
@@ -13,6 +15,9 @@ private:
 
   bool stateSyncRequested = false;
   unsigned long stateSyncStartTime = 0;
+  // Priority-ordered hub device ids the active scene composes; front() is the
+  // primary target requested when the transport budget only fits one device.
+  std::vector<std::string> syncTargetDevices;
   static const unsigned long STATE_SYNC_DELAY = 100; // ms
   static const unsigned long RUNTIME_TTL_MS = 1500;
   HubOutboundQueue outboundQueue;
@@ -60,6 +65,10 @@ public:
   
   void requestStateSync();
   bool isStateSyncRequested() const;
+
+  // Push the active scene's priority-ordered hub device ids (empty when the
+  // scene controls no hub device). Used to pick the single-device sync target.
+  void setSyncTargetDevices(const std::vector<std::string>& orderedDevices);
   
   void setMessageHandler(std::function<void(const omote_CommandResult&)> handler);
   void handleIncomingCommandResult(const omote_CommandResult& result);

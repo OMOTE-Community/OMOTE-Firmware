@@ -15,7 +15,9 @@ public:
   uint8_t failedSendsRemaining = 0;
   uint8_t initCalls = 0;
   uint8_t sendAttempts = 0;
+  size_t inboundBudget = 0;
   std::vector<omote_OmoteCommand> sentCommands;
+  std::vector<omote_RemoteEvent> sentEvents;
 
   bool init() override {
     initCalls++;
@@ -34,6 +36,7 @@ public:
     }
 
     sentCommands.push_back(event.command);
+    sentEvents.push_back(event);
     return true;
   }
 
@@ -43,6 +46,10 @@ public:
 
   unsigned long wakeQueueTtlMs() const override {
     return wakeTtlMs;
+  }
+
+  size_t maxInboundCommandResultBytes() const override {
+    return inboundBudget;
   }
 
   void shutdown() override {
@@ -77,6 +84,7 @@ static void assertSent(FakeHubTransport* transport, const omote_OmoteCommand* ex
 static void resetManagerState() {
   HubManager& manager = HubManager::getInstance();
 
+  manager.setSyncTargetDevices({});
   manager.shutdown();
 
   if (!manager.isStateSyncRequested()) {
@@ -284,8 +292,63 @@ void test_single_device_budget_covers_worst_case_encoded() {
   TEST_ASSERT_GREATER_OR_EQUAL_UINT(stream.bytes_written, Hub::STATE_SYNC_SINGLE_DEVICE_BUDGET);
 }
 
+static const omote_RemoteEvent& driveStateSync(HubManager& manager, FakeHubTransport* transport) {
+  manager.requestStateSync();
+  delay(110);
+  manager.process();
+  TEST_ASSERT_FALSE(manager.isStateSyncRequested());
+  TEST_ASSERT_FALSE(transport->sentEvents.empty());
+  return transport->sentEvents.back();
+}
+
+static void assertSyncRequestData(const omote_RemoteEvent& event, const char* expected) {
+  TEST_ASSERT_EQUAL(omote_OmoteCommand_SYNC_STATE, event.command);
+  const size_t expectedLen = strlen(expected);
+  // strlen, no trailing NUL counted in the payload.
+  TEST_ASSERT_EQUAL_UINT(expectedLen, event.data.size);
+  TEST_ASSERT_EQUAL_INT(0, memcmp(event.data.bytes, expected, expectedLen));
+}
+
+void test_sync_state_requests_full_when_budget_covers_full() {
+  HubManager& manager = HubManager::getInstance();
+  FakeHubTransport* transport = initWithFakeTransport();
+  transport->inboundBudget = omote_CommandResult_size;
+
+  assertSyncRequestData(driveStateSync(manager, transport), "time,devices");
+}
+
+void test_sync_state_requests_primary_device_for_mid_budget() {
+  HubManager& manager = HubManager::getInstance();
+  FakeHubTransport* transport = initWithFakeTransport();
+  transport->inboundBudget = Hub::STATE_SYNC_SINGLE_DEVICE_BUDGET;
+  manager.setSyncTargetDevices({"ANDROID_TV", "DENON_AVR"});  // primary = front
+
+  assertSyncRequestData(driveStateSync(manager, transport), "time,devices:ANDROID_TV");
+}
+
+void test_sync_state_requests_time_only_for_tiny_budget() {
+  HubManager& manager = HubManager::getInstance();
+  FakeHubTransport* transport = initWithFakeTransport();
+  transport->inboundBudget = 250;
+  manager.setSyncTargetDevices({"ANDROID_TV"});
+
+  assertSyncRequestData(driveStateSync(manager, transport), "time");
+}
+
+void test_sync_state_requests_time_only_without_target_devices() {
+  HubManager& manager = HubManager::getInstance();
+  FakeHubTransport* transport = initWithFakeTransport();
+  transport->inboundBudget = Hub::STATE_SYNC_SINGLE_DEVICE_BUDGET;
+
+  assertSyncRequestData(driveStateSync(manager, transport), "time");
+}
+
 int main() {
   UNITY_BEGIN();
+  RUN_TEST(test_sync_state_requests_full_when_budget_covers_full);
+  RUN_TEST(test_sync_state_requests_primary_device_for_mid_budget);
+  RUN_TEST(test_sync_state_requests_time_only_for_tiny_budget);
+  RUN_TEST(test_sync_state_requests_time_only_without_target_devices);
   RUN_TEST(test_request_shape_full_when_budget_covers_full_command_result);
   RUN_TEST(test_request_shape_single_device_for_mid_budget_with_active_device);
   RUN_TEST(test_request_shape_time_only_for_tiny_budget);
