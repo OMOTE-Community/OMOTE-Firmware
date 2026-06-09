@@ -1,0 +1,11 @@
+{
+  "name": "HubDeviceStateCache",
+  "version": "0.1.0",
+  "dependencies": [
+    {
+      "owner": "nanopb",
+      "name": "Nanopb",
+      "version": "^0.4.9"
+    }
+  ]
+}

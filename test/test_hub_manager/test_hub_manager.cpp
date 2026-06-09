@@ -1,9 +1,12 @@
 #include <unity.h>
 #include <memory>
 #include <vector>
+#include <cstring>
+#include <pb_encode.h>
 
 #include "applicationInternal/hardware/arduinoLayer.h"
 #include "applicationInternal/hub/hubManager.h"
+#include "applicationInternal/hub/syncRequest.h"
 
 class FakeHubTransport : public HubTransportBase {
 public:
@@ -215,8 +218,79 @@ void test_process_defers_state_sync_while_backlog_remains_pending() {
   TEST_ASSERT_FALSE(manager.isStateSyncRequested());
 }
 
+void test_request_shape_full_when_budget_covers_full_command_result() {
+  TEST_ASSERT_EQUAL_STRING("time,devices",
+    Hub::pickSyncRequestData(omote_CommandResult_size, "ANDROID_TV").c_str());
+  // Full sync does not need a specific active device.
+  TEST_ASSERT_EQUAL_STRING("time,devices",
+    Hub::pickSyncRequestData(omote_CommandResult_size, "").c_str());
+}
+
+void test_request_shape_single_device_for_mid_budget_with_active_device() {
+  TEST_ASSERT_EQUAL_STRING("time,devices:ANDROID_TV",
+    Hub::pickSyncRequestData(Hub::STATE_SYNC_SINGLE_DEVICE_BUDGET, "ANDROID_TV").c_str());
+}
+
+void test_request_shape_time_only_for_tiny_budget() {
+  // ESP-NOW v1 (250 B) cannot carry even one rich device.
+  TEST_ASSERT_EQUAL_STRING("time",
+    Hub::pickSyncRequestData(250, "ANDROID_TV").c_str());
+}
+
+void test_request_shape_time_only_when_no_active_device() {
+  TEST_ASSERT_EQUAL_STRING("time",
+    Hub::pickSyncRequestData(Hub::STATE_SYNC_SINGLE_DEVICE_BUDGET, "").c_str());
+}
+
+static omote_CommandResult makeWorstCaseSingleDeviceStateSync() {
+  omote_CommandResult result = omote_CommandResult_init_zero;
+  result.kind = omote_ResponseKind_STATE_SYNC;
+  result.which_data = omote_CommandResult_state_sync_tag;
+
+  omote_StateSync& sync = result.data.state_sync;
+  sync.has_time = true;
+  sync.time.timestamp = 0xFFFFFFFF;
+  sync.time.timezone_offset = -720;
+  sync.devices_count = 1;
+
+  omote_DeviceState& dev = sync.devices[0];
+  memset(dev.device_id, 'D', sizeof(dev.device_id) - 1);
+  dev.is_on = true;
+  dev.has_volume = true;
+  dev.volume.level = -30.5f;
+  dev.volume.is_muted = true;
+  dev.has_media_player = true;
+  dev.media_player.has_playback = true;
+
+  omote_Metadata& md = dev.media_player.playback;
+  memset(md.title, 'T', sizeof(md.title) - 1);
+  memset(md.artist, 'A', sizeof(md.artist) - 1);
+  memset(md.album, 'L', sizeof(md.album) - 1);
+  memset(md.state, 'S', sizeof(md.state) - 1);
+  md.duration = 0xFFFFFFFF;
+  md.position = 0xFFFFFFFF;
+  return result;
+}
+
+void test_single_device_budget_covers_worst_case_encoded() {
+  omote_CommandResult worst = makeWorstCaseSingleDeviceStateSync();
+
+  uint8_t buffer[omote_CommandResult_size];
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+  TEST_ASSERT_TRUE(pb_encode(&stream, omote_CommandResult_fields, &worst));
+
+  // Budget must cover the worst-case rich single-device response; fails loudly
+  // if a proto/.options change grows it past the constant.
+  TEST_ASSERT_GREATER_OR_EQUAL_UINT(stream.bytes_written, Hub::STATE_SYNC_SINGLE_DEVICE_BUDGET);
+}
+
 int main() {
   UNITY_BEGIN();
+  RUN_TEST(test_request_shape_full_when_budget_covers_full_command_result);
+  RUN_TEST(test_request_shape_single_device_for_mid_budget_with_active_device);
+  RUN_TEST(test_request_shape_time_only_for_tiny_budget);
+  RUN_TEST(test_request_shape_time_only_when_no_active_device);
+  RUN_TEST(test_single_device_budget_covers_worst_case_encoded);
   RUN_TEST(test_failed_direct_send_is_requeued_and_flushed_next_tick);
   RUN_TEST(test_ready_transport_queues_behind_existing_backlog);
   RUN_TEST(test_flush_stops_on_failed_send_and_retries_next_tick);
