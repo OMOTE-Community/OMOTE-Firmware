@@ -8,6 +8,10 @@
 #include "applicationInternal/omote_log.h"
 #include "guis/gui_sceneSelection.h"
 #include "scenes/scene__default.h"
+#if (ENABLE_HUB_COMMUNICATION > 0)
+#include "applicationInternal/hub/hubManager.h"
+#include "applicationInternal/hub/sceneSyncTargets.h"
+#endif
 
 void setLabelActiveScene() {
   if ((SceneLabel != NULL) && sceneExists(gui_memoryOptimizer_getActiveSceneName())) {
@@ -138,6 +142,12 @@ void handleScene(uint16_t command, commandData commandData, std::string addition
   }
 
   gui_memoryOptimizer_setActiveSceneName(scene_name);
+
+#if (ENABLE_HUB_COMMUNICATION > 0)
+  // Track which hub devices the active scene composes, so a wake state sync
+  // requests the right per-device snapshot for the transport's budget.
+  HubManager::getInstance().setSyncTargetDevices(Hub::hubSyncTargetsForScene(scene_name));
+#endif
 
   if (SceneLabel != NULL) {lv_label_set_text(SceneLabel, gui_memoryOptimizer_getActiveSceneName().c_str());}
 

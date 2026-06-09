@@ -7,6 +7,7 @@
 #include "applicationInternal/hardware/arduinoLayer.h"
 #include "applicationInternal/hub/hubManager.h"
 #include "applicationInternal/hub/syncRequest.h"
+#include "applicationInternal/hub/sceneSyncTargets.h"
 
 class FakeHubTransport : public HubTransportBase {
 public:
@@ -343,8 +344,28 @@ void test_sync_state_requests_time_only_without_target_devices() {
   assertSyncRequestData(driveStateSync(manager, transport), "time");
 }
 
+void test_scene_sync_targets_map_to_priority_ordered_devices() {
+  std::vector<std::string> shield = Hub::hubSyncTargetsForScene("Shield");
+  TEST_ASSERT_EQUAL_UINT(3, shield.size());
+  TEST_ASSERT_EQUAL_STRING("ANDROID_TV", shield[0].c_str());  // primary = media device
+  TEST_ASSERT_EQUAL_STRING("DENON_AVR", shield[1].c_str());
+  TEST_ASSERT_EQUAL_STRING("LG_TV", shield[2].c_str());
+
+  std::vector<std::string> tv = Hub::hubSyncTargetsForScene("TV");
+  TEST_ASSERT_EQUAL_UINT(1, tv.size());
+  TEST_ASSERT_EQUAL_STRING("LG_TV", tv[0].c_str());
+}
+
+void test_scene_sync_targets_empty_for_non_hub_scenes() {
+  TEST_ASSERT_TRUE(Hub::hubSyncTargetsForScene("Fire TV").empty());
+  TEST_ASSERT_TRUE(Hub::hubSyncTargetsForScene("Off").empty());
+  TEST_ASSERT_TRUE(Hub::hubSyncTargetsForScene("").empty());
+}
+
 int main() {
   UNITY_BEGIN();
+  RUN_TEST(test_scene_sync_targets_map_to_priority_ordered_devices);
+  RUN_TEST(test_scene_sync_targets_empty_for_non_hub_scenes);
   RUN_TEST(test_sync_state_requests_full_when_budget_covers_full);
   RUN_TEST(test_sync_state_requests_primary_device_for_mid_budget);
   RUN_TEST(test_sync_state_requests_time_only_for_tiny_budget);
