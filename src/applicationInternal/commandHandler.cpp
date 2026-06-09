@@ -357,7 +357,13 @@ void receiveMQTTmessage_cb(std::string topic, std::string payload) {
 #if (ENABLE_HUB_COMMUNICATION > 0)
 #include "applicationInternal/hub/pairingManager.h"
 #include "applicationInternal/gui/guiNotification.h"
+#include <hubDeviceStateCache.h>
 // #include "devices/mediaPlayer/device_appleTV/gui_appleTV.h"
+
+// Latest per-device snapshots from the hub. Populated by the bulk StateSync
+// merge; surfacing cached state to the UI lands lockstep with hub
+// publish_device_state and is intentionally not wired here yet.
+static HubDeviceStateCache hubDeviceStateCache;
 
 void handleHubCommandResult(const omote_CommandResult& result) {
   omote_log_d("Received CommandResult: kind=%d\r\n", result.kind);
@@ -408,6 +414,12 @@ void handleHubCommandResult(const omote_CommandResult& result) {
         setTime(state_sync.time.timestamp, state_sync.time.timezone_offset);
         omote_log_d("Time sync: timestamp=%lu, tz=%d\r\n",
                    state_sync.time.timestamp, state_sync.time.timezone_offset);
+      }
+
+      // Merge each snapshot silently: the cache ignores empty device ids and the
+      // bulk wake sync deliberately raises no per-device volume/power UI.
+      for (pb_size_t i = 0; i < state_sync.devices_count; i++) {
+        hubDeviceStateCache.merge(state_sync.devices[i]);
       }
 
       omote_log_d("State sync: has_time=%s, devices=%d\r\n",
