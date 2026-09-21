@@ -1,7 +1,12 @@
 // OMOTE test firmware for ESP32 OMOTE, to test hardware feeatures of the OMOTE board
 // 2023-2025 Maximilian Kern, Klaus Musch
 
+#if (DISPLAY_DRIVER == 0)
 #include <LovyanGFX.hpp>
+#elif (DISPLAY_DRIVER == 1)
+#include <Arduino_GFX_Library.h>
+#include <Adafruit_FT6206.h>
+#endif
 #if(OMOTE_HARDWARE_REV >= 5)
   #include <Adafruit_TCA8418.h>
 #else
@@ -147,6 +152,7 @@ bool wakeupByIMUEnabled = true;
 LIS3DH IMU(I2C_MODE, 0x19); // Default constructor is I2C, addr 0x19.
 
 // LCD declarations -------------------------------------------------------------------------------
+#if (DISPLAY_DRIVER == 0)
 class LGFX : public lgfx::LGFX_Device{
 private:
     lgfx::Panel_ILI9341 _panel_instance;
@@ -215,6 +221,23 @@ LGFX::LGFX(void) {
   setPanel(&_panel_instance);
 }
 LGFX tft;
+#elif (DISPLAY_DRIVER == 1)
+#if(OMOTE_HARDWARE_REV >= 5)
+Arduino_DataBus *agfxBus = new Arduino_ESP32PAR8(
+  LCD_DC_GPIO, LCD_CS_GPIO, LCD_WR_GPIO, LCD_RD_GPIO,
+  LCD_D0_GPIO, LCD_D1_GPIO, LCD_D2_GPIO, LCD_D3_GPIO,
+  LCD_D4_GPIO, LCD_D5_GPIO, LCD_D6_GPIO, LCD_D7_GPIO
+);
+#else
+// rev1-4 drives the ILI9341 over VSPI, using its native pins (sck 18, mosi 23, cs 5).
+Arduino_DataBus *agfxBus = new Arduino_ESP32SPI(
+  LCD_DC_GPIO, LCD_CS_GPIO, LCD_SCK_GPIO, LCD_MOSI_GPIO,
+  GFX_NOT_DEFINED /* miso */, VSPI, false /* is_shared_interface */
+);
+#endif
+Arduino_GFX *agfx = new Arduino_ILI9341(agfxBus, GFX_NOT_DEFINED, 0, false);
+Adafruit_FT6206 touch = Adafruit_FT6206();
+#endif
 int backlightBrightness = 255;
 
 // Keypad declarations ----------------------------------------------------------------------------
@@ -249,6 +272,7 @@ enum Wakeup_reasons{WAKEUP_BY_RESET, WAKEUP_BY_IMU, WAKEUP_BY_KEYPAD};
 static lv_disp_draw_buf_t draw_buf;
 lv_obj_t* checksTable;
 lv_obj_t* touchScreen;
+lv_obj_t* touchInfoLabel;
 
 // array for checking which keys have already been recognized
 #if(OMOTE_HARDWARE_REV >= 5)
@@ -287,7 +311,17 @@ static void show_touches_cb(lv_event_t * e) {
     if (!show_touches) {
       // create new screen, only showing touches
       touchScreen = lv_obj_create(NULL);
+      lv_obj_set_style_pad_all(touchScreen, 0, LV_PART_MAIN);
+      lv_obj_clear_flag(touchScreen, LV_OBJ_FLAG_SCROLLABLE);
       lv_scr_load(touchScreen);
+
+      // Status line at the bottom.
+      touchInfoLabel = lv_label_create(touchScreen);
+      lv_obj_set_style_text_font(touchInfoLabel, &lv_font_montserrat_10, LV_PART_MAIN);
+      lv_obj_set_style_text_color(touchInfoLabel, lv_color_hex(0x808080), LV_PART_MAIN);
+      lv_obj_set_width(touchInfoLabel, SCR_WIDTH);
+      lv_obj_align(touchInfoLabel, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+      lv_label_set_text(touchInfoLabel, "");
 
       show_touches = true;
     }
@@ -299,6 +333,7 @@ void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *colo
   uint32_t w = ( area->x2 - area->x1 + 1 );
   uint32_t h = ( area->y2 - area->y1 + 1 );
 
+  #if (DISPLAY_DRIVER == 0)
   tft.startWrite();
   tft.setAddrWindow( area->x1, area->y1, w, h );
   // single buffer bufA
@@ -306,13 +341,28 @@ void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *colo
   // double buffer bufA and bufB
   tft.pushPixelsDMA( ( uint16_t * )&color_p->full, w * h);
   tft.endWrite();
+  #elif (DISPLAY_DRIVER == 1)
+  // Arduino_GFX's flush is synchronous - the transfer is done when it returns,
+  // so a single buffer is enough and lv_disp_flush_ready() can follow directly.
+  agfx->draw16bitRGBBitmap(area->x1, area->y1, reinterpret_cast<uint16_t *>(color_p), w, h);
+  #endif
 
   lv_disp_flush_ready( disp );
 }
 
 // Read the touchpad
+bool TouchInitSuccessful = false;
+bool touchChipResponds();
 void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data) {
+    // Ignore the touch until the controller has answered. The retry is done in loop(), which
+    // also updates the table - doing it here as well would set the flag without the table.
+    if (!TouchInitSuccessful) {
+      data->state = LV_INDEV_STATE_REL;
+      return;
+    }
+
     uint16_t x, y;
+    #if (DISPLAY_DRIVER == 0)
     if (tft.getTouch(&x, &y)) {
         data->state = LV_INDEV_STATE_PR;
         data->point.x = x;
@@ -333,6 +383,33 @@ void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data) {
     } else {
         data->state = LV_INDEV_STATE_REL;
     }
+    #elif (DISPLAY_DRIVER == 1)
+    TS_Point touchPoint = touch.getPoint();
+    x = touchPoint.x;
+    y = touchPoint.y;
+
+    if (!touch.touched()) {
+      data->state = LV_INDEV_STATE_REL;
+      return;
+    }
+  
+    data->state = LV_INDEV_STATE_PR;
+    // The touch controller counts from the opposite corner than the panel does.
+    data->point.x = SCR_WIDTH - 1 - x;
+    data->point.y = SCR_HEIGHT - 1 - y;
+
+    standbyTimer = SLEEP_TIMEOUT;
+
+    count_touches++;
+    // draw touch point
+    if (show_touches) {
+      if (data->point.x >= 0 && data->point.x < SCR_WIDTH && data->point.y >= 0 && data->point.y < SCR_HEIGHT) {
+        agfx->drawPixel(data->point.x, data->point.y, RGB565_RED);
+      }
+    }
+
+    lv_table_set_cell_value_fmt(checksTable, 8, 1, "%" LV_PRIu32, count_touches);
+    #endif
 }
 
 int activityDetection(){
@@ -527,6 +604,24 @@ void WiFiEvent(WiFiEvent_t event){
 int fuelGaugeInitSuccessful = false;
 int sdCardInitSuccessful = false;
 
+// Ask the touch controller whether it is there.
+// This deliberately goes through the same I2C driver that also drives the touch at runtime,
+// so a negative result means "the touch controller did not answer" and not "some other
+// I2C stack is not in shape".
+bool touchChipResponds() {
+  #if (DISPLAY_DRIVER == 0)
+  // LovyanGFX drives I2C itself (not through Wire), port 0 as configured for the touch above.
+  // Register 0xA3 is the chip id of the FT5x06/FT6x06 family.
+  return lgfx::i2c::readRegister8(0, 0x38, 0xA3, 400000).has_value();
+  #elif (DISPLAY_DRIVER == 1)
+  // readRegister8() is private in Adafruit_FT6206, so begin() is the only way to ask.
+  // It verifies vendor id and chip id, and apart from rewriting the threshold it is idempotent.
+  return touch.begin(128);
+  #else
+  return false;
+  #endif
+}
+
 void setup() {  
 
   Serial.begin(115200);
@@ -649,12 +744,63 @@ void setup() {
   #endif
 
   delay(100); // Wait for the LCD driver to power on
+  #if (DISPLAY_DRIVER == 0)
   tft.init();
   tft.initDMA();
   tft.setRotation(0);
   tft.fillScreen(TFT_BLACK);
   tft.setSwapBytes(true);
-  
+  #elif (DISPLAY_DRIVER == 1)
+  #if(OMOTE_HARDWARE_REV >= 5)
+  if (!agfx->begin()) {
+  #else
+  if (!agfx->begin(SPI_FREQUENCY)) {
+  #endif
+    Serial.println("LCD init failed (Arduino_GFX)");
+  }
+
+  // Panel corrections, so that "Arduino_GFX" shows the same picture as LovyanGFX.
+  // Arduino_GFX never writes the ILI9341 gamma tables - GMCTRP1/GMCTRN1 are commented out
+  // in its ili9341_init_operations[], only the curve selection (GAMMASET) is sent - and it
+  // uses weaker power and VCOM settings than LovyanGFX. Black level, contrast and the
+  // antialiased edges of LVGL's text all depend on these, which is why the picture looks
+  // flatter without them. The values below are the ones LovyanGFX writes in
+  // Panel_ILI9341::getInitCommands().
+  // Not corrected here, because they are not visible in a still picture: FRMCTR1 (frame
+  // rate, 0x00,0x13 vs 0x00,0x1A) and DFUNCTR (0x08,0xC2,0x27 vs 0x08,0x82,0x27).
+  static const uint8_t gammaP[15] = {0x0F,0x31,0x2B,0x0C,0x0E,0x08,0x4E,0xF1,0x37,0x07,0x10,0x03,0x0E,0x09,0x00};
+  static const uint8_t gammaN[15] = {0x00,0x0E,0x14,0x03,0x11,0x07,0x31,0xC1,0x48,0x08,0x0F,0x0C,0x31,0x36,0x0F};
+  agfxBus->beginWrite();
+  agfxBus->writeC8D8(0xC0, 0x23);                              // PWCTR1  power control, VRH   (Arduino_GFX: 0x10)
+  agfxBus->writeC8D8(0xC1, 0x10);                              // PWCTR2  power control, SAP/BT (Arduino_GFX: 0x00)
+  agfxBus->writeCommand(0xC5); agfxBus->write(0x3E); agfxBus->write(0x28);  // VMCTR1 VCOM      (Arduino_GFX: 0x30,0x30)
+  agfxBus->writeC8D8(0xC7, 0x86);                              // VMCTR2  VCOM offset          (Arduino_GFX: 0xB7)
+  agfxBus->writeCommand(0xE0);                                 // GMCTRP1 positive gamma curve (Arduino_GFX: not written)
+  for (uint8_t i = 0; i < 15; i++) agfxBus->write(gammaP[i]);
+  agfxBus->writeCommand(0xE1);                                 // GMCTRN1 negative gamma curve (Arduino_GFX: not written)
+  for (uint8_t i = 0; i < 15; i++) agfxBus->write(gammaN[i]);
+  agfxBus->endWrite();
+
+  agfx->fillScreen(RGB565_BLACK);
+  #endif
+
+  // Make sure the I2C bus runs on OMOTE's pins before the other I2C devices are initialized.
+  // Several libraries call Wire.begin() without arguments (LIS3DH, Adafruit BusIO for the
+  // TCA8418 keypad and the FT6206 touch). If Wire is not running at that point, they start it
+  // on the board defaults SDA=8/SCL=9 - on rev5 that is the keypad interrupt and the backlight.
+  // With DISPLAY_DRIVER 0 this normally does nothing: LovyanGFX has already started Wire when it
+  // initialized the touch in tft.init(), and it has to stay that way. If Wire is started before
+  // tft.init(), LovyanGFX only shares the bus instead of owning it, and then its I2C error
+  // recovery (a reset of the I2C peripheral) breaks Wire for everybody else.
+  // With DISPLAY_DRIVER 1 this is what starts the bus, before touch.begin() is called.
+  // 100 kHz, because that is what LovyanGFX starts Wire with (it passes no frequency), so the
+  // bus runs at the same speed with both drivers and in the fallback case above. LovyanGFX's
+  // own touch transfers still run at the 400 kHz of its touch config; it sets that per
+  // transfer and restores the Wire settings afterwards.
+  Wire.begin(SDA_GPIO, SCL_GPIO, 100000);
+  // Check if the touchscreen is responding
+  TouchInitSuccessful = touchChipResponds();
+
   // setup LVGL -----------------------------------------------------------------------------------
   // Double buffer
   lv_color_t * bufA = (lv_color_t *) malloc(sizeof(lv_color_t) * SCR_WIDTH * SCR_HEIGHT / 10);
@@ -811,10 +957,6 @@ void setup() {
   printf("MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\r\n", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
 
   // provide some first test results --------------------------------------------------------------
-  // Check if the touchscreen is responding
-  boolean TouchInitSuccessful = false;
-  Wire.beginTransmission(0x38);
-  if(Wire.endTransmission() == 0) TouchInitSuccessful = true;
 
   if(TouchInitSuccessful) lv_table_set_cell_value_fmt(checksTable, 0, 1, LV_SYMBOL_OK);
   else lv_table_set_cell_value_fmt(checksTable, 0, 1, LV_SYMBOL_WARNING);
@@ -903,6 +1045,19 @@ void loop() {
       enterSleep();
     }
     IMUTaskTimer = millis();
+  }
+
+  // Retry the touch controller check at 2Hz ------------------------------------------------------
+  // After a soft restart (ESP.restart()) the touch controller is not power cycled and can need
+  // a moment before it answers. Without this retry a single unlucky moment during setup would
+  // leave the warning in the table for the rest of the session. Until then my_touchpad_read()
+  // ignores the touch, so keep the interval short.
+  // This is the only place that retries, because it is the only one that also updates the table.
+  static unsigned long touchRetryTimer = millis();
+  if(!TouchInitSuccessful && (millis() - touchRetryTimer >= 500)) {
+    TouchInitSuccessful = touchChipResponds();
+    if(TouchInitSuccessful) lv_table_set_cell_value_fmt(checksTable, 0, 1, LV_SYMBOL_OK);
+    touchRetryTimer = millis();
   }
 
   // Update battery stats at 1Hz ------------------------------------------------------------------
@@ -1076,16 +1231,7 @@ void loop() {
   if (show_touches) {
     static unsigned long touchInfoTimer = millis();
     if ((count_touches_old != count_touches) || (millis() - touchInfoTimer >= 1000)) {
-      tft.setColor(TFT_BLACK);
-      tft.setRawColor(TFT_BLACK);
-      tft.setBaseColor(TFT_BLACK);
-      tft.fillRect(0, 305, 240, 15);
-
-      tft.setFont(&fonts::Font2);
-      tft.setTextSize(0.9);
-      tft.setTextColor(TFT_DARKGREY);
-      tft.setCursor(0, 305);
-      tft.printf("touch count: %d | hit any key to reboot", count_touches);
+      lv_label_set_text_fmt(touchInfoLabel, "touch count: %d | hit any key to reboot", count_touches);
 
       count_touches_old = count_touches;
       touchInfoTimer = millis();

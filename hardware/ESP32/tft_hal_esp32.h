@@ -1,6 +1,11 @@
 #pragma once
 
+#if (DISPLAY_DRIVER == 0)
 #include <LovyanGFX.hpp>
+#elif (DISPLAY_DRIVER == 1)
+#include <Arduino_GFX_Library.h>
+#include <Adafruit_FT6206.h>
+#endif
 
 extern const uint8_t LCD_BL_GPIO;
 extern const uint8_t LCD_EN_GPIO;
@@ -24,6 +29,7 @@ extern const uint8_t LCD_DC_GPIO;
 #endif
 
 // used in lvgl_hal.cpp "void my_disp_flush(..."
+#if (DISPLAY_DRIVER == 0)
 class LGFX : public lgfx::LGFX_Device{
 private:
     lgfx::Panel_ILI9341 _panel_instance;
@@ -38,6 +44,16 @@ public:
     LGFX(void);
 };
 extern LGFX tft;
+#elif (DISPLAY_DRIVER == 1)
+#if(OMOTE_HARDWARE_REV >= 5)
+extern Arduino_DataBus *agfxBus;
+#else
+// rev1-4 drives the ILI9341 over VSPI, using its native pins (sck 18, mosi 23, cs 5).
+extern Arduino_DataBus *agfxBus;
+#endif
+extern Arduino_GFX *agfx;
+extern Adafruit_FT6206 touch;
+#endif
 
 // only called from lvgl_hal.cpp, not from the HAL
 void init_tft(void);
