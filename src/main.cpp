@@ -18,8 +18,10 @@
 //   TV
 #include "devices/TV/device_samsungTV/device_samsungTV.h"
 //#include "devices/TV/device_lgTV/device_lgTV.h"
+//#include "devices/TV/device_sonyTV/device_sonyTV.h.h"
 //   AV receiver
 #include "devices/AVreceiver/device_yamahaAmp/device_yamahaAmp.h"
+//#include "devices/AVreceiver/device_boseAmp/device_boseAmp.h"
 //#include "devices/AVreceiver/device_denonAvr/device_denonAvr.h"
 //#include "devices/AVreceiver/device_lgsoundbar/device_lgsoundbar.h"
 //   media player
@@ -89,8 +91,10 @@ int main(int argc, char *argv[]) {
   //   TV
   register_device_samsungTV();
   //register_device_lgTV();
+  //register_device_sonyTV();
   //   AV receiver
   register_device_yamahaAmp();
+  //register_device_boseAmp();
   //register_device_denonAvr();
   //register_device_lgsoundbar();
   //   media player
