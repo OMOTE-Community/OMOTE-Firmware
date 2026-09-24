@@ -12,6 +12,8 @@
 #else
   #include <Keypad.h> // modified for inverted logic
 #endif
+#include <esp_heap_caps.h>
+#include <soc/soc_memory_layout.h> // esp_ptr_internal(), to report where the draw buffer ended up
 #include "SparkFunLIS3DH.h"
 #include "Wire.h"
 #include <IRremoteESP8266.h>
@@ -334,12 +336,16 @@ void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *colo
   uint32_t h = ( area->y2 - area->y1 + 1 );
 
   #if (DISPLAY_DRIVER == 0)
+  // Synchronous: endWrite() waits until everything has been sent, so LVGL may render into the
+  // buffer again as soon as this returns. That is why one buffer is enough here.
+  // (The firmware can also send asynchronously, which needs a second buffer and DMA capable
+  // memory - see the comments in hardware/ESP32/lvgl_hal_esp32.cpp. For a board test the few
+  // frames per second are not worth the memory and the extra complexity.)
+  // The last parameter of pushPixels() says whether LovyanGFX has to swap the bytes while
+  // sending: with LV_COLOR_16_SWAP = 0 LVGL delivers them in the CPU byte order, so yes.
   tft.startWrite();
-  tft.setAddrWindow( area->x1, area->y1, w, h );
-  // single buffer bufA
-  // tft.pushPixels((uint16_t*)&color_p->full, w * h, true);
-  // double buffer bufA and bufB
-  tft.pushPixelsDMA( ( uint16_t * )&color_p->full, w * h);
+  tft.setAddrWindow(area->x1, area->y1, w, h);
+  tft.pushPixels((uint16_t*)&color_p->full, w * h, LV_COLOR_16_SWAP == 0);
   tft.endWrite();
   #elif (DISPLAY_DRIVER == 1)
   // Arduino_GFX's flush is synchronous - the transfer is done when it returns,
@@ -746,10 +752,10 @@ void setup() {
   delay(100); // Wait for the LCD driver to power on
   #if (DISPLAY_DRIVER == 0)
   tft.init();
-  tft.initDMA();
-  tft.setRotation(0);
   tft.fillScreen(TFT_BLACK);
-  tft.setSwapBytes(true);
+  // No initDMA() and no setSwapBytes() here: initDMA() does nothing at all on this hardware (it is
+  // an empty function for both the parallel and the SPI bus of LovyanGFX), and the byte order is
+  // passed to pushPixels() in my_disp_flush() directly.
   #elif (DISPLAY_DRIVER == 1)
   #if(OMOTE_HARDWARE_REV >= 5)
   if (!agfx->begin()) {
@@ -802,10 +808,20 @@ void setup() {
   TouchInitSuccessful = touchChipResponds();
 
   // setup LVGL -----------------------------------------------------------------------------------
-  // Double buffer
-  lv_color_t * bufA = (lv_color_t *) malloc(sizeof(lv_color_t) * SCR_WIDTH * SCR_HEIGHT / 10);
-  lv_color_t * bufB = (lv_color_t *) malloc(sizeof(lv_color_t) * SCR_WIDTH * SCR_HEIGHT / 10);
-  lv_disp_draw_buf_init( &draw_buf, bufA, bufB, SCR_WIDTH * SCR_HEIGHT / 10 );
+  // One draw buffer. A second one would only help if my_disp_flush() returned before the transfer
+  // is finished, and it does not (see there).
+  // Internal memory is asked for, because LVGL renders into this buffer pixel by pixel and that is
+  // faster in internal RAM than in PSRAM: measured 24.6 instead of 27.0 ms per full screen. A plain
+  // malloc() of this size returns PSRAM on rev5, because CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL is
+  // 4096. MALLOC_CAP_DMA is not needed, because no DMA reads this buffer directly.
+  const size_t bufSize = sizeof(lv_color_t) * SCR_WIDTH * SCR_HEIGHT / 10;
+  lv_color_t * bufA = (lv_color_t *) heap_caps_malloc(bufSize, MALLOC_CAP_INTERNAL);
+  if (!bufA) {
+    bufA = (lv_color_t *) malloc(bufSize); // internal RAM is tight? then take whatever is left
+  }
+  Serial.printf("LVGL: one draw buffer of %u bytes in %s RAM\r\n",
+                (unsigned)bufSize, esp_ptr_internal(bufA) ? "internal" : "PSRAM");
+  lv_disp_draw_buf_init( &draw_buf, bufA, NULL, SCR_WIDTH * SCR_HEIGHT / 10 );
 
   // Initialize the display driver
   static lv_disp_drv_t disp_drv;
