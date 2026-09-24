@@ -47,7 +47,7 @@ void register_device_boseAmp() {
   register_command(&BOSE_MENU           , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC),   concatenateIRsendParams("0x5DD209F6", kNECBits,   kNoRepeat)}));
   register_command(&BOSE_GUIDE          , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC),   concatenateIRsendParams("0x5DD20BF4", kNECBits,   kNoRepeat)}));
   register_command(&BOSE_INFO           , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC),   concatenateIRsendParams("0x5DD226D9", kNECBits,   kNoRepeat)}));
-  register_command(&BOSE_EXIT           , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC),   concatenateIRsendParams("0x5DD20CF3", kNECBits,   kNoRepeat),          concatenateIRsendParams("0x5DD28C73", kNECBits, kNoRepeat)}));
+  register_command(&BOSE_EXIT           , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC),   concatenateIRsendParams("0x5DD20CF3", kNECBits,   kNoRepeat)}));
   register_command(&BOSE_UP             , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC),   concatenateIRsendParams("0x5DD203FC", kNECBits,   kNoRepeat)}));
   register_command(&BOSE_DOWN           , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC),   concatenateIRsendParams("0x5DD204FB", kNECBits,   kNoRepeat)}));
   register_command(&BOSE_LEFT           , makeCommandData(IR, {std::to_string(IR_PROTOCOL_NEC),   concatenateIRsendParams("0x5DD205FA", kNECBits,   kNoRepeat)}));
