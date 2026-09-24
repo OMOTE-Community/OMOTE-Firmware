@@ -4,6 +4,9 @@
 #include <string>
 #include "applicationInternal/hardware/IRremoteProtocols.h"
 #include "applicationInternal/hardware/arduinoLayer.h"
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 // --- hardware general -------------------------------------------------------
 void init_hardware_general(void);
@@ -138,3 +141,12 @@ void wifi_shutdown();
 
 // --- memory usage -----------------------------------------------------------
 void get_heapUsage(unsigned long *heapSize, unsigned long *freeHeap, unsigned long *maxAllocHeap, unsigned long *minFreeHeap);
+
+// --- ESP-NOW ----------------------------------------------------------------
+#if (ENABLE_HUB_COMMUNICATION == 1)
+// ESP-NOW hardware presenter functions
+void init_espnow();
+void espnow_loop();
+bool publishEspNowMessage(json payload);
+void espnow_shutdown();
+#endif

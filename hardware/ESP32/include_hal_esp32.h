@@ -14,3 +14,4 @@
 #include "ESP32/sleep_hal_esp32.h"
 #include "ESP32/tft_hal_esp32.h"
 #include "ESP32/user_led_hal_esp32.h"
+#include "ESP32/espnow_hal_esp32.h"

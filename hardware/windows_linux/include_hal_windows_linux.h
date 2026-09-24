@@ -14,3 +14,4 @@
 #include "windows_linux/sleep_hal_windows_linux.h"
 #include "windows_linux/tft_hal_windows_linux.h"
 #include "windows_linux/user_led_hal_windows_linux.h"
+#include "windows_linux/espnow_hal_windows_linux.h"
