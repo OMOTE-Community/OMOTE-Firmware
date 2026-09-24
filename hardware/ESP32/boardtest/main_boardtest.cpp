@@ -12,6 +12,8 @@
 #else
   #include <Keypad.h> // modified for inverted logic
 #endif
+#include <esp_heap_caps.h>
+#include <soc/soc_memory_layout.h> // esp_ptr_internal(), to report where the draw buffer ended up
 #include "SparkFunLIS3DH.h"
 #include "Wire.h"
 #include <IRremoteESP8266.h>
@@ -333,12 +335,16 @@ static void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t *p
   uint32_t h = (area->y2 - area->y1 + 1);
 
   #if (DISPLAY_DRIVER == 0)
+  // Synchronous: endWrite() waits until everything has been sent, so LVGL may render into the
+  // buffer again as soon as this returns. That is why one buffer is enough here.
+  // (The firmware can also send asynchronously, which needs a second buffer and DMA capable
+  // memory - see the comments in hardware/ESP32/lvgl_hal_esp32.cpp. For a board test the few
+  // frames per second are not worth the memory and the extra complexity.)
+  // The last parameter of pushPixels() says whether LovyanGFX has to swap the bytes while
+  // sending: with LV_COLOR_16_SWAP = 0 LVGL delivers them in the CPU byte order, so yes.
   tft.startWrite();
   tft.setAddrWindow(area->x1, area->y1, w, h);
-  // single buffer bufA
-  // tft.pushColors((uint16_t *)px_map, w * h, true);
-  // double buffer bufA and bufB
-  tft.pushPixelsDMA((uint16_t*)px_map, w * h);
+  tft.pushPixels((uint16_t *)px_map, w * h, LV_COLOR_16_SWAP == 0);
   tft.endWrite();
   #elif (DISPLAY_DRIVER == 1)
   // Arduino_GFX's flush is synchronous - the transfer is done when it returns,
@@ -749,10 +755,10 @@ void setup() {
   delay(100); // Wait for the LCD driver to power on
   #if (DISPLAY_DRIVER == 0)
   tft.init();
-  tft.initDMA();
-  tft.setRotation(0);
   tft.fillScreen(TFT_BLACK);
-  tft.setSwapBytes(true);
+  // No initDMA() and no setSwapBytes() here: initDMA() does nothing at all on this hardware (it is
+  // an empty function for both the parallel and the SPI bus of LovyanGFX), and the byte order is
+  // passed to pushPixels() in my_disp_flush() directly.
   #elif (DISPLAY_DRIVER == 1)
   #if(OMOTE_HARDWARE_REV >= 5)
   if (!agfx->begin()) {
@@ -807,7 +813,7 @@ void setup() {
   // setup LVGL -----------------------------------------------------------------------------------
   // new in lvgl 9
   lv_tick_set_cb(my_tick_get_cb);
-  
+
   /*LVGL draw into this buffer, 1/10 screen size usually works well. The size is in bytes*/
   #define DRAW_BUF_SIZE (SCR_WIDTH * SCR_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
 
@@ -818,9 +824,20 @@ void setup() {
 
   // https://github.com/lvgl/lvgl/blob/release/v9.0/docs/CHANGELOG.rst#migration-guide
   // lv_display_set_buffers(display, buf1, buf2, buf_size_byte, mode) is more or less the equivalent of lv_disp_draw_buf_init(&draw_buf_dsc, buf1, buf2, buf_size_px) from v8, however in v9 the buffer size is set in bytes.
-  uint8_t *bufA = (uint8_t *) malloc(DRAW_BUF_SIZE);
-  uint8_t *bufB = (uint8_t *) malloc(DRAW_BUF_SIZE);
-  lv_display_set_buffers(disp, bufA, bufB, DRAW_BUF_SIZE, LV_DISPLAY_RENDER_MODE_PARTIAL);
+  //
+  // One draw buffer. A second one would only help if my_disp_flush() returned before the transfer
+  // is finished, and it does not (see there).
+  // Internal memory is asked for, because LVGL renders into this buffer pixel by pixel and that is
+  // faster in internal RAM than in PSRAM: measured 24.6 instead of 27.0 ms per full screen. A plain
+  // malloc() of this size returns PSRAM on rev5, because CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL is
+  // 4096. MALLOC_CAP_DMA is not needed, because no DMA reads this buffer directly.
+  uint8_t *bufA = (uint8_t *) heap_caps_malloc(DRAW_BUF_SIZE, MALLOC_CAP_INTERNAL);
+  if (!bufA) {
+    bufA = (uint8_t *) malloc(DRAW_BUF_SIZE); // internal RAM is tight? then take whatever is left
+  }
+  Serial.printf("LVGL: one draw buffer of %u bytes in %s RAM\r\n",
+                (unsigned)DRAW_BUF_SIZE, esp_ptr_internal(bufA) ? "internal" : "PSRAM");
+  lv_display_set_buffers(disp, bufA, NULL, DRAW_BUF_SIZE, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
   // Initialize the touchscreen driver
   // https://github.com/lvgl/lvgl/blob/release/v9.0/docs/CHANGELOG.rst#indev-api
