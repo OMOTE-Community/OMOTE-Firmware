@@ -14,6 +14,18 @@
 #endif
 #include <esp_heap_caps.h>
 #include <soc/soc_memory_layout.h> // esp_ptr_internal(), to report where the draw buffer ended up
+
+// LVGL 8 had LV_COLOR_16_SWAP as a configuration switch. LVGL 9 does not define it any more, it
+// only honours it for backward compatibility: if it is set, LVGL swaps the bytes itself before it
+// calls the flush callback (see lv_refr.c). If it is not set - the normal case in v9 - LVGL
+// delivers RGB565 in the CPU byte order and the driver has to swap while sending.
+// In the preprocessor an undefined macro counts as 0, but in C++ code it has to be written out,
+// so this is the one place that knows about it.
+#if defined(LV_COLOR_16_SWAP) && LV_COLOR_16_SWAP
+  #define LVGL_DELIVERS_PANEL_BYTE_ORDER 1
+#else
+  #define LVGL_DELIVERS_PANEL_BYTE_ORDER 0
+#endif
 #include "SparkFunLIS3DH.h"
 #include "Wire.h"
 #include <IRremoteESP8266.h>
@@ -344,7 +356,7 @@ static void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t *p
   // sending: with LV_COLOR_16_SWAP = 0 LVGL delivers them in the CPU byte order, so yes.
   tft.startWrite();
   tft.setAddrWindow(area->x1, area->y1, w, h);
-  tft.pushPixels((uint16_t *)px_map, w * h, LV_COLOR_16_SWAP == 0);
+  tft.pushPixels((uint16_t *)px_map, w * h, LVGL_DELIVERS_PANEL_BYTE_ORDER == 0);
   tft.endWrite();
   #elif (DISPLAY_DRIVER == 1)
   // Arduino_GFX's flush is synchronous - the transfer is done when it returns,

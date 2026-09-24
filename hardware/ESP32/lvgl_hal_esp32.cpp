@@ -4,6 +4,18 @@
 #include "tft_hal_esp32.h"
 #include "sleep_hal_esp32.h"
 
+// LVGL 8 had LV_COLOR_16_SWAP as a configuration switch. LVGL 9 does not define it any more, it
+// only honours it for backward compatibility: if it is set, LVGL swaps the bytes itself before it
+// calls the flush callback (see lv_refr.c). If it is not set - the normal case in v9 - LVGL
+// delivers RGB565 in the CPU byte order and the driver has to swap while sending.
+// In the preprocessor an undefined macro counts as 0, but in C++ code it has to be written out,
+// so this is the one place that knows about it.
+#if defined(LV_COLOR_16_SWAP) && LV_COLOR_16_SWAP
+  #define LVGL_DELIVERS_PANEL_BYTE_ORDER 1
+#else
+  #define LVGL_DELIVERS_PANEL_BYTE_ORDER 0
+#endif
+
 // -----------------------
 // https://docs.lvgl.io/master/porting/display.html#two-buffers
 // With two buffers, the rendering and refreshing of the display become parallel operations
@@ -43,7 +55,7 @@
 #undef useTwoBuffersForlvgl
 #endif
 
-#if (DISPLAY_DRIVER == 0) && (LV_COLOR_16_SWAP == 0)
+#if (DISPLAY_DRIVER == 0) && (LVGL_DELIVERS_PANEL_BYTE_ORDER == 0)
 // LVGL renders RGB565 in the CPU byte order, the ILI9341 expects the high byte first. For the
 // asynchronous transfer the DMA sends the buffer exactly as it is, so the bytes have to be swapped
 // in the buffer beforehand. This runs while the previous transfer is still going on, so it does not
@@ -94,7 +106,7 @@ static void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t *p
   // The next pushImageDMA() waits for this transfer before it starts the next one, and getTouch()
   // does the same (the touch config keeps the default bus_shared = true).
   if (lvgl_flush_async) {
-    #if (LV_COLOR_16_SWAP == 0)
+    #if (LVGL_DELIVERS_PANEL_BYTE_ORDER == 0)
     swap_rgb565_inplace((lv_color_t *)px_map, w * h);
     #endif
     if (tft.getStartCount() == 0) {
@@ -108,7 +120,7 @@ static void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t *p
     // already in the panel's byte order and must not be swapped a second time.
     tft.startWrite();
     tft.setAddrWindow(area->x1, area->y1, w, h);
-    tft.pushPixels((uint16_t *)px_map, w * h, LV_COLOR_16_SWAP == 0);
+    tft.pushPixels((uint16_t *)px_map, w * h, LVGL_DELIVERS_PANEL_BYTE_ORDER == 0);
     tft.endWrite();
   }
   #elif (DISPLAY_DRIVER == 1)
