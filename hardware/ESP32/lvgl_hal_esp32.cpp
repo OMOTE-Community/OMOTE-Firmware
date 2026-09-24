@@ -120,6 +120,23 @@ static void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t *p
   lv_display_flush_ready(disp);
 }
 
+// -----------------------
+// Ghost touches? The FT6206 decides with the threshold in register 0x80 (ID_G_THGROUP) how much
+// signal counts as a touch. The lower the value, the more sensitive it is, and the more likely
+// noise - from the panel itself, from the backlight PWM or from the display bus - shows up as a
+// touch that nobody made.
+// The two display drivers treat that register differently:
+//   DISPLAY_DRIVER 0 (LovyanGFX)  : never writes it. Measured on a rev5 board, the value after
+//                                   power-on is 0, so the controller runs at its most sensitive.
+//   DISPLAY_DRIVER 1 (Adafruit)   : touch.begin() writes it, 128 is the library's default.
+// If you see touches that nobody made, define a threshold here. It is then used by both drivers,
+// so that they behave the same. Higher = less sensitive, the register is 8 bit, so 0..255.
+// Start with 128 and go up in steps if it is not enough. If it gets too high, real touches with a
+// light finger are lost.
+// Undefined = leave the controller as it is with DISPLAY_DRIVER 0, and use the Adafruit default
+// of 128 with DISPLAY_DRIVER 1.
+// #define TOUCH_THRESHOLD 128
+
 static bool TouchInitSuccessful = false;
 // Ask the touch controller whether it is there.
 // This deliberately goes through the same I2C driver that also drives the touch at runtime,
@@ -129,11 +146,27 @@ bool touchChipResponds() {
   #if (DISPLAY_DRIVER == 0)
   // LovyanGFX drives I2C itself (not through Wire), port 0 as configured for the touch above.
   // Register 0xA3 is the chip id of the FT5x06/FT6x06 family.
-  return lgfx::i2c::readRegister8(0, 0x38, 0xA3, 400000).has_value();
+  if (!lgfx::i2c::readRegister8(0, 0x38, 0xA3, 400000).has_value()) {
+    return false;
+  }
+  #ifdef TOUCH_THRESHOLD
+  // LovyanGFX does not touch this register, so write it here. This runs once, as soon as the
+  // controller answers for the first time - also after a restart, where it is not power cycled.
+  if (lgfx::i2c::writeRegister8(0, 0x38, 0x80, TOUCH_THRESHOLD, 0, 400000).has_value()) {
+    Serial.printf("Touch threshold (register 0x80) set to %d\r\n", TOUCH_THRESHOLD);
+  } else {
+    Serial.println("ERROR: could not set the touch threshold (register 0x80)");
+  }
+  #endif
+  return true;
   #elif (DISPLAY_DRIVER == 1)
   // readRegister8() is private in Adafruit_FT6206, so begin() is the only way to ask.
   // It verifies vendor id and chip id, and apart from rewriting the threshold it is idempotent.
-  return touch.begin(128);
+  #ifdef TOUCH_THRESHOLD
+  return touch.begin(TOUCH_THRESHOLD);
+  #else
+  return touch.begin(128); // the Adafruit default
+  #endif
   #else
   return false;
   #endif
