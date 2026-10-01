@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "tft_hal_esp32.h"
+#include "displaydriver.h"
 
 void init_hardware_general_HAL(void) {
   // Make sure ESP32 is running at full speed

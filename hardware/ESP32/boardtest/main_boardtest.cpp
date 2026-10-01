@@ -1,12 +1,8 @@
 // OMOTE test firmware for ESP32 OMOTE, to test hardware feeatures of the OMOTE board
 // 2023-2025 Maximilian Kern, Klaus Musch
 
-#if (DISPLAY_DRIVER == 0)
-#include <LovyanGFX.hpp>
-#elif (DISPLAY_DRIVER == 1)
-#include <Arduino_GFX_Library.h>
-#include <Adafruit_FT6206.h>
-#endif
+#include "../displaydriver.h"
+
 #if(OMOTE_HARDWARE_REV >= 5)
   #include <Adafruit_TCA8418.h>
 #else
@@ -34,7 +30,6 @@
 #include <IRutils.h>
 #include <lvgl.h>
 #include "WiFi.h"
-#include "driver/ledc.h"
 #include <SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library.h>
 #include "secrets.h"
 #if(OMOTE_HARDWARE_REV >= 5)
@@ -47,24 +42,6 @@
 // Pin assignment ---------------------------------------------------------------------------------
 
 #if(OMOTE_HARDWARE_REV >= 5)
-  const uint8_t SDA_GPIO = 20;
-  const uint8_t SCL_GPIO = 19;
-
-  const uint8_t LCD_BL_GPIO = 9;
-  const uint8_t LCD_EN_GPIO = 38;
-  const uint8_t LCD_CS_GPIO = 39;
-  const uint8_t LCD_DC_GPIO = 40;
-  const uint8_t LCD_WR_GPIO = 41;
-  const uint8_t LCD_RD_GPIO = 42;
-  const uint8_t LCD_D0_GPIO = 48;
-  const uint8_t LCD_D1_GPIO = 47;
-  const uint8_t LCD_D2_GPIO = 21;
-  const uint8_t LCD_D3_GPIO = 14;
-  const uint8_t LCD_D4_GPIO = 13;
-  const uint8_t LCD_D5_GPIO = 12;
-  const uint8_t LCD_D6_GPIO = 11;
-  const uint8_t LCD_D7_GPIO = 10;
-
   const uint8_t USER_LED_GPIO = 45;
 
   const uint8_t IR_RX_GPIO  = 4; // IR receiver input
@@ -72,8 +49,6 @@
   const uint8_t IR_LED_GPIO = 5;  // IR LED output
 
   const uint8_t ACC_INT_GPIO = 2;
-
-  #define LEDC_SPEED_MODE LEDC_LOW_SPEED_MODE
 
   const uint8_t SD_EN_GPIO = 16;
   const uint8_t SD_CS_GPIO = 18;
@@ -83,16 +58,6 @@
   
   const uint8_t KBD_BL_GPIO = 46;
 #else
-  const uint8_t SDA_GPIO = 19;
-  const uint8_t SCL_GPIO = 22;
-
-  const uint8_t LCD_BL_GPIO = 4;
-  const uint8_t LCD_EN_GPIO = 10;
-  const uint8_t LCD_CS_GPIO = 5;
-  const uint8_t LCD_DC_GPIO = 9;
-  const uint8_t LCD_MOSI_GPIO = 23;
-  const uint8_t LCD_SCK_GPIO = 18;
-
   const uint8_t USER_LED_GPIO = 2;
 
   const uint8_t IR_RX_GPIO  = 15; // IR receiver input
@@ -100,8 +65,6 @@
   const uint8_t IR_LED_GPIO = 33; // IR LED output
 
   const uint8_t ACC_INT_GPIO = 13;
-
-  #define LEDC_SPEED_MODE LEDC_HIGH_SPEED_MODE
 #endif
 
 #if (OMOTE_HARDWARE_REV <= 3)
@@ -165,93 +128,6 @@ int standbyTimer = SLEEP_TIMEOUT;
 bool wakeupByIMUEnabled = true;
 LIS3DH IMU(I2C_MODE, 0x19); // Default constructor is I2C, addr 0x19.
 
-// LCD declarations -------------------------------------------------------------------------------
-#if (DISPLAY_DRIVER == 0)
-class LGFX : public lgfx::LGFX_Device{
-private:
-    lgfx::Panel_ILI9341 _panel_instance;
-    #if(OMOTE_HARDWARE_REV >= 5)
-    lgfx::Bus_Parallel8 _bus_instance;
-    #else
-    lgfx::Bus_SPI _bus_instance;
-    #endif
-    lgfx::Touch_FT5x06 _touch_instance;
-
-public:
-    LGFX(void);
-};
-LGFX::LGFX(void) {
-  {
-    auto cfg = _bus_instance.config();
-    cfg.freq_write = SPI_FREQUENCY;
-    #if(OMOTE_HARDWARE_REV >= 5)
-    cfg.pin_wr = LCD_WR_GPIO;
-    cfg.pin_rd = LCD_RD_GPIO;
-    cfg.pin_rs = LCD_DC_GPIO;
-    cfg.pin_d0 = LCD_D0_GPIO;
-    cfg.pin_d1 = LCD_D1_GPIO;
-    cfg.pin_d2 = LCD_D2_GPIO;
-    cfg.pin_d3 = LCD_D3_GPIO;
-    cfg.pin_d4 = LCD_D4_GPIO;
-    cfg.pin_d5 = LCD_D5_GPIO;
-    cfg.pin_d6 = LCD_D6_GPIO;
-    cfg.pin_d7 = LCD_D7_GPIO;
-    #else
-    cfg.freq_read  = 16000000;
-    cfg.dma_channel = SPI_DMA_CH_AUTO;
-    cfg.pin_sclk = LCD_SCK_GPIO;
-    cfg.pin_mosi = LCD_MOSI_GPIO;
-    cfg.pin_dc   = LCD_DC_GPIO;
-    #endif
-    _bus_instance.config(cfg);
-    _panel_instance.setBus(&_bus_instance);
-  }
-  {
-    auto cfg = _panel_instance.config();
-    cfg.pin_cs           = LCD_CS_GPIO;
-    cfg.pin_rst          = -1;
-    cfg.pin_busy         = -1;
-    cfg.memory_width     = SCR_WIDTH;
-    cfg.memory_height    = SCR_HEIGHT;
-    cfg.panel_width      = SCR_WIDTH;
-    cfg.panel_height     = SCR_HEIGHT;
-    cfg.offset_rotation  = 2;
-    _panel_instance.config(cfg);
-  }
-  {
-    auto cfg = _touch_instance.config();
-    cfg.i2c_addr = 0x38;
-    cfg.i2c_port = 0;
-    cfg.pin_sda = SDA_GPIO;
-    cfg.pin_scl = SCL_GPIO;
-    cfg.freq = 400000;
-    cfg.x_min = 0;
-    cfg.x_max = SCR_WIDTH-1;
-    cfg.y_min = 0;
-    cfg.y_max = SCR_HEIGHT-1;
-    _touch_instance.config(cfg);
-    _panel_instance.setTouch(&_touch_instance);
-  }
-  setPanel(&_panel_instance);
-}
-LGFX tft;
-#elif (DISPLAY_DRIVER == 1)
-#if(OMOTE_HARDWARE_REV >= 5)
-Arduino_DataBus *agfxBus = new Arduino_ESP32PAR8(
-  LCD_DC_GPIO, LCD_CS_GPIO, LCD_WR_GPIO, LCD_RD_GPIO,
-  LCD_D0_GPIO, LCD_D1_GPIO, LCD_D2_GPIO, LCD_D3_GPIO,
-  LCD_D4_GPIO, LCD_D5_GPIO, LCD_D6_GPIO, LCD_D7_GPIO
-);
-#else
-// rev1-4 drives the ILI9341 over VSPI, using its native pins (sck 18, mosi 23, cs 5).
-Arduino_DataBus *agfxBus = new Arduino_ESP32SPI(
-  LCD_DC_GPIO, LCD_CS_GPIO, LCD_SCK_GPIO, LCD_MOSI_GPIO,
-  GFX_NOT_DEFINED /* miso */, VSPI, false /* is_shared_interface */
-);
-#endif
-Arduino_GFX *agfx = new Arduino_ILI9341(agfxBus, GFX_NOT_DEFINED, 0, false);
-Adafruit_FT6206 touch = Adafruit_FT6206();
-#endif
 int backlightBrightness = 255;
 
 // Keypad declarations ----------------------------------------------------------------------------
@@ -325,7 +201,7 @@ static void show_touches_cb(lv_event_t * e) {
       // create new screen, only showing touches
       touchScreen = lv_obj_create(NULL);
       lv_obj_set_style_pad_all(touchScreen, 0, LV_PART_MAIN);
-      lv_obj_clear_flag(touchScreen, LV_OBJ_FLAG_SCROLLABLE);
+      lv_obj_remove_flag(touchScreen, LV_OBJ_FLAG_SCROLLABLE);
       lv_screen_load(touchScreen);
 
       // Status line at the bottom.
@@ -341,92 +217,29 @@ static void show_touches_cb(lv_event_t * e) {
   }
 }
 
-// Display flushing
-static void my_disp_flush( lv_display_t *disp, const lv_area_t *area, uint8_t *px_map ) {
-  uint32_t w = (area->x2 - area->x1 + 1);
-  uint32_t h = (area->y2 - area->y1 + 1);
-
-  #if (DISPLAY_DRIVER == 0)
-  // Synchronous: endWrite() waits until everything has been sent, so LVGL may render into the
-  // buffer again as soon as this returns. That is why one buffer is enough here.
-  // (The firmware can also send asynchronously, which needs a second buffer and DMA capable
-  // memory - see the comments in hardware/ESP32/lvgl_hal_esp32.cpp. For a board test the few
-  // frames per second are not worth the memory and the extra complexity.)
-  // The last parameter of pushPixels() says whether LovyanGFX has to swap the bytes while
-  // sending: with LV_COLOR_16_SWAP = 0 LVGL delivers them in the CPU byte order, so yes.
-  tft.startWrite();
-  tft.setAddrWindow(area->x1, area->y1, w, h);
-  tft.pushPixels((uint16_t *)px_map, w * h, LVGL_DELIVERS_PANEL_BYTE_ORDER == 0);
-  tft.endWrite();
-  #elif (DISPLAY_DRIVER == 1)
-  // Arduino_GFX's flush is synchronous - the transfer is done when it returns,
-  // so a single buffer is enough and lv_disp_flush_ready() can follow directly.
-  agfx->draw16bitRGBBitmap(area->x1, area->y1, reinterpret_cast<uint16_t *>(px_map), w, h);
-  #endif
-
-  lv_display_flush_ready(disp);
-}
-
 // Read the touchpad
-bool TouchInitSuccessful = false;
 bool touchChipResponds();
-static void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data) {
-    // Ignore the touch until the controller has answered. The retry is done in loop(), which
-    // also updates the table - doing it here as well would set the flag without the table.
-    if (!TouchInitSuccessful) {
-      data->state = LV_INDEV_STATE_REL;
-      return;
-    }
+void my_touchpad_read(lv_indev_t * indev_driver, lv_indev_data_t * data) {
+  // Ignore the touch until the controller has answered. The retry is done in loop(), which
+  // also updates the table - doing it here as well would set the flag without the table.
+  if (!TouchInitSuccessful) {
+    data->state = LV_INDEV_STATE_RELEASED;
+    return;
+  }
 
-    uint16_t x, y;
-    #if (DISPLAY_DRIVER == 0)
-    if (tft.getTouch(&x, &y)) {
-        data->state = LV_INDEV_STATE_PRESSED;
-        data->point.x = x;
-        data->point.y = y;
+  my_touchpad_read_display_specific(indev_driver, data);
 
-        standbyTimer = SLEEP_TIMEOUT;
-
-        count_touches++;
-        // draw touch point
-        if (show_touches) {
-          if (x >= 0 && x < tft.width() && y >= 0 && y < tft.height()) {
-            tft.drawPixel(x, y, TFT_RED);
-          }
-        }
-
-        lv_table_set_cell_value_fmt(checksTable, 8, 1, "%" LV_PRIu32, count_touches);
-
-    } else {
-        data->state = LV_INDEV_STATE_RELEASED;
-    }
-    #elif (DISPLAY_DRIVER == 1)
-    TS_Point touchPoint = touch.getPoint();
-    x = touchPoint.x;
-    y = touchPoint.y;
-
-    if (!touch.touched()) {
-      data->state = LV_INDEV_STATE_REL;
-      return;
-    }
-  
-    data->state = LV_INDEV_STATE_PR;
-    // The touch controller counts from the opposite corner than the panel does.
-    data->point.x = SCR_WIDTH - 1 - x;
-    data->point.y = SCR_HEIGHT - 1 - y;
-
+  if (data->state == LV_INDEV_STATE_PRESSED) {
     standbyTimer = SLEEP_TIMEOUT;
 
     count_touches++;
     // draw touch point
     if (show_touches) {
-      if (data->point.x >= 0 && data->point.x < SCR_WIDTH && data->point.y >= 0 && data->point.y < SCR_HEIGHT) {
-        agfx->drawPixel(data->point.x, data->point.y, RGB565_RED);
-      }
+      draw_touchpoint(data->point.x, data->point.y);
     }
 
     lv_table_set_cell_value_fmt(checksTable, 8, 1, "%" LV_PRIu32, count_touches);
-    #endif
+  }
 }
 
 int activityDetection(){
@@ -625,58 +438,6 @@ static uint32_t my_tick_get_cb(void) {
 int fuelGaugeInitSuccessful = false;
 int sdCardInitSuccessful = false;
 
-// -----------------------
-// Ghost touches? The FT6206 decides with the threshold in register 0x80 (ID_G_THGROUP) how much
-// signal counts as a touch. The lower the value, the more sensitive it is, and the more likely
-// noise - from the panel itself, from the backlight PWM or from the display bus - shows up as a
-// touch that nobody made.
-// The two display drivers treat that register differently:
-//   DISPLAY_DRIVER 0 (LovyanGFX)  : never writes it. Measured on a rev5 board, the value after
-//                                   power-on is 0, so the controller runs at its most sensitive.
-//   DISPLAY_DRIVER 1 (Adafruit)   : touch.begin() writes it, 128 is the library's default.
-// If you see touches that nobody made, define a threshold here. It is then used by both drivers,
-// so that they behave the same. Higher = less sensitive, the register is 8 bit, so 0..255.
-// Start with 128 and go up in steps if it is not enough. If it gets too high, real touches with a
-// light finger are lost.
-// Undefined = leave the controller as it is with DISPLAY_DRIVER 0, and use the Adafruit default
-// of 128 with DISPLAY_DRIVER 1.
-// The same switch exists in the firmware, in hardware/ESP32/lvgl_hal_esp32.cpp.
-// #define TOUCH_THRESHOLD 128
-
-// Ask the touch controller whether it is there.
-// This deliberately goes through the same I2C driver that also drives the touch at runtime,
-// so a negative result means "the touch controller did not answer" and not "some other
-// I2C stack is not in shape".
-bool touchChipResponds() {
-  #if (DISPLAY_DRIVER == 0)
-  // LovyanGFX drives I2C itself (not through Wire), port 0 as configured for the touch above.
-  // Register 0xA3 is the chip id of the FT5x06/FT6x06 family.
-  if (!lgfx::i2c::readRegister8(0, 0x38, 0xA3, 400000).has_value()) {
-    return false;
-  }
-  #ifdef TOUCH_THRESHOLD
-  // LovyanGFX does not touch this register, so write it here. This runs once, as soon as the
-  // controller answers for the first time - also after a restart, where it is not power cycled.
-  if (lgfx::i2c::writeRegister8(0, 0x38, 0x80, TOUCH_THRESHOLD, 0, 400000).has_value()) {
-    Serial.printf("Touch threshold (register 0x80) set to %d\r\n", TOUCH_THRESHOLD);
-  } else {
-    Serial.println("ERROR: could not set the touch threshold (register 0x80)");
-  }
-  #endif
-  return true;
-  #elif (DISPLAY_DRIVER == 1)
-  // readRegister8() is private in Adafruit_FT6206, so begin() is the only way to ask.
-  // It verifies vendor id and chip id, and apart from rewriting the threshold it is idempotent.
-  #ifdef TOUCH_THRESHOLD
-  return touch.begin(TOUCH_THRESHOLD);
-  #else
-  return touch.begin(128); // the Adafruit default
-  #endif
-  #else
-  return false;
-  #endif
-}
-
 void setup() {  
 
   Serial.begin(115200);
@@ -752,107 +513,11 @@ void setup() {
   lv_init();
 
   // setup TFT ------------------------------------------------------------------------------------
-  // Configure the backlight PWM
-  // Manual setup because ledcSetup() briefly turns on the backlight
-  ledc_channel_config_t ledc_channel_left;
-  ledc_channel_left.gpio_num = (gpio_num_t)LCD_BL_GPIO;
-  ledc_channel_left.speed_mode = LEDC_SPEED_MODE;
-  ledc_channel_left.channel = LEDC_CHANNEL_5;
-  ledc_channel_left.intr_type = LEDC_INTR_DISABLE;
-  ledc_channel_left.timer_sel = LEDC_TIMER_1;
-  // LEDC channel duty, the range of duty setting is [0, (2**duty_resolution)]
-  ledc_channel_left.duty = 0;
-  // needs to be set to 0, otherwise log message "E (324) ledc: ledc_set_duty_with_hpoint(699): hpoint argument is invalid"
-  // https://github.com/mudassar-tamboli/ESP32-OV7670-WebSocket-Camera/issues/13
-  // LEDC channel hpoint value, the max value is 0xfffff
-  ledc_channel_left.hpoint = 0;
-  ledc_channel_left.flags.output_invert = 1; // Can't do this with ledcSetup()
-  // hpoint and duty explained:
-  // https://miro.medium.com/v2/resize:fit:1400/1*ViqSTFdH9COZ51iKYrIyMA.png
-  ledc_channel_config(&ledc_channel_left);
+  setup_tft();
+  init_tft();
 
-  ledc_timer_config_t ledc_timer;
-  ledc_timer.speed_mode = LEDC_SPEED_MODE;
-  ledc_timer.duty_resolution = LEDC_TIMER_8_BIT;
-  ledc_timer.timer_num = LEDC_TIMER_1;
-  ledc_timer.freq_hz = 640;
-  // https://github.com/mudassar-tamboli/ESP32-OV7670-WebSocket-Camera/issues/13
-  // otherwise crash with "assert failed: ledc_clk_cfg_to_global_clk ledc.c:444 (false)"
-  ledc_timer.clk_cfg = LEDC_USE_APB_CLK;
-  esp_err_t err = ledc_timer_config(&ledc_timer);
-  if (err != ESP_OK) {
-    Serial.println("Error when calling ledc_timer_config!");
-  }  
+  setup_wire();
 
-  #if (OMOTE_HARDWARE_REV == 1)
-  // Slowly charge the VSW voltage to prevent a brownout
-  // Workaround for hardware rev 1!
-  Serial.println("Will slowly charge VSW voltage to prevent that screen is completely bright, with no content");
-  for(int i = 0; i < 100; i++) {
-    digitalWrite(LCD_EN_GPIO, HIGH);  // LCD Logic off
-    delayMicroseconds(1);
-    digitalWrite(LCD_EN_GPIO, LOW);   // LCD Logic on
-  }
-  #else
-  Serial.println("Will immediately charge VSW voltage. If screen is completely bright, with no content, then this is the reason.");
-  digitalWrite(LCD_EN_GPIO, LOW);
-  #endif
-
-  delay(100); // Wait for the LCD driver to power on
-  #if (DISPLAY_DRIVER == 0)
-  tft.init();
-  tft.fillScreen(TFT_BLACK);
-  // No initDMA() and no setSwapBytes() here: initDMA() does nothing at all on this hardware (it is
-  // an empty function for both the parallel and the SPI bus of LovyanGFX), and the byte order is
-  // passed to pushPixels() in my_disp_flush() directly.
-  #elif (DISPLAY_DRIVER == 1)
-  #if(OMOTE_HARDWARE_REV >= 5)
-  if (!agfx->begin()) {
-  #else
-  if (!agfx->begin(SPI_FREQUENCY)) {
-  #endif
-    Serial.println("LCD init failed (Arduino_GFX)");
-  }
-
-  // Panel corrections, so that "Arduino_GFX" shows the same picture as LovyanGFX.
-  // Arduino_GFX never writes the ILI9341 gamma tables - GMCTRP1/GMCTRN1 are commented out
-  // in its ili9341_init_operations[], only the curve selection (GAMMASET) is sent - and it
-  // uses weaker power and VCOM settings than LovyanGFX. Black level, contrast and the
-  // antialiased edges of LVGL's text all depend on these, which is why the picture looks
-  // flatter without them. The values below are the ones LovyanGFX writes in
-  // Panel_ILI9341::getInitCommands().
-  // Not corrected here, because they are not visible in a still picture: FRMCTR1 (frame
-  // rate, 0x00,0x13 vs 0x00,0x1A) and DFUNCTR (0x08,0xC2,0x27 vs 0x08,0x82,0x27).
-  static const uint8_t gammaP[15] = {0x0F,0x31,0x2B,0x0C,0x0E,0x08,0x4E,0xF1,0x37,0x07,0x10,0x03,0x0E,0x09,0x00};
-  static const uint8_t gammaN[15] = {0x00,0x0E,0x14,0x03,0x11,0x07,0x31,0xC1,0x48,0x08,0x0F,0x0C,0x31,0x36,0x0F};
-  agfxBus->beginWrite();
-  agfxBus->writeC8D8(0xC0, 0x23);                              // PWCTR1  power control, VRH   (Arduino_GFX: 0x10)
-  agfxBus->writeC8D8(0xC1, 0x10);                              // PWCTR2  power control, SAP/BT (Arduino_GFX: 0x00)
-  agfxBus->writeCommand(0xC5); agfxBus->write(0x3E); agfxBus->write(0x28);  // VMCTR1 VCOM      (Arduino_GFX: 0x30,0x30)
-  agfxBus->writeC8D8(0xC7, 0x86);                              // VMCTR2  VCOM offset          (Arduino_GFX: 0xB7)
-  agfxBus->writeCommand(0xE0);                                 // GMCTRP1 positive gamma curve (Arduino_GFX: not written)
-  for (uint8_t i = 0; i < 15; i++) agfxBus->write(gammaP[i]);
-  agfxBus->writeCommand(0xE1);                                 // GMCTRN1 negative gamma curve (Arduino_GFX: not written)
-  for (uint8_t i = 0; i < 15; i++) agfxBus->write(gammaN[i]);
-  agfxBus->endWrite();
-
-  agfx->fillScreen(RGB565_BLACK);
-  #endif
-
-  // Make sure the I2C bus runs on OMOTE's pins before the other I2C devices are initialized.
-  // Several libraries call Wire.begin() without arguments (LIS3DH, Adafruit BusIO for the
-  // TCA8418 keypad and the FT6206 touch). If Wire is not running at that point, they start it
-  // on the board defaults SDA=8/SCL=9 - on rev5 that is the keypad interrupt and the backlight.
-  // With DISPLAY_DRIVER 0 this normally does nothing: LovyanGFX has already started Wire when it
-  // initialized the touch in tft.init(), and it has to stay that way. If Wire is started before
-  // tft.init(), LovyanGFX only shares the bus instead of owning it, and then its I2C error
-  // recovery (a reset of the I2C peripheral) breaks Wire for everybody else.
-  // With DISPLAY_DRIVER 1 this is what starts the bus, before touch.begin() is called.
-  // 100 kHz, because that is what LovyanGFX starts Wire with (it passes no frequency), so the
-  // bus runs at the same speed with both drivers and in the fallback case above. LovyanGFX's
-  // own touch transfers still run at the 400 kHz of its touch config; it sets that per
-  // transfer and restores the Wire settings afterwards.
-  Wire.begin(SDA_GPIO, SCL_GPIO, 100000);
   // Check if the touchscreen is responding
   TouchInitSuccessful = touchChipResponds();
 
@@ -860,30 +525,16 @@ void setup() {
   // new in lvgl 9
   lv_tick_set_cb(my_tick_get_cb);
 
-  /*LVGL draw into this buffer, 1/10 screen size usually works well. The size is in bytes*/
-  #define DRAW_BUF_SIZE (SCR_WIDTH * SCR_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
-
+  // Initialize the display driver
   // https://github.com/lvgl/lvgl/blob/release/v9.0/docs/CHANGELOG.rst#display-api
   // https://docs.lvgl.io/master/get-started/quick-overview.html#add-lvgl-into-your-project
   lv_display_t *disp = lv_display_create(SCR_WIDTH, SCR_HEIGHT);
   lv_display_set_flush_cb(disp, my_disp_flush);
 
-  // https://github.com/lvgl/lvgl/blob/release/v9.0/docs/CHANGELOG.rst#migration-guide
-  // lv_display_set_buffers(display, buf1, buf2, buf_size_byte, mode) is more or less the equivalent of lv_disp_draw_buf_init(&draw_buf_dsc, buf1, buf2, buf_size_px) from v8, however in v9 the buffer size is set in bytes.
-  //
-  // One draw buffer. A second one would only help if my_disp_flush() returned before the transfer
-  // is finished, and it does not (see there).
-  // Internal memory is asked for, because LVGL renders into this buffer pixel by pixel and that is
-  // faster in internal RAM than in PSRAM: measured 24.6 instead of 27.0 ms per full screen. A plain
-  // malloc() of this size returns PSRAM on rev5, because CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL is
-  // 4096. MALLOC_CAP_DMA is not needed, because no DMA reads this buffer directly.
-  uint8_t *bufA = (uint8_t *) heap_caps_malloc(DRAW_BUF_SIZE, MALLOC_CAP_INTERNAL);
-  if (!bufA) {
-    bufA = (uint8_t *) malloc(DRAW_BUF_SIZE); // internal RAM is tight? then take whatever is left
-  }
-  Serial.printf("LVGL: one draw buffer of %u bytes in %s RAM\r\n",
-                (unsigned)DRAW_BUF_SIZE, esp_ptr_internal(bufA) ? "internal" : "PSRAM");
-  lv_display_set_buffers(disp, bufA, NULL, DRAW_BUF_SIZE, LV_DISPLAY_RENDER_MODE_PARTIAL);
+  // allocate lvgl buffers ----------------------------------------------------------------------
+  // Has to come after lv_display_create(): in LVGL 9 the buffers are handed to the display, not
+  // registered through a descriptor as in v8.
+  init_lvgl_buffer(disp);
 
   // Initialize the touchscreen driver
   // https://github.com/lvgl/lvgl/blob/release/v9.0/docs/CHANGELOG.rst#indev-api
@@ -1115,7 +766,7 @@ void loop() {
     IMUTaskTimer = millis();
   }
 
-  // Retry the touch controller check at 2Hz ------------------------------------------------------
+  // Retry the touch controller check at 0.5Hz ------------------------------------------------------
   // After a soft restart (ESP.restart()) the touch controller is not power cycled and can need
   // a moment before it answers. Without this retry a single unlucky moment during setup would
   // leave the warning in the table for the rest of the session. Until then my_touchpad_read()

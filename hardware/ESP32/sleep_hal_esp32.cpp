@@ -7,6 +7,7 @@
 // turn off power of IR receiver
 #include "infrared_receiver_hal_esp32.h"
 // turn off tft
+#include "displaydriver.h"
 #include "tft_hal_esp32.h"
 // turn off SD card
 #include "sd_card_hal_esp32.h"
