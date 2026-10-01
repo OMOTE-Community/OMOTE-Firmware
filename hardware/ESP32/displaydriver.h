@@ -75,7 +75,7 @@
 // Careful: this is not the fix if red and blue are swapped but light and dark are correct. That is
 // the RGB/BGR order of the panel, not the inversion, and the knob for it is rgb_order in the
 // LovyanGFX panel config resp. the "bgr" argument of the Arduino_ILI9341 constructor.
-#define DISPLAY_INVERT_COLORS
+// #define DISPLAY_INVERT_COLORS
 
 // LVGL 8 had LV_COLOR_16_SWAP as a configuration switch. LVGL 9 does not define it any more, it
 // only honours it for backward compatibility: if it is set, LVGL swaps the bytes itself before it
