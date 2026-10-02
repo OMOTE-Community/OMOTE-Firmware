@@ -37,6 +37,7 @@ unsigned long millis() {
 }
 
 SerialClass Serial;
+
 void SerialClass::begin(unsigned long) {
   // Serial.begin is one of the first methods called in main.cpp
   // So we use this to initialize the timer
@@ -49,6 +50,7 @@ size_t SerialClass::printf(const char * format, ...) {
   va_start(args, format);
   int ret = vprintf(format, args);
   va_end(args);
+  fflush(stdout);
   return ret;
 }
 

@@ -68,6 +68,7 @@ void register_command(uint16_t *command, commandData aCommandData) {
 
   commands[*command] = aCommandData;
 }
+
 // only get a unique ID. used by KEYBOARD_DUMMY and COMMAND_UNKNOWN
 void get_uniqueCommandID(uint16_t *command) {
   *command = uniqueCommandID;
@@ -178,7 +179,7 @@ std::string convertStringListToString(std::list<std::string> listOfStrings) {
 void executeCommandWithData(uint16_t command, commandData commandData, std::string additionalPayload = "") {
   switch (commandData.commandHandler) {
     case IR: {
-      omote_log_v("  generic IR, payloads %s\r\n", convertStringListToString(commandData.commandPayloads).c_str());
+      omote_log_d("  generic IR, payloads %s\r\n", convertStringListToString(commandData.commandPayloads).c_str());
 
       // we received a comma separated list of strings
       // the first string is the IR protocol, the second is the payload to be sent
@@ -186,7 +187,7 @@ void executeCommandWithData(uint16_t command, commandData commandData, std::stri
       // get protocol and erase first element in list
       std::string protocol = *it;
       it = commandData.commandPayloads.erase(it);
-      omote_log_v("  protocol %s, payload %s\r\n", protocol.c_str(), convertStringListToString(commandData.commandPayloads).c_str());
+      omote_log_d("  protocol %s, payload %s\r\n", protocol.c_str(), convertStringListToString(commandData.commandPayloads).c_str());
       
       sendIRcode(std::stoi(protocol), commandData.commandPayloads, additionalPayload);
       break;

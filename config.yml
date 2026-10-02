@@ -1,0 +1,667 @@
+scenes:
+  watch_tv:
+    display_name: Watch TV
+    keys_default: sony_bravia
+    shortcuts:
+      - device: sony_bravia
+        command: Netflix
+      - device: sony_bravia
+        command: Swap
+        
+    keys_short:
+      UP:
+        device: sony_bravia
+        command: Down
+      DOWN:
+        device: sony_bravia
+        command: Up
+    start:
+      - device: sony_bravia
+        command: Power
+
+  watch_tv_receiver:
+    display_name: Watch TV Receiver
+    keys_default: sony_bravia    
+    keys_short:
+      VOLUP:
+        device: denon_x4700h
+        command: Volume Up
+      VOLDO:
+        device: denon_x4700h
+        command: Volume Down
+      MUTE:
+        device: denon_x4700h
+        command: Mute
+      
+    start:
+      - device: sony_bravia
+        command: Power        
+      - delay: 500
+      - device: denon_x4700h
+        command: Power Toggle
+      - device: denon_x4700h
+        command: Input TV
+     
+  watch_dvd:
+    display_name: Watch DVD
+    keys_default: sony_bravia
+    keys_short:
+      VOLUP:
+        device: denon_x4700h
+        command: Volume Up
+      VOLDO:
+        device: denon_x4700h
+        command: Volume Down
+      MUTE:
+        device: denon_x4700h
+        command: Mute
+    shortcuts:
+      - device: panasonic_dvd
+        command: Eject
+        
+    start:
+      - device: panasonic_dvd
+        command: Power
+      - device: sony_bravia
+        command: Power        
+      - device: denon_x4700h
+        command: Power Toggle
+      - delay: 1000       
+      - device: denon_x4700h
+        command: Input Blue Ray
+      
+devices:
+  denon_x4700h:
+    display_name: Denon Receiver
+    protocol: DENON
+    commands:
+    - name: Power Toggle
+      data: "0x2A4C028A0088"
+      nbits: 48
+      repeats: 0
+      category: on,off
+      map_short: OFF
+    - name: Volume Up
+      data: "0x2A4C0280E86A"
+      nbits: 48
+      repeats: 0
+      map_short: VOLUP
+    - name: Volume Down
+      data: "0x2A4C0288E862"
+      nbits: 48
+      repeats: 0
+      map_short: VOLDO
+    - name: Input Blue Ray
+      data: "0x2A4C0288B43E"
+      nbits: 48
+      repeats: 0
+    - name: Input TV
+      data: "0x2A4C0284B432"
+      nbits: 48
+      repeats: 0
+    - name: Power Sleep
+      data: "0x2A4C02822CAC"
+      nbits: 48
+      repeats: 0
+    - name: Mute
+      data: "0x2A4C0284E86E"
+      nbits: 48
+      repeats: 0
+      map_short: MUTE
+    - name: Channel Up
+      data: "0x2A4C0288DC56"
+      nbits: 48
+      repeats: 0
+      map_short: CHUP
+    - name: Channel Down
+      data: "0x2A4C0284DC5A"
+      nbits: 48
+      repeats: 0
+    - name: Input Cable/Sat
+      data: "0x2A4C028CB43A"
+      nbits: 48
+      repeats: 0
+    - name: Input Media Player
+      data: "0x2A4C0286B430"
+      nbits: 48
+      repeats: 0
+    - name: Input Game
+      data: "0x2A4C028AB43C"
+      nbits: 48
+      repeats: 0
+    - name: Input Aux 1
+      data: "0x2A4C0289B43F"
+      nbits: 48
+      repeats: 0
+    - name: Input Aux 2
+      data: "0x2A4C0285B433"
+      nbits: 48
+      repeats: 0
+    - name: Input Phono
+      data: "0x2A4C028034B6"
+      nbits: 48
+      repeats: 0
+    - name: Input Tuner
+      data: "0x2A4C028F34B9"
+      nbits: 48
+      repeats: 0
+    - name: Input USB
+      data: "0x2A4C028734B1"
+      nbits: 48
+      repeats: 0
+    - name: Input BT
+      data: "0x2A4C028F74F9"
+      nbits: 48
+      repeats: 0
+    - name: Input Internet
+      data: "0x2A4C028A74FC"
+      nbits: 48
+      repeats: 0
+    - name: Input HEOS
+      data: "0x2A4C028E34B8"
+      nbits: 48
+      repeats: 0
+    - name: Power Eco
+      data: "0x2A4C02816CEF"
+      nbits: 48
+      repeats: 0
+    - name: Info
+      data: "0x2A4C0280E466"
+      nbits: 48
+      repeats: 0
+    - name: Option
+      data: "0x2A4C028ADC54"
+      nbits: 48
+      repeats: 0
+    - name: Back
+      data: "0x2A4C028440C6"
+      nbits: 48
+      repeats: 0
+    - name: Setup
+      data: "0x2A4C028C40CE"
+      nbits: 48
+      repeats: 0
+    - name: Enter
+      data: "0x2A4C028F800D"
+      nbits: 48
+      repeats: 0
+    - name: Up
+      data: "0x2A4C028D800F"
+      nbits: 48
+      repeats: 0
+    - name: Left
+      data: "0x2A4C028B8009"
+      nbits: 48
+      repeats: 0
+    - name: Right
+      data: "0x2A4C02878005"
+      nbits: 48
+      repeats: 0
+    - name: Down
+      data: "0x2A4C02838001"
+      nbits: 48
+      repeats: 0
+    - name: Mode Movie
+      data: "0x2A4C028928A3"
+      nbits: 48
+      repeats: 0
+    - name: Mode Music
+      data: "0x2A4C028528AF"
+      nbits: 48
+      repeats: 0
+    - name: Mode Game
+      data: "0x2A4C028D28A7"
+      nbits: 48
+      repeats: 0
+    - name: Mode Pure
+      data: "0x2A4C028AC840"
+      nbits: 48
+      repeats: 0
+    - name: Quick Select 1
+      data: "0x2A4C028248C8"
+      nbits: 48
+      repeats: 0
+    - name: Quick Select 2
+      data: "0x2A4C028A48C0"
+      nbits: 48
+      repeats: 0
+    - name: Quick Select 3
+      data: "0x2A4C028648CC"
+      nbits: 48
+      repeats: 0
+    - name: Quick Select 4
+      data: "0x2A4C028E48C4"
+      nbits: 48
+      repeats: 0
+    - name: Prev
+      data: "0x2A4C028C7CF2"
+      nbits: 48
+      repeats: 0
+    - name: Play/Pause
+      data: "0x2A4C02807CFE"
+      nbits: 48
+      repeats: 0
+    - name: Next
+      data: "0x2A4C02827CFC"
+      nbits: 48
+      repeats: 0
+      
+  sony_bravia:
+    display_name: Sony Bravia
+    protocol: SIRC    
+    commands:
+    - name: Power
+      data: '0xA90'
+      nbits: 12
+      map_short: OFF
+      category: on,off
+    - name: Input
+      data: '0xA50'
+      nbits: 12
+      map_short: SRC
+    - name: Home
+      data: '0x070'
+      nbits: 12
+      map_short: INFO
+    - name: Apps
+      data: '0x2A23'
+      nbits: 15
+    - name: Tv
+      data: '0x250'
+      nbits: 12
+    - name: Left
+      data: '0x2D0'
+      nbits: 12
+      map_short: LEFT
+    - name: Right
+      data: '0xCD0'
+      nbits: 12
+      map_short: RIGHT
+    - name: Up
+      data: '0x2F0'
+      nbits: 12
+      map_short: UP
+    - name: Down
+      data: '0xAF0'
+      nbits: 12
+      map_short: DOWN
+    - name: Enter
+      data: '0xA70'
+      nbits: 12
+      map_short: OK
+    - name: Back
+      data: '0x62E9'
+      nbits: 15
+      map_short: BACK
+    - name: Mute
+      data: '0x290'
+      nbits: 12
+      map_short: MUTE
+    - name: Vol Up
+      data: '0x490'
+      nbits: 12
+      map_short: VOLUP
+    - name: Vol Down
+      data: '0xC90'
+      nbits: 12
+      map_short: VOLDO
+    - name: Chan Next
+      data: '0x090'
+      nbits: 12
+      map_short: CHUP
+    - name: Chan Prev
+      data: '0x890'
+      nbits: 12
+      map_short: CHDOW
+    - name: Play
+      data: '0x2CE9'
+      nbits: 15
+      map_short: PLAY
+    - name: Pause
+      data: '0x4CE9'
+      nbits: 15
+    - name: Stop
+      data: '0x0CE9'
+      nbits: 15
+      map_short: STOP
+    - name: Fwd
+      data: '0x1CE9'
+      nbits: 15
+      map_short: FORW
+    - name: Rew
+      data: '0x6CE9'
+      nbits: 15
+      map_short: REWI
+    - name: Prev
+      data: '0x1EE9'
+      nbits: 15
+    - name: Next
+      data: '0x5EE9'
+      nbits: 15
+    - name: Rec
+      data: '0x02E9'
+      nbits: 15
+    - name: Netflix
+      data: '0x1F58'
+      nbits: 15
+    - name: Google Play
+      data: '0x3123'
+      nbits: 15
+    - name: Red
+      data: '0x52E9'
+      nbits: 15
+    - name: Green
+      data: '0x32E9'
+      nbits: 15
+    - name: Yellow
+      data: '0x72E9'
+      nbits: 15
+    - name: Blue
+      data: '0x12E9'
+      nbits: 15
+    - name: Action Menu
+      data: '0x6923'
+      nbits: 15
+      map_short: CONF
+    - name: Guide
+      data: '0x6D25'
+      nbits: 15
+    - name: Help
+      data: '0x5923'
+      nbits: 15
+    - name: Title List
+      data: '0x5358'
+      nbits: 15
+    - name: Audio
+      data: '0xE90'
+      nbits: 12
+    - name: Screen___
+      data: '0x0AE9'
+      nbits: 15
+    - name: Swap
+      data: '0xDD0'
+      nbits: 12
+    - name: Dig_analo
+      data: '0x58EE'
+      nbits: 15
+    - name: Tv_radio
+      data: '0x7558'
+      nbits: 15
+    - name: Exit
+      data: '0xC70'
+      nbits: 12
+    - name: Ext_box_menu
+      data: '0x4923'
+      nbits: 15
+    - name: '1'
+      data: '0x010'
+      nbits: 12
+    - name: '2'
+      data: '0x810'
+      nbits: 12
+    - name: '3'
+      data: '0x410'
+      nbits: 12
+    - name: '4'
+      data: '0xC10'
+      nbits: 12
+    - name: '5'
+      data: '0x210'
+      nbits: 12
+    - name: '6'
+      data: '0xA10'
+      nbits: 12
+    - name: '7'
+      data: '0x610'
+      nbits: 12
+    - name: '8'
+      data: '0xE10'
+      nbits: 12
+    - name: '9'
+      data: '0x110'
+      nbits: 12
+    - name: '0'
+      data: '0x910'
+      nbits: 12
+    - name: I_plus
+      data: '0x5D0'
+      nbits: 12
+    - name: Txt
+      data: '0xFD0'
+      nbits: 12
+
+  panasonic_dvd:
+    display_name: BlueRay
+    protocol: KASEIKYO
+    commands:
+    - name: Power
+      data: '0x40040D00BCB1'
+      nbits: 48
+      repeats: 0
+      category: on,off
+      map_short: OFF      
+    - name: Eject
+      data: '0x40040D00808D'
+      nbits: 48
+      repeats: 0
+    - name: Prev
+      data: '0x40040D00929F'
+      nbits: 48
+      repeats: 0
+    - name: Ok
+      data: '0x40040D00414C'
+      nbits: 48
+      repeats: 0
+      map_short: OK      
+    - name: Up
+      data: '0x40040D00A1AC'
+      nbits: 48
+      repeats: 0
+      map_short: UP
+    - name: Down
+      data: '0x40040D00616C'
+      nbits: 48
+      repeats: 0
+      map_short: DOWN      
+    - name: Left
+      data: '0x40040D00E1EC'
+      nbits: 48
+      repeats: 0
+      map_short: LEFT      
+    - name: Right
+      data: '0x40040D00111C'
+      nbits: 48
+      repeats: 0
+      map_short: RIGHT      
+    - name: Fast Frw
+      data: '0x40040D00A0AD'
+      nbits: 48
+      repeats: 0
+      map_short: FORW      
+    - name: Fast Bkw
+      data: '0x40040D00202D'
+      nbits: 48
+      repeats: 0
+      map_short: REWI      
+    - name: Pause
+      data: '0x40040D00606D'
+      nbits: 48
+      repeats: 0
+    - name: Play
+      data: '0x40040D00505D'
+      nbits: 48
+      repeats: 0
+      map_short: PLAY      
+    - name: Stop
+      data: '0x40040D00000D'
+      nbits: 48
+      repeats: 0
+      map_short: STOP      
+    - name: Subtitle
+      data: '0x40040D40C885'
+      nbits: 48
+      repeats: 0
+    - name: Netflix
+      data: '0x40040D80169B'
+      nbits: 48
+      repeats: 0
+    - name: Audio
+      data: '0x40040D00CCC1'
+      nbits: 48
+      repeats: 0
+    - name: Top Menu
+      data: '0x40040D00D9D4'
+      nbits: 48
+      repeats: 0
+    - name: PopUp
+      data: '0x40040D800A87'
+      nbits: 48
+      repeats: 0
+    - name: Home
+      data: '0x40040D00EAE7'
+      nbits: 48
+      repeats: 0
+    - name: HDR Setting
+      data: '0x40040D809419'
+      nbits: 48
+      repeats: 0
+    - name: Status
+      data: '0x40040D00FAF7'
+      nbits: 48
+      repeats: 0
+    - name: Info
+      data: '0x40040D80A429'
+      nbits: 48
+      repeats: 0
+      map_short: INFO      
+    - name: Internet
+      data: '0x40040D809A17'
+      nbits: 48
+      repeats: 0
+    - name: Return
+      data: '0x40040D00818C'
+      nbits: 48
+      repeats: 0
+      map_short: BACK      
+    - name: Option
+      data: '0x40040D00010C'
+      nbits: 48
+      repeats: 0
+      map_short: CONF      
+    - name: Cancel
+      data: '0x40040D00C1CC'
+      nbits: 48
+      repeats: 0      
+    - name: Red
+      data: '0x40040D80820F'
+      nbits: 48
+      repeats: 0
+      map_short: RED      
+    - name: Green
+      data: '0x40040D8042CF'
+      nbits: 48
+      repeats: 0
+      map_short: GREEN      
+    - name: Yellow
+      data: '0x40040D80C24F'
+      nbits: 48
+      repeats: 0
+      map_short: YELLO      
+    - name: Blue
+      data: '0x40040D80028F'
+      nbits: 48
+      repeats: 0
+      map_short: BLUE      
+    - name: 1
+      data: '0x40040D000805'
+      nbits: 48
+      repeats: 0
+    - name: 2
+      data: '0x40040D008885'
+      nbits: 48
+      repeats: 0
+    - name: 3
+      data: '0x40040D004845'
+      nbits: 48
+      repeats: 0
+    - name: 4
+      data: '0x40040D00C8C5'
+      nbits: 48
+      repeats: 0
+    - name: 5
+      data: '0x40040D002825'
+      nbits: 48
+      repeats: 0
+    - name: 6
+      data: '0x40040D00A8A5'
+      nbits: 48
+      repeats: 0
+    - name: 7
+      data: '0x40040D006865'
+      nbits: 48
+      repeats: 0
+    - name: 8
+      data: '0x40040D00E8E5'
+      nbits: 48
+      repeats: 0
+    - name: 9
+      data: '0x40040D001815'
+      nbits: 48
+      repeats: 0
+    - name: 0
+      data: '0x40040D009895'
+      nbits: 48
+      repeats: 0           
+
+
+  topping_dac:
+    display_name: DAC
+    protocol: NEC
+    commands:
+    - name: Power
+      data: '0x11EE18E7'
+      repeats: 0
+      category: on,off
+    - name: Volume Up
+      data: '0x11EE629D'
+      repeats: 0
+    - name: Power
+      data: '0x11EE6897'
+      repeats: 0
+    - name: Mute
+      data: '0x11EE609F'
+      repeats: 0
+    - name: Prev Input
+      data: '0x11EEE21D'
+      repeats: 0
+    - name: Next Input
+      data: '0x11EEA857'
+      repeats: 0
+    - name: Headphone Out 
+      data: '0x11EE20DF'
+      repeats: 0
+    - name: Line Out
+      data: '0x11EE02FD'
+      repeats: 0
+    - name: Filter
+      data: '0x11EE2AD5'
+      repeats: 0
+    - name: Headphone Gain
+      data: '0x11EE0AF5'
+      repeats: 0
+    - name: Brightness
+      data: '0x11EE28D7'
+      repeats: 0
+    - name: Auto Standby
+      data: '0x11EE08F7'
+      repeats: 0
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
