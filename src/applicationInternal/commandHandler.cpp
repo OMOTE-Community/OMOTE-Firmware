@@ -14,6 +14,7 @@
 #include "guis/gui_irReceiver.h"
 // show received BLE connection messages
 #include "guis/gui_BLEpairing.h"
+#include "hub/hubManager.h"
 
 uint16_t COMMAND_UNKNOWN;
 
@@ -175,7 +176,7 @@ std::string convertStringListToString(std::list<std::string> listOfStrings) {
   return result;
 }
 
-void executeCommandWithData(uint16_t command, commandData commandData, std::string additionalPayload = "") {
+void executeCommandWithData(uint16_t command, commandData commandData, std::string additionalPayload) {
   switch (commandData.commandHandler) {
     case IR: {
       omote_log_v("  generic IR, payloads %s\r\n", convertStringListToString(commandData.commandPayloads).c_str());
@@ -239,17 +240,96 @@ void executeCommandWithData(uint16_t command, commandData commandData, std::stri
       }
       break;
     }
+
+#if (ENABLE_HUB_COMMUNICATION > 0)
+    case HUB: {
+      omote_log_w("HUB commands should be handled using the CommandExecutionParams struct\r\n");
+      break;
+    }
+#endif
   }
+}
+
+void executeCommandWithData(const CommandExecutionParams& params, commandData commandData) {
+#if (ENABLE_HUB_COMMUNICATION > 0)
+  if (commandData.commandHandler != HUB) {
+    // For non-HUB commands, pass through to the original function
+    omote_log_d("command: will execute command '%u'%s%s\r\n", 
+               params.commandId, 
+               params.additionalPayload.empty() ? "" : " with additionalPayload '",
+               params.additionalPayload.empty() ? "" : (params.additionalPayload + "'").c_str());
+    
+    executeCommandWithData(params.commandId, commandData, params.additionalPayload);
+    return;
+  }
+
+  auto current = commandData.commandPayloads.begin();
+  
+  // Extract device and command
+  std::string deviceName = *current;
+  current = std::next(current, 1);
+  
+  std::string commandName = *current;
+  current = std::next(current, 1);
+  
+  // Create JSON payload
+  json payload;
+  payload["device"] = deviceName;
+  payload["command"] = commandName;
+  payload["type"] = params.commandType;
+  
+  // Create a data array if we have any additional data
+  json dataArray = json::array();
+  
+  // Add all remaining items from commandPayloads to the data array
+  while (current != commandData.commandPayloads.end()) {
+    dataArray.push_back(*current);
+    current = std::next(current, 1);
+  }
+  
+  // If additionalPayload is provided, add it to the data array
+  if (!params.additionalPayload.empty()) {
+    dataArray.push_back(params.additionalPayload);
+  }
+  
+  // Only add the data array if it has any content
+  if (!dataArray.empty()) {
+    payload["data"] = dataArray;
+  }
+  
+  omote_log_d("execute: will send hub message for device '%s', command '%s'\r\n", 
+              deviceName.c_str(), commandName.c_str());
+  
+  // Send using the hub manager
+  HubManager::getInstance().sendMessage(payload);
+#endif
 }
 
 void executeCommand(uint16_t command, std::string additionalPayload) {
   try {
     if (commands.count(command) > 0) {
-      omote_log_d("command: will execute command '%u' with additionalPayload '%s'\r\n", command, additionalPayload.c_str());
+      omote_log_d("command: will execute command '%u' with additionalPayload '%s'\r\n", 
+                 command, additionalPayload.c_str());
       executeCommandWithData(command, commands.at(command), additionalPayload);
     } else {
       omote_log_w("command: command '%u' not found\r\n", command);
     }
+  }
+  catch (const std::out_of_range& oor) {
+    omote_log_e("executeCommand: internal error, command not registered\r\n");
+  }
+}
+
+void executeCommand(const CommandExecutionParams& params) {
+  try {
+    // Early return if command not found
+    if (commands.count(params.commandId) == 0) {
+      omote_log_w("command: command '%u' not found\r\n", params.commandId);
+      return;
+    }
+    
+    commandData cmdData = commands.at(params.commandId);
+    executeCommandWithData(params, cmdData);
   }
   catch (const std::out_of_range& oor) {
     omote_log_e("executeCommand: internal error, command not registered\r\n");
@@ -287,5 +367,21 @@ void receiveWiFiConnected_cb(bool connected) {
 void receiveMQTTmessage_cb(std::string topic, std::string payload) {
   showMQTTmessage(topic, payload);
 }
+#endif
 
+#if (ENABLE_HUB_COMMUNICATION == 1)
+void receiveEspNowMessage_cb(json payload) {
+  // Extract device and command from the payload
+  std::string device, command, jsonStr;
+  
+  if (payload.contains("device") && payload.contains("command")) {
+    device = payload["device"];
+    command = payload["command"];
+  
+    // Serialize the payload to a string
+    std::string jsonStr = payload.dump();
+    
+    // TODO: Process the command based on device and command
+  }
+}
 #endif
